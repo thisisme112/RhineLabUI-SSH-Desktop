@@ -690,6 +690,15 @@ button {
   font-style: normal;
   margin: 0 5px;
 }
+.demo-badge {
+  margin-left: 0.65rem;
+  color: var(--theme-accent, #d48a3a);
+  border: 1px solid currentColor;
+  padding: 0.12rem 0.35rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
 .system-footer button {
   font-size: 10px;
   letter-spacing: 1px;

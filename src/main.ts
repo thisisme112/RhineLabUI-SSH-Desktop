@@ -182,7 +182,11 @@ import { logo, brandHeading } from "./brand";
 
 // The desktop launcher verifies its Vite mode. Keeping this compile-time
 // gate lets web and wallpaper builds omit the SSH terminal and native bridge.
-const desktopShell = isDesktop || isAndroid;
+// The web build exposes a safe, read-only SSH showcase.  It reuses the real
+// workspace UI with fixture hosts, but never attempts to access a native SSH
+// bridge (browsers cannot open the local ssh/PTY APIs).
+const demoSsh = !isDesktop && !isAndroid && !isWallpaper;
+const desktopShell = isDesktop || isAndroid || demoSsh;
 
 $("#stage").innerHTML = `
   ${isDesktop ? '<div class="titlebar-drag" aria-hidden="true"></div>' : ""}
@@ -191,7 +195,7 @@ $("#stage").innerHTML = `
   <div id="boot-background" class="boot-background"><svg viewBox="0 0 1920 1080" preserveAspectRatio="none"><g fill="none" stroke="#fff" stroke-width="3"><path d="M-210 705C-45 705 182 704 247 567C337 377 99 306 4 435S27 680 169 631C309 584 227 314 279 111S568-113 568-113"/><path d="M1560-80C1374 114 1671 168 1601 323S1371 367 1431 480S1692 666 1559 787S1329 886 1498 1130"/><circle cx="1450" cy="648" r="346"/><circle cx="1450" cy="648" r="348"/></g></svg></div>
   <header class="brand">${brandHeading}</header>
   <nav class="system-nav" aria-label="系统导航">
-    ${desktopShell ? '<button data-action="ssh-hosts">主机总览 <span>↗</span></button>' : ""}
+    ${desktopShell ? `<button data-action="ssh-hosts">主机总览 <span>↗</span></button>${demoSsh ? '<span class="demo-badge">SSH 演示模式</span>' : ""}` : ""}
     <button data-action="search"><span class="nav-glyph">⌕</span> ${desktopShell ? "WORKSPACE INDEX" : "ARCHIVE INDEX"} <span class="key">/</span></button>
     <button data-action="saved" aria-label="查看收藏档案" title="收藏档案">＋ SAVED <span id="saved-count">00</span></button>
     <button class="settings-button" data-action="settings" aria-label="系统设置" title="系统设置"><span class="settings-glyph" aria-hidden="true">◷</span><span class="settings-label">设置</span></button>
@@ -220,7 +224,7 @@ $("#stage").innerHTML = `
     <article id="detail-content" class="detail-content"></article>
   </section>
   <div class="powered">POWERED BY <b>RHINE LAB</b><i></i></div>
-  <footer class="system-footer"><span><i class="status-light"></i> ${desktopShell ? "SSH WORKSPACE" : "SESSION AUTHORIZED"}${isWallpaper ? '<button type="button" class="three-toggle" data-action="toggle-three" aria-pressed="true" title="卸载三维模型，保留 2D 界面">3D 开启</button>' : ''}</span><span>${desktopShell ? "REMOTE SESSION" : "JOYCE MOORE"} <i>／</i> <span id="clock">00:00:00</span></span><button data-action="replay" title="重播启动流程">REINITIALIZE ↗</button></footer>
+    <footer class="system-footer"><span><i class="status-light"></i> ${desktopShell ? "SSH WORKSPACE" : "SESSION AUTHORIZED"}${demoSsh ? ' · 演示模式' : ''}${isWallpaper ? '<button type="button" class="three-toggle" data-action="toggle-three" aria-pressed="true" title="卸载三维模型，保留 2D 界面">3D 开启</button>' : ''}</span><span>${desktopShell ? "REMOTE SESSION" : "JOYCE MOORE"} <i>／</i> <span id="clock">00:00:00</span></span><button data-action="replay" title="重播启动流程">REINITIALIZE ↗</button></footer>
   <div id="pwa-update-notice" class="pwa-update-notice" role="status" hidden><span>新版本已就绪</span><button data-pwa-action="update">更新并重启 ↻</button></div>
   <div id="modal-root"></div><div id="toast" class="toast" role="status"></div>
   <div id="loading" class="loading"><div class="loading-mark">${logo}</div><span>CONNECTING TO INTERNAL DATABASE</span><i></i></div>
@@ -1885,6 +1889,10 @@ if (desktopShell) {
     // The desktop catalog is registered before navigation is built.
     const cards = hostCards!;
     const loadHosts = () => {
+      if (demoSsh) return Promise.resolve({ ok: true, hosts: [
+        { alias: "demo-gateway", displayName: "演示网关", hostname: "gateway.demo.invalid", user: "demo", port: "22", source: "saved" as const },
+        { alias: "demo-lab", displayName: "演示实验室", hostname: "lab.demo.invalid", user: "analyst", port: "2222", source: "saved" as const },
+      ] });
       const bridge = window.rhineDesktop;
       if (!bridge?.hosts) return Promise.resolve({ ok: false, hosts: [], error: "宿主未提供主机列表" });
       return bridge.hosts();
@@ -2114,6 +2122,13 @@ if (desktopShell) {
     };
     connectHostAlias = (alias: string, newSession = false) => {
       const host = [...cards.bound, ...cards.overflow].find(entry => entry.alias === alias);
+      if (demoSsh) {
+        const card = cards.cardOf(alias);
+        if (card !== undefined && card !== selected) select(card);
+        if (card !== undefined && mode !== "detail") setMode("detail");
+        notify("SSH 演示模式：此页面不会连接真实主机");
+        return;
+      }
       connectLaunch({ target: alias, displayName: host ? hostLabel(host) : alias }, newSession);
     };
     openHostSession = alias => {
