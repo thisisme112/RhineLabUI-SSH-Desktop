@@ -1,0 +1,85 @@
+{
+  "checks": {
+    "authentication keeps the package assembled": true,
+    "real authentication log is retained": true,
+    "authentication alone does not open a shell": true,
+    "tools start folded and never read the clipboard automatically": true,
+    "search shortcut unfolds the existing footer and focuses its input": true,
+    "footer opening uses the shared page animation": true,
+    "footer layout resizes the PTY once instead of on every frame": true,
+    "search reads real scrollback and scrolls back to the result": true,
+    "Enter advances to the next match": true,
+    "Shift+Enter returns to the previous match": true,
+    "case option filters matches": true,
+    "copy transfers the actual xterm selection without reading the clipboard": true,
+    "live output updates the result count without replacing search input": true,
+    "search and copy preserve a word across a wrapped terminal line": true,
+    "no results disables navigation": true,
+    "search follows the active full-screen buffer": true,
+    "Escape from search folds only tools and immediately restores terminal input": true,
+    "reopening during exit keeps one terminal and the current query": true,
+    "tool shortcuts and search navigation never send input to the remote": true,
+    "ordinary Escape Tab arrows Ctrl+C and Ctrl+F still reach the remote": true,
+    "paste uses bracketed mode and adds no execution newline": true,
+    "empty clipboard sends nothing": true,
+    "clipboard failures stay in the footer and send nothing": true,
+    "paste button works and returns keyboard focus to the terminal": true,
+    "moving focus while clipboard reads cancels that paste": true,
+    "collapsing while clipboard reads cancels that paste": true,
+    "collapse leaves tools folded and clears search decorations": true,
+    "font controls affect terminal text and its PTY dimensions": true,
+    "font upper bound is 24": true,
+    "font lower bound is 12": true,
+    "current size restores the default when clicked": true,
+    "disconnected output can be searched and copied but cannot accept paste": true,
+    "reconnection clears the previous search query": true,
+    "an old clipboard read cannot send text to a reconnected session": true,
+    "reconnection preserves font preference and a single fresh terminal": true,
+    "font preference survives an application reload": true,
+    "reduced motion shows footer controls immediately without animations": true,
+    "tools inherit the terminal dark theme": true,
+    "footer controls fit 1024x640": true,
+    "footer controls fit 800x600": true,
+    "reduced motion folds tools immediately and restores remote input": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {
+    "tools": {
+      "fontSize": "18",
+      "count": "1 / 1",
+      "sizes": [
+        [
+          125,
+          22
+        ],
+        [
+          125,
+          19
+        ],
+        [
+          125,
+          20
+        ],
+        [
+          73,
+          9
+        ],
+        [
+          60,
+          7
+        ]
+      ],
+      "terminal": {
+        "x": 72,
+        "y": 167.3813018798828,
+        "width": 656,
+        "height": 349.2374267578125,
+        "top": 167.3813018798828,
+        "right": 728,
+        "bottom": 516.6187286376953,
+        "left": 72
+      }
+    }
+  }
+}

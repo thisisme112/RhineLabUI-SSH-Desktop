@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-09-13T12:57:10.257Z",
+  "scope": "Built web and Wallpaper Engine artifacts; desktop SSH runtime markers and native/model assets must be absent.",
+  "runtimeMarkers": [
+    "rhine.ssh.workspace",
+    "ssh-session-navigation",
+    "ssh-workspace-tabs",
+    "ssh-terminal-screen",
+    "session:reserve",
+    "LIVE SESSIONS"
+  ],
+  "targets": [
+    {
+      "folder": "dist",
+      "runtimeFilesChecked": 6,
+      "filesChecked": 829,
+      "runtimeMatches": [],
+      "nativeAssets": [],
+      "passed": true
+    },
+    {
+      "folder": "release/wallpaper",
+      "runtimeFilesChecked": 3,
+      "filesChecked": 826,
+      "runtimeMatches": [],
+      "nativeAssets": [],
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "checks": {
+    "preload assigns distinct native IDs and log files": true,
+    "a second password reply leaves the first connection awaiting its own answer": true,
+    "native IPC input and output remain isolated between two ConPTY processes": true,
+    "native session switching mounts one terminal and retains the other buffer": true,
+    "late resize and authentication after native exit are rejected without affecting A": true,
+    "the ended native session is readable from history": true,
+    "two native sessions are still alive before reload": true,
+    "reload stops the old native owners and creates no automatic connection": true,
+    "native reload checkpoints retain all live session histories": true
+  },
+  "failed": [],
+  "result": {
+    "checks": {
+      "preload assigns distinct native IDs and log files": true,
+      "a second password reply leaves the first connection awaiting its own answer": true,
+      "native IPC input and output remain isolated between two ConPTY processes": true,
+      "native session switching mounts one terminal and retains the other buffer": true,
+      "late resize and authentication after native exit are rejected without affecting A": true,
+      "the ended native session is readable from history": true,
+      "two native sessions are still alive before reload": true,
+      "reload stops the old native owners and creates no automatic connection": true,
+      "native reload checkpoints retain all live session histories": true
+    },
+    "promptIds": [
+      1,
+      2
+    ],
+    "liveIds": [
+      "1c18b7a4-077f-4ecd-9c6a-12da6760db2b",
+      "799bfa5f-0b56-46ef-b18f-d093a63e8617"
+    ],
+    "endedId": "81e0853a-a26d-48db-aae7-dcc71e8d738c",
+    "sessions": [
+      {
+        "key": "94b9de27-a690-47da-a64f-f2bbf8c7b8c2",
+        "id": "1c18b7a4-077f-4ecd-9c6a-12da6760db2b",
+        "target": "passhost-one",
+        "phase": "interactive",
+        "active": true,
+        "bufferLines": 34,
+        "directory": "",
+        "sampleSequence": 0
+      },
+      {
+        "key": "7cc4cab5-bd99-4afc-93bf-1ad8e487a2ed",
+        "id": "81e0853a-a26d-48db-aae7-dcc71e8d738c",
+        "target": "passhost-two",
+        "phase": "failed",
+        "active": false,
+        "bufferLines": 38,
+        "directory": "",
+        "sampleSequence": 0
+      },
+      {
+        "key": "06ea611d-4934-429f-86d8-610f2b2de4dc",
+        "id": "799bfa5f-0b56-46ef-b18f-d093a63e8617",
+        "target": "reload-live-peer",
+        "phase": "interactive",
+        "active": true,
+        "bufferLines": 30,
+        "directory": "",
+        "sampleSequence": 0
+      }
+    ]
+  },
+  "problems": [
+    {
+      "kind": "console",
+      "severity": "warning",
+      "message": "THREE.WebGLProgram: Program Info Log: (210,81-129): warning X4122: sum of 0.996094 and -2.98545e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n\n\n\u0000",
+      "line": 17,
+      "source": "file:///D:/myproject/RhineLab/dist-desktop/assets/index-KU0Ey3UD.js"
+    }
+  ],
+  "scope": "Actual Electron/preload/IPC/ConPTY; SSH peer simulated."
+}

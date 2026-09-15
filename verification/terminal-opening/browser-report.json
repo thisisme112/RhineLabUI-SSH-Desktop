@@ -1,0 +1,218 @@
+{
+  "checks": {
+    "authentication keeps the package assembled": true,
+    "real authentication log is retained": true,
+    "authentication alone does not open a shell": true,
+    "terminal operates on the projected model screen": true,
+    "secret is absent from visible output": true,
+    "real input and output use the same terminal": true,
+    "PTY dimensions follow the operating surface": true,
+    "Escape reaches the remote application": true,
+    "Tab reaches terminal completion": true,
+    "arrow keys reach remote applications": true,
+    "closing preserves the connection": true,
+    "closing restores a visible host action": true,
+    "collapsed terminal still answers protocol queries": true,
+    "hidden output survives reopening": true,
+    "rapid reopening retains one xterm": true,
+    "ANSI truecolor and wide characters render": true,
+    "alternate screen survives packing": true,
+    "alternate screen returns to the same normal buffer": true,
+    "screen remains inside 1366x768": true,
+    "screen remains inside 2560x1440": true,
+    "disconnect keeps output available": true,
+    "new session clears old terminal content": true,
+    "authentication failure leaves the package closed": true,
+    "failed output remains readable without unpacking": true,
+    "opening can be cancelled without disconnecting": true,
+    "reconnected terminal has one fresh buffer": true,
+    "dark theme reaches both terminal presentations": true,
+    "reduced motion reassembles immediately": true,
+    "missing model preserves a working terminal": true,
+    "frame loop stays alive": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {
+    "openingFrames": {
+      "file": "opening-frames.json",
+      "samples": 356,
+      "durationMs": 2110.300000011921
+    },
+    "final": {
+      "stats": {
+        "sessionDeck": {
+          "available": true,
+          "state": "open",
+          "progress": 1,
+          "focus": 1,
+          "ready": true,
+          "screen": {
+            "corners": [
+              [
+                290.54540954805066,
+                259.20058568552315
+              ],
+              [
+                1629.4512598788547,
+                259.20059621990447
+              ],
+              [
+                1629.4512483902895,
+                971.999373452956
+              ],
+              [
+                290.54542103667325,
+                971.9993896609324
+              ]
+            ],
+            "width": 1339,
+            "height": 713
+          }
+        },
+        "decryption": {
+          "time": 39.56,
+          "intervals": [],
+          "markers": 0,
+          "point": 0,
+          "label": 0,
+          "labelValue": 1,
+          "clarity": 1,
+          "phase": "clear"
+        },
+        "topLeft": [
+          159,
+          -69
+        ],
+        "topRight": [
+          1761,
+          -69
+        ],
+        "labelTopLeft": [
+          363,
+          67
+        ],
+        "labelBottomLeft": [
+          363,
+          215
+        ],
+        "modelPosition": [
+          0,
+          1.6537,
+          -2.17
+        ],
+        "cameraPosition": [
+          0,
+          3.4542,
+          69.969
+        ],
+        "fieldOfView": 2.676214764793529,
+        "loaded": true,
+        "drawCalls": 116,
+        "superPerformance": false,
+        "presentation": 1,
+        "triangles": 196505,
+        "archiveCount": 4,
+        "archiveCandidates": 290,
+        "archiveCulled": 286,
+        "archiveCapacity": 576,
+        "archiveCoverage": "standard",
+        "returningFiles": 0,
+        "selectionPhase": "settled",
+        "pendingPulse": null,
+        "pulses": [],
+        "referenceTime": 51.51,
+        "selectedSlot": 173,
+        "selectedLane": 5,
+        "selectedCell": {
+          "lane": 5,
+          "row": 13
+        },
+        "hoverCell": null,
+        "hoverLifts": {},
+        "dragTrack": null,
+        "archiveMomentum": null,
+        "holdingArchive": false,
+        "dragProjection": {
+          "lane": {
+            "x": -2221.868952368584,
+            "y": -9.877036863392696e-7
+          },
+          "row": {
+            "x": -0.00015237681144273827,
+            "y": 0.1818000117391616
+          }
+        },
+        "dragMapping": null,
+        "coordinateOrigin": {
+          "lane": 0,
+          "row": 0
+        },
+        "poolBounds": {
+          "minLane": 4,
+          "maxLane": 6,
+          "minRow": -20,
+          "maxRow": 123
+        },
+        "laneFocus": 4.999999999999994,
+        "columnCamera": 15.599999999999982,
+        "rotation": 0,
+        "clearance": 0.3635096867709593,
+        "canInspect": false,
+        "returnPhase": "lowering",
+        "extraction": 4.05,
+        "appearance": 1,
+        "cameraDetail": 1,
+        "idleGain": 0,
+        "flatten": 0,
+        "spectrumActivity": 0,
+        "selectedIndexDim": 0,
+        "returningIndexDims": [],
+        "cameraDistance": 71.99999641400125,
+        "cameraNear": 5,
+        "cameraFar": 300,
+        "fogNear": 70.99999641400125,
+        "fogFar": 83.99999641400126,
+        "returningAppearance": [],
+        "rail": -0.62,
+        "threeState": "on",
+        "fps": 227,
+        "mode": "detail",
+        "ready": true,
+        "startup": "started",
+        "motion": {
+          "reduced": false,
+          "systemReduced": false
+        },
+        "bootTime": null,
+        "selected": "H-001",
+        "selectedIndex": 41,
+        "saved": [],
+        "audio": {
+          "state": "locked",
+          "scene": "detail",
+          "tracks": 0,
+          "voices": 0,
+          "loaded": false,
+          "playedKeys": 0,
+          "error": "",
+          "preferences": {
+            "sound": false,
+            "music": false,
+            "soundVolume": 0.55,
+            "musicVolume": 0.5
+          }
+        },
+        "wallpaper": null
+      },
+      "sizes": [
+        [
+          141,
+          25
+        ]
+      ],
+      "phase": "closed"
+    },
+    "expectedModelFailure": "终端模型载入失败： Error: 无法载入终端模型或包装盒\n    at w.load (http://127.0.0.1:52773/assets/terminal-deck-CxTaLuX9.js:1:1530)"
+  }
+}

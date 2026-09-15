@@ -1,0 +1,124 @@
+{
+    "checkedAt":  "2026-09-15T05:58:49.0837464+08:00",
+    "scope":  "Static package file inspection only; no application launch, test execution or device operation.",
+    "artifacts":  [
+                      {
+                          "name":  "RhineLab-Android-1.0.0-workspace-20260915.apk",
+                          "bytes":  52303960,
+                          "sha256":  "6145c63fedf6a1033b15c34c2fb0b4cbe4c71d9e59caa7d0d5ec2dcad4b9c084"
+                      },
+                      {
+                          "name":  "RhineLab-Portable-1.0.0-workspace-20260915.exe",
+                          "bytes":  163294055,
+                          "sha256":  "25a149d25c0278cd4e6528fa5dcfeeee8290b39c120537f86c80486079038935"
+                      },
+                      {
+                          "name":  "RhineLab-Setup-1.0.0-workspace-20260915.exe",
+                          "bytes":  163515390,
+                          "sha256":  "f4462c84edd3703d270492501f4efd446e39391799d01f28927595332fc143da"
+                      }
+                  ],
+    "nativeManifestSourceDigest":  "5e55b3d35cc20d850e3bf09d5c7722fc930b375f7f2338d1b327d05181e373ac",
+    "packagedNative":  [
+                           {
+                               "target":  "session/android/arm64",
+                               "sha256":  "51811ae675802925992f7c74fb9ce2d88f8754db972e2de04a89280bb64f9e25",
+                               "bytes":  5832864
+                           },
+                           {
+                               "target":  "session/android/armv7",
+                               "sha256":  "eac158d95544cef5cddcac71ccefdf143a987192a324361331280da06d780064",
+                               "bytes":  6291616
+                           },
+                           {
+                               "target":  "session/android/amd64",
+                               "sha256":  "89e5dd9279f3f5f1ee74179e2f07ce414fae809e7a845d6b7fea565809282a9b",
+                               "bytes":  6271136
+                           },
+                           {
+                               "target":  "bridge/windows/amd64",
+                               "sha256":  "6bf4b6fde1d89069095fbd275704c33721c3bc4841792dffffbaa2c9c83cb32d",
+                               "bytes":  5969408
+                           },
+                           {
+                               "target":  "monitor/linux/amd64",
+                               "sha256":  "956932b2dbe0e0db81f715df9190c2148dfc5369004989fe4c22d5257430512c",
+                               "bytes":  3092640
+                           },
+                           {
+                               "target":  "monitor/linux/arm64",
+                               "sha256":  "62bf6c2c32e6181e7b8d6e5e6d7aad546b4c143e04dab028243b19d86b4ac5d4",
+                               "bytes":  3014816
+                           }
+                       ],
+    "desktopFonts":  [
+                         "ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+                         "ibm-plex-mono-latin-700-normal-7sUh57Bg.woff2",
+                         "jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+                         "jetbrains-mono-latin-700-normal-BYuf6tUa.woff2"
+                     ],
+    "desktopFeatures":  {
+                            "text-editor":  [
+                                                "text-editor-C4VMbUtT.js"
+                                            ],
+                            "quick-search":  [
+                                                 "quick-search-DbaqSL8g.js"
+                                             ],
+                            "session-health":  [
+                                                   "session-health-1FfnQESd.js"
+                                               ],
+                            "tunnel-panel":  [
+                                                 "tunnel-panel-D6kURb64.js"
+                                             ],
+                            "terminal-appearance":  [
+                                                        "terminal-appearance-BhCx7nGL.js"
+                                                    ],
+                            "settings-panel":  [
+                                                   "settings-panel-DC4iT5uv.js"
+                                               ]
+                        },
+    "androidFonts":  [
+                         "assets/public/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+                         "assets/public/assets/ibm-plex-mono-latin-700-normal-7sUh57Bg.woff2",
+                         "assets/public/assets/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+                         "assets/public/assets/jetbrains-mono-latin-700-normal-BYuf6tUa.woff2"
+                     ],
+    "androidFeatures":  {
+                            "text-editor":  [
+                                                "assets/public/assets/text-editor-26vFZkY8.js"
+                                            ],
+                            "quick-search":  [
+                                                 "assets/public/assets/quick-search-4noUFixv.js"
+                                             ],
+                            "session-health":  [
+                                                   "assets/public/assets/session-health-1FfnQESd.js"
+                                               ],
+                            "tunnel-panel":  [
+                                                 "assets/public/assets/tunnel-panel-D8rHhNbY.js"
+                                             ],
+                            "terminal-appearance":  [
+                                                        "assets/public/assets/terminal-appearance-Bp6i_lFE.js"
+                                                    ],
+                            "settings-panel":  [
+                                                   "assets/public/assets/settings-panel-C7RrGiEn.js"
+                                               ]
+                        },
+    "androidConnectionService":  true,
+    "androidNative":  [
+                          {
+                              "abi":  "x86_64",
+                              "entry":  "lib/x86_64/librhine-session.so",
+                              "sha256":  "89e5dd9279f3f5f1ee74179e2f07ce414fae809e7a845d6b7fea565809282a9b"
+                          },
+                          {
+                              "abi":  "arm64-v8a",
+                              "entry":  "lib/arm64-v8a/librhine-session.so",
+                              "sha256":  "51811ae675802925992f7c74fb9ce2d88f8754db972e2de04a89280bb64f9e25"
+                          },
+                          {
+                              "abi":  "armeabi-v7a",
+                              "entry":  "lib/armeabi-v7a/librhine-session.so",
+                              "sha256":  "eac158d95544cef5cddcac71ccefdf143a987192a324361331280da06d780064"
+                          }
+                      ]
+}

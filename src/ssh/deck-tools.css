@@ -1,0 +1,79 @@
+/* The scene end of the terminal teardown: the way back out of an exploded
+   stack. The way in is the terminal bar's own 拆解终端, because this surface is
+   modal and nothing beside it is reachable while it is open.
+   It lives in #viewport rather than #stage so its controls are native pixels,
+   like every other SSH surface. */
+.deck-tools {
+  position: absolute;
+  right: 40px;
+  bottom: 120px;
+  /* Above the operating terminal (terminal.css: z-index 25) — the teardown is
+     reachable while the session is being used, which is the point — and below
+     every blocking surface (prompt / audit / modal / viewer, all 30). */
+  z-index: 26;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  border: 1px solid var(--theme-line, #a4a08f);
+  background: var(--theme-panel, #e8e5e1);
+  color: var(--theme-ink, #20221c);
+  font-family: MiSans, system-ui, sans-serif;
+}
+.deck-tools-label {
+  padding: 0 4px 0 20px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--theme-muted, #77756d);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.deck-tools[hidden] {
+  display: none;
+}
+.deck-tools button {
+  min-width: 166px;
+  padding: 19px 24px;
+  font: inherit;
+  font-size: 15px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.deck-tools button span {
+  margin-right: 10px;
+}
+.deck-tools button[aria-pressed="true"] {
+  background: var(--theme-ink, #292d24);
+  color: var(--theme-paper, #eeeade);
+}
+.deck-tools button:hover:not(:disabled) {
+  background: var(--theme-accent, #c9c8b6);
+  color: var(--theme-paper, #20221c);
+}
+.deck-tools button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.deck-tools button:focus-visible {
+  outline: 1px solid var(--theme-accent, #9b7247);
+  outline-offset: 2px;
+}
+.reduce-motion .deck-tools button {
+  transition: none;
+}
+@media (max-width: 1000px) {
+  .deck-tools {
+    right: 16px;
+    bottom: 92px;
+  }
+  .deck-tools button {
+    min-width: 0;
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+}

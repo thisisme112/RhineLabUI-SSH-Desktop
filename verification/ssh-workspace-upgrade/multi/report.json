@@ -1,0 +1,220 @@
+{
+  "checks": {
+    "six functional columns replace the desktop lore columns": true,
+    "session directory starts with a genuine empty state": true,
+    "files directory starts with a genuine empty state": true,
+    "monitor directory starts with a genuine empty state": true,
+    "command directory starts with a genuine empty state": true,
+    "history directory starts with a genuine empty state": true,
+    "authentication uses the current host deck and an independent texture source": true,
+    "identical request numbers stay bound to their own session": true,
+    "both connections retain independent authentication and buffers": true,
+    "hidden parsers and telemetry continue without chart rendering or fitting": true,
+    "native terminal input is routed only to the selected session": true,
+    "background auxiliary authentication never takes focus": true,
+    "auxiliary answers retain owner through active session switching": true,
+    "switching restores the original directory and scrollback": true,
+    "GPU overview precedes device detail and high load is not a fault": true,
+    "covered 3D stops rendering while terminal and monitoring remain live": true,
+    "resized operating surface stays outside the scaled stage": true,
+    "operating switches retain the open package and exactly one mounted terminal": true,
+    "background samples preserve editor nodes and the current draft": true,
+    "command insertion targets the chosen S ID without sending Enter": true,
+    "ending a session with transfers waits for inline confirmation": true,
+    "stopping from the session directory retains confirmation on its owning terminal": true,
+    "ending B preserves its output and A remains connected": true,
+    "background ending updates selected actions without a blocking dialog": true,
+    "history contains real ended sessions": true,
+    "eight sessions retain bounded independent buffers with one visible workspace": true,
+    "closing retains the terminal insert throughout reassembly": true,
+    "outgoing card retains its own host screen and label": true,
+    "quick return does not replace the terminal with the old internal model": true,
+    "reload restores local libraries without reconnecting or executing commands": true,
+    "offline command insertion is disabled": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {
+    "fastSwitchMs": 249,
+    "eightSessions": {
+      "sessions": [
+        {
+          "key": "4d612bc5-6693-4bd9-a8b4-83ad449d7d93",
+          "id": "51d4df4b-6044-4f1e-9a6c-2be677fed39d",
+          "target": "review-host",
+          "phase": "failed",
+          "active": false,
+          "bufferLines": 25,
+          "directory": "/home/review-host/project",
+          "sampleSequence": 27
+        },
+        {
+          "key": "7034b903-7b80-4d3f-b7cd-5fc30ac176e7",
+          "id": "ec3cd7e3-c82f-4a87-b1c4-30bc5b9ab931",
+          "target": "second-host",
+          "phase": "closed",
+          "active": false,
+          "bufferLines": 27,
+          "directory": "/home/second-host",
+          "sampleSequence": 28
+        },
+        {
+          "key": "bc1a09c5-5b30-4fbd-b683-31d9cefa06b4",
+          "id": "97eb6d89-3280-4e21-adc9-883fd77739eb",
+          "target": "review-host",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/review-host",
+          "sampleSequence": 7
+        },
+        {
+          "key": "6c8129c3-14a7-4b45-8b10-0c60a943ccf8",
+          "id": "1f052f3a-3a5a-4882-97cf-9b05a6d34c3a",
+          "target": "second-host",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/second-host",
+          "sampleSequence": 7
+        },
+        {
+          "key": "f40bfaa0-2e60-4b80-81f3-4e2615e30349",
+          "id": "76e530ca-09f1-42c4-8d4d-153e6d9d3bae",
+          "target": "host-3",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-3",
+          "sampleSequence": 7
+        },
+        {
+          "key": "ef5be02c-404f-47f0-990f-4c352900135b",
+          "id": "371c8046-4013-4960-a88e-384629021eae",
+          "target": "host-4",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-4",
+          "sampleSequence": 7
+        },
+        {
+          "key": "2ff2bcb2-a7f4-42be-9b09-1f51ae56fd90",
+          "id": "7d589e15-ac96-4b26-93b4-03d5ea26c5e4",
+          "target": "host-5",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-5",
+          "sampleSequence": 7
+        },
+        {
+          "key": "e18be90a-f9ad-4ca4-90c5-f8eb7cbb6168",
+          "id": "c74f9c30-5012-4c92-ad2d-bbc8566327c7",
+          "target": "host-6",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-6",
+          "sampleSequence": 7
+        },
+        {
+          "key": "41e83e82-6da1-49fe-a90f-71f3ff2d156b",
+          "id": "ac9e8e81-eb52-4ce6-8cc6-d169f87df952",
+          "target": "host-7",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-7",
+          "sampleSequence": 7
+        },
+        {
+          "key": "76497ee5-fd65-46b0-a19e-40c29e38dbdf",
+          "id": "afd649f6-504e-435c-ae06-b5a003579c48",
+          "target": "host-8",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-8",
+          "sampleSequence": 7
+        }
+      ],
+      "rendering": {
+        "frames": 7732,
+        "frozen": false,
+        "returning": 1
+      },
+      "heapBytes": 45835721
+    },
+    "savedWorkspace": {
+      "version": 1,
+      "commands": [
+        {
+          "id": "52754209-96c5-4921-9380-d6d68af7f427",
+          "name": "工作目录",
+          "command": "pwd",
+          "note": "只插入，按回车后执行"
+        }
+      ],
+      "bookmarks": [
+        {
+          "alias": "review-host",
+          "path": "/home/review-host/project",
+          "name": "project",
+          "id": "94ee1cdf-9609-47d9-bdbe-ed1479be684a"
+        }
+      ],
+      "numbers": {
+        "session:directory": 0,
+        "files:directory": 0,
+        "monitor:directory": 0,
+        "command:directory": 0,
+        "history:directory": 0,
+        "session:4d612bc5-6693-4bd9-a8b4-83ad449d7d93": 1,
+        "files:session:4d612bc5-6693-4bd9-a8b4-83ad449d7d93": 1,
+        "monitor:4d612bc5-6693-4bd9-a8b4-83ad449d7d93": 1,
+        "session:7034b903-7b80-4d3f-b7cd-5fc30ac176e7": 2,
+        "files:session:7034b903-7b80-4d3f-b7cd-5fc30ac176e7": 2,
+        "monitor:7034b903-7b80-4d3f-b7cd-5fc30ac176e7": 2,
+        "files:bookmark:94ee1cdf-9609-47d9-bdbe-ed1479be684a": 3,
+        "command:52754209-96c5-4921-9380-d6d68af7f427": 1,
+        "history:ec3cd7e3-c82f-4a87-b1c4-30bc5b9ab931.json": 1,
+        "history:51d4df4b-6044-4f1e-9a6c-2be677fed39d.json": 2,
+        "session:bc1a09c5-5b30-4fbd-b683-31d9cefa06b4": 3,
+        "files:session:bc1a09c5-5b30-4fbd-b683-31d9cefa06b4": 4,
+        "monitor:bc1a09c5-5b30-4fbd-b683-31d9cefa06b4": 3,
+        "session:6c8129c3-14a7-4b45-8b10-0c60a943ccf8": 4,
+        "files:session:6c8129c3-14a7-4b45-8b10-0c60a943ccf8": 5,
+        "monitor:6c8129c3-14a7-4b45-8b10-0c60a943ccf8": 4,
+        "session:f40bfaa0-2e60-4b80-81f3-4e2615e30349": 5,
+        "files:session:f40bfaa0-2e60-4b80-81f3-4e2615e30349": 6,
+        "monitor:f40bfaa0-2e60-4b80-81f3-4e2615e30349": 5,
+        "session:ef5be02c-404f-47f0-990f-4c352900135b": 6,
+        "files:session:ef5be02c-404f-47f0-990f-4c352900135b": 7,
+        "monitor:ef5be02c-404f-47f0-990f-4c352900135b": 6,
+        "session:2ff2bcb2-a7f4-42be-9b09-1f51ae56fd90": 7,
+        "files:session:2ff2bcb2-a7f4-42be-9b09-1f51ae56fd90": 8,
+        "monitor:2ff2bcb2-a7f4-42be-9b09-1f51ae56fd90": 7,
+        "session:e18be90a-f9ad-4ca4-90c5-f8eb7cbb6168": 8,
+        "files:session:e18be90a-f9ad-4ca4-90c5-f8eb7cbb6168": 9,
+        "monitor:e18be90a-f9ad-4ca4-90c5-f8eb7cbb6168": 8,
+        "session:41e83e82-6da1-49fe-a90f-71f3ff2d156b": 9,
+        "files:session:41e83e82-6da1-49fe-a90f-71f3ff2d156b": 10,
+        "monitor:41e83e82-6da1-49fe-a90f-71f3ff2d156b": 9,
+        "session:76497ee5-fd65-46b0-a19e-40c29e38dbdf": 10,
+        "files:session:76497ee5-fd65-46b0-a19e-40c29e38dbdf": 11,
+        "monitor:76497ee5-fd65-46b0-a19e-40c29e38dbdf": 10
+      },
+      "layouts": {
+        "review-host": {
+          "width": 320,
+          "page": "files"
+        },
+        "host-8": {
+          "width": 320,
+          "page": "monitor"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "checks": {
+    "the corner button covers the detail page's own": true,
+    "teardown is offered from the surface that owns the screen": true,
+    "the scene control stays out of the way until there is something to reassemble": true,
+    "the operating terminal steps off the moving screen": true,
+    "the package stays open while the stack is apart": true,
+    "the camera opens up to frame the whole stack": true,
+    "the way back out is offered once the terminal has stepped off": true,
+    "reassembly gives the screen back to the terminal": true,
+    "packing a separated stack puts the plates back": true,
+    "frame loop stays alive": true
+  },
+  "errors": [],
+  "evidence": {
+    "whilePromptOpen": {
+      "inert": true,
+      "hidden": true,
+      "stageInert": false,
+      "viewportInert": false
+    },
+    "afterPromptClosed": {
+      "inert": false,
+      "hidden": true,
+      "stageInert": false,
+      "viewportInert": false
+    },
+    "atOperatingSize": {
+      "inert": true,
+      "hidden": true,
+      "stageInert": false,
+      "viewportInert": false
+    }
+  }
+}

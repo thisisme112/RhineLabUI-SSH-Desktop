@@ -1,0 +1,15 @@
+{
+  "checks": [
+    "a host key question reaches the surface with the server's real fingerprint",
+    "the phase sequence the surface animates is exactly the protocol's",
+    "terminal bytes are decoded from base64 into the shell's own output",
+    "typed input round-trips through the driver to the server and back",
+    "the driver's resize reaches the server",
+    "an exit status of 0 survives the protocol rather than being dropped as empty",
+    "rejecting the host key ends the attempt before any credential is sent",
+    "a rejected password reports the failed phase and the reason",
+    "the server's challenge is surfaced when it arrives, with its own wording",
+    "answering the challenge completes the connection"
+  ],
+  "passed": true
+}

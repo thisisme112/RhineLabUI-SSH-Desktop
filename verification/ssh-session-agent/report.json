@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "the agent asks about the host key, with the server's real fingerprint",
+    "every stage is reported in the order the protocol performs them",
+    "the shell's own output arrives on the terminal stream",
+    "input reaches the server and its answer comes back",
+    "the terminal can be resized after the shell is up",
+    "closing the shell reports an exit status and a closed phase",
+    "a changed host key is refused without asking",
+    "an accepted host key is not asked about a second time",
+    "public key authentication completes",
+    "an encrypted private key is unlocked with its passphrase",
+    "a locked key without its passphrase says so, rather than failing obscurely",
+    "a keyboard-interactive challenge is put to the caller when it arrives",
+    "answering it completes the connection",
+    "a wrong code fails the connection instead of appearing to succeed",
+    "a rejected password reports a failed phase and the reason"
+  ],
+  "passed": true
+}

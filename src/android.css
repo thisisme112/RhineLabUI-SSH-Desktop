@@ -1,0 +1,87 @@
+/* Fit the extra native SSH entry without moving the archive's portrait HUD. */
+[data-native-shell="true"] [data-layout="portrait"] .system-nav { gap: 0; }
+[data-native-shell="true"] [data-layout="portrait"] .system-nav [data-action="saved"] { font-size: 0; gap: 3px; }
+[data-native-shell="true"] [data-layout="portrait"] .system-nav [data-action="saved"]::before { content: "＋"; font-size: 17px; }
+[data-native-shell="true"] [data-layout="portrait"] .system-nav #saved-count { font-size: 10px; }
+/* Scroll belongs to the document under the finger, never the archive canvas. */
+[data-native-shell="true"] :is(.detail-content, .ssh-overview-content, .ssh-overview-list, .ssh-host-editor, .ssh-library, .ssh-shortcuts, .ssh-monitor, .ssh-files-list, .ssh-transfer-drawer, .ssh-prompt-panel, .terminal-modal) {
+  touch-action: pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+}
+[data-native-shell="true"] .ssh-terminal-screen { touch-action: none; }
+[data-native-shell="true"] .ssh-mobile-keys { display: flex; justify-content: space-between; gap: 2px; border-bottom: 1px solid var(--terminal-line); }
+[data-native-shell="true"] .ssh-mobile-keys button { flex: 1; min-height: 34px; min-width: 0; padding: 3px; color: var(--terminal-fg); background: transparent; border: 0; font: 12px MiSans, sans-serif; }
+[data-native-shell="true"] .ssh-mobile-keys button[aria-pressed="true"] { color: var(--terminal-accent); background: color-mix(in srgb, var(--terminal-accent) 15%, transparent); }
+[data-native-shell="true"] .ssh-terminal:not([data-workspace-page="terminal"]) .ssh-mobile-keys { display: none; }
+@media (max-width: 840px) {
+  [data-native-shell="true"] .ssh-overview-columns { display: none; }
+  [data-native-shell="true"] .ssh-overview-scroll { padding: 0 0 8px; touch-action: pan-y; }
+  [data-native-shell="true"] .ssh-overview .ssh-overview-connect { grid-template-columns: minmax(0, 1fr); gap: 3px; min-height: 64px; padding: 8px 4px; }
+  [data-native-shell="true"] .ssh-overview-host-name { gap: 6px; }
+  [data-native-shell="true"] .ssh-overview-host-name b { font-size: 10px; }
+  [data-native-shell="true"] .ssh-overview-host-name strong { font-size: 14px; }
+  [data-native-shell="true"] .ssh-overview-host-name small { font-size: 12px; margin-top: 2px; }
+  [data-native-shell="true"] .ssh-overview-host-load { font-size: 11px; }
+  [data-native-shell="true"] .ssh-overview-host-state { font-size: 11px; }
+  [data-native-shell="true"] .ssh-overview-host-actions { width: 92px; gap: 0; justify-content: space-between; }
+  [data-native-shell="true"] .ssh-overview-host-actions button { padding: 3px; font-size: 12px; min-height: 40px; }
+  [data-native-shell="true"] .ssh-overview-secondary { padding: 0; }
+  [data-native-shell="true"] .ssh-overview { padding: 8px; font-size: 13px; }
+  [data-native-shell="true"] .ssh-overview-glass { width: 100%; height: 100%; max-height: none; }
+  [data-native-shell="true"] .ssh-overview-heading { padding: 12px 14px 6px; gap: 8px; }
+  [data-native-shell="true"] .ssh-overview-heading > div > span { font-size: 10px; letter-spacing: .08em; }
+  [data-native-shell="true"] .ssh-overview-heading h1 { font-size: 21px; margin-top: 4px; }
+  [data-native-shell="true"] .ssh-overview-heading h1 small { display: none; }
+  [data-native-shell="true"] .ssh-overview-heading-actions { gap: 4px; }
+  [data-native-shell="true"] .ssh-overview-heading-actions button { min-height: 36px; padding: 4px 6px; font-size: 12px; }
+  [data-native-shell="true"] .ssh-overview-summary { padding: 4px 14px 8px; gap: 14px; font-size: 12px; }
+  [data-native-shell="true"] .ssh-overview-summary strong { font-size: 18px; }
+  [data-native-shell="true"] .ssh-overview-nav { gap: 12px; padding: 0 14px; overflow-x: auto; flex-shrink: 0; white-space: nowrap; touch-action: pan-x; }
+  [data-native-shell="true"] .ssh-overview-nav button { flex-shrink: 0; font-size: 12px; padding: 10px 0; }
+  [data-native-shell="true"] .ssh-overview-content { padding: 10px 14px; min-height: 0; overflow-y: auto; }
+  [data-native-shell="true"] .ssh-overview-search { min-height: 38px; margin-bottom: 8px; }
+  [data-native-shell="true"] .ssh-overview-search input { font-size: 13px; }
+  [data-native-shell="true"] .ssh-overview-row { min-height: 56px; padding: 8px 0; gap: 8px; }
+  [data-native-shell="true"] .ssh-overview-row strong { font-size: 14px; }
+  [data-native-shell="true"] .ssh-overview-row small { font-size: 12px; }
+  [data-native-shell="true"] .ssh-overview-footer { padding: 6px 14px; font-size: 11px; }
+  [data-native-shell="true"] :is(.ssh-library, .ssh-hosts, .ssh-key-library, .ssh-shortcuts) { font-size: 13px; line-height: 1.6; }
+  [data-native-shell="true"] :is(.ssh-library h2, .ssh-catalog-heading h2, .ssh-shortcuts h2) { font-size: 20px; margin: 8px 0; }
+  [data-native-shell="true"] .ssh-host-fields { gap: 10px 12px; }
+  [data-native-shell="true"] .ssh-host-fields label { font-size: 11px; gap: 4px; }
+  [data-native-shell="true"] .ssh-hosts :is(input, select, textarea) { font-size: 13px; min-height: 34px; padding: 5px 2px; }
+  [data-native-shell="true"] .ssh-host-fields input[type="checkbox"] { min-height: 0; }
+  [data-native-shell="true"] .ssh-host-editor-actions { flex-wrap: wrap; gap: 8px; }
+  [data-native-shell="true"] .ssh-host-editor-actions button { min-height: 36px; font-size: 12px; }
+  [data-native-shell="true"] #stage[data-layout="portrait"] .detail-content { top: 43%; bottom: 24px; overflow-y: auto; font-size: 13px; }
+  [data-native-shell="true"] #stage[data-layout="portrait"] .object-caption { bottom: 57%; }
+  [data-native-shell="true"] #stage[data-layout="portrait"] .detail-content :is(h2, .detail-title-cn) { font-size: 19px; margin-top: 6px; }
+  [data-native-shell="true"] #stage .ssh-detail p { font-size: 13px; line-height: 1.65; }
+  [data-native-shell="true"] #stage .ssh-prompt { background: linear-gradient(180deg, transparent, var(--theme-paper) 42%); }
+  [data-native-shell="true"] #stage .ssh-prompt-panel { left: 16px; right: 16px; width: auto; top: min(32%, 210px); bottom: 14px; max-height: none; font-size: 13px; }
+  [data-native-shell="true"] #stage .ssh-prompt-panel h2 { font-size: 22px; }
+  [data-native-shell="true"] #stage .ssh-prompt-back { left: 16px; top: 64px; font-size: 18px; }
+  [data-native-shell="true"] #stage .ssh-prompt-back kbd { display: none; }
+  [data-native-shell="true"] .ssh-terminal-bar { padding: 4px 7px; gap: 6px; flex-wrap: wrap; min-height: 35px; letter-spacing: 0; }
+  [data-native-shell="true"] .ssh-terminal-target { max-width: calc(100% - 148px); font-size: 12px; flex: 1; }
+  [data-native-shell="true"] .ssh-terminal-phase { display: none; }
+  [data-native-shell="true"] .ssh-terminal-bar :is(.ssh-terminal-audit, .ssh-terminal-teardown) { display: none; }
+  [data-native-shell="true"] .ssh-terminal-bar :is(.ssh-terminal-close, .ssh-terminal-settings, .ssh-terminal-reconnect) { min-height: 30px; padding: 3px 6px; font-size: 12px; }
+  [data-native-shell="true"] .ssh-workspace-tabs { order: 5; flex: 1 0 100%; gap: 24px; height: 32px; justify-content: center; margin: 0; font-size: 12px; }
+  [data-native-shell="true"] .ssh-session-navigation { padding: 0 7px; min-height: 32px; gap: 4px; }
+  [data-native-shell="true"] .ssh-session-tabs { min-width: 0; max-width: 100%; touch-action: pan-x; }
+  [data-native-shell="true"] .ssh-session-tab { font-size: 12px; }
+  [data-native-shell="true"] .ssh-terminal-screen { padding: 3px 4px; }
+  [data-native-shell="true"] .ssh-terminal-status { min-height: 28px; padding: 0 7px; gap: 9px; font-size: 11px; letter-spacing: 0; }
+  [data-native-shell="true"] .ssh-terminal-status [data-stat="elapsed"], [data-native-shell="true"] .ssh-terminal-shortcut span { display: none; }
+  [data-native-shell="true"] .ssh-terminal-tools { padding: 5px 8px; max-height: 32vh; overflow-y: auto; }
+  [data-native-shell="true"] .ssh-terminal-find-row { grid-template-columns: minmax(0, 1fr) repeat(3, 30px); gap: 4px; }
+  [data-native-shell="true"] .ssh-terminal-find > span, [data-native-shell="true"] .ssh-terminal-tool-hint { display: none; }
+  [data-native-shell="true"] .ssh-terminal-search-count { grid-row: 2; grid-column: 1 / 3; min-width: 0; text-align: left; font-size: 11px; }
+  [data-native-shell="true"] .ssh-terminal-tools [data-terminal-tool="return"] { grid-column: 3 / 5; grid-row: 2; }
+  [data-native-shell="true"] .ssh-terminal-tool-actions { flex-wrap: wrap; gap: 7px; }
+  [data-native-shell="true"] .ssh-terminal-font { gap: 4px; }
+  [data-native-shell="true"] .ssh-terminal-auth { padding: 10px; font-size: 12px; }
+  [data-native-shell="true"] .ssh-monitor { padding: 10px; font-size: 12px; }
+  [data-native-shell="true"] .ssh-workspace-side { min-width: 0; }
+  [data-native-shell="true"] .ssh-transfer-drawer { max-height: 42vh; overflow-y: auto; }
+}

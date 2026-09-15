@@ -1,0 +1,637 @@
+{
+  "checks": {
+    "expanded overview keeps background controls out of keyboard focus": true,
+    "overview has a direct host-detail route without connecting": true,
+    "collapsing restores description, read button and both navigation axes": true,
+    "collapsed sheet cannot trap Tab in invisible fields": true,
+    "a real click opens the model selected by the wheel": true,
+    "holding a selected model raises only that file": true,
+    "a short pull returns to the array without opening": true,
+    "pulling back before release cancels a previously crossed threshold": true,
+    "a committed manual extraction opens host details": true,
+    "free plane drags can turn without extracting a model": true,
+    "touch cancellation returns the model without opening or changing selection": true,
+    "touch extraction uses the same host-detail route": true,
+    "authentication back still cancels the attempt": true,
+    "terminal collapse returns to this host instead of the global overview": true,
+    "clicking the detail model reopens the same terminal buffer": true,
+    "Escape remains terminal input": true,
+    "the array exposes the retained terminal outside the model": true,
+    "the outer terminal button resumes without reconnecting": true,
+    "reopening during reassembly preserves session and final focus": true,
+    "later archive navigation survives the terminal exit callback": true,
+    "archive controls remain reachable at 1920x1080 DPR 1": true,
+    "archive controls remain reachable at 1366x768 DPR 1.25": true,
+    "archive controls remain reachable at 2560x1440 DPR 1.5": true,
+    "reload restores original controls without auto-connecting": true,
+    "reduced motion keeps the same return hierarchy and connection": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {
+    "pullStarts": [
+      {
+        "point": {
+          "x": 592.2,
+          "y": 283.4
+        },
+        "baseline": {
+          "position": [
+            0,
+            -1.9097,
+            -2.17
+          ],
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "up": {
+            "x": 0,
+            "y": -139.1304347826087
+          }
+        },
+        "state": {
+          "pull": {
+            "active": false,
+            "progress": 0.02881057161435983,
+            "ready": false
+          },
+          "holding": true,
+          "drag": null,
+          "detail": 0.002,
+          "extraction": 0.505,
+          "position": [
+            0,
+            -1.8873,
+            -2.17
+          ],
+          "hover": null,
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "inert": false
+        }
+      },
+      {
+        "point": {
+          "x": 593.4,
+          "y": 281.4
+        },
+        "baseline": {
+          "position": [
+            0,
+            -1.8921,
+            -2.17
+          ],
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "up": {
+            "x": 0,
+            "y": -139.1304347826087
+          }
+        },
+        "state": {
+          "pull": {
+            "active": false,
+            "progress": 0.03411350504586464,
+            "ready": false
+          },
+          "holding": true,
+          "drag": null,
+          "detail": 0,
+          "extraction": 0.524,
+          "position": [
+            0,
+            -1.8719,
+            -2.17
+          ],
+          "hover": null,
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "inert": false
+        }
+      },
+      {
+        "point": {
+          "x": 593.4,
+          "y": 282.2
+        },
+        "baseline": {
+          "position": [
+            0,
+            -1.9171,
+            -2.17
+          ],
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "up": {
+            "x": 0,
+            "y": -139.1304347826087
+          }
+        },
+        "state": {
+          "pull": {
+            "active": false,
+            "progress": 0.03080421086224123,
+            "ready": false
+          },
+          "holding": true,
+          "drag": null,
+          "detail": 0,
+          "extraction": 0.512,
+          "position": [
+            0,
+            -1.8839,
+            -2.17
+          ],
+          "hover": null,
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "inert": false
+        }
+      }
+    ],
+    "pullMoves": [
+      {
+        "point": {
+          "x": 592.2,
+          "y": 283.4
+        },
+        "lift": 0.55,
+        "destination": {
+          "x": 592.2,
+          "y": 206.8782608695652
+        },
+        "state": {
+          "pull": {
+            "active": true,
+            "progress": 0.18118610866498389,
+            "ready": false
+          },
+          "holding": true,
+          "drag": null,
+          "detail": 0.002,
+          "extraction": 1.061,
+          "position": [
+            0,
+            -1.3321,
+            -2.17
+          ],
+          "hover": null,
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "inert": false
+        }
+      },
+      {
+        "point": {
+          "x": 593.4,
+          "y": 281.4
+        },
+        "lift": 1.6,
+        "destination": {
+          "x": 593.4,
+          "y": 58.79130434782607
+        },
+        "state": {
+          "pull": {
+            "active": true,
+            "progress": 0.4779410393120596,
+            "ready": true
+          },
+          "holding": true,
+          "drag": null,
+          "detail": 0,
+          "extraction": 2.144,
+          "position": [
+            0,
+            -0.2518,
+            -2.17
+          ],
+          "hover": null,
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "inert": false
+        }
+      },
+      {
+        "point": {
+          "x": 593.4,
+          "y": 281.4
+        },
+        "lift": 0.2,
+        "destination": {
+          "x": 593.4,
+          "y": 253.57391304347823
+        },
+        "state": {
+          "pull": {
+            "active": true,
+            "progress": 0.08959193542077241,
+            "ready": false
+          },
+          "holding": true,
+          "drag": null,
+          "detail": 0,
+          "extraction": 0.727,
+          "position": [
+            0,
+            -1.6693,
+            -2.17
+          ],
+          "hover": null,
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "inert": false
+        }
+      },
+      {
+        "point": {
+          "x": 593.4,
+          "y": 282.2
+        },
+        "lift": 1.6,
+        "destination": {
+          "x": 593.4,
+          "y": 59.59130434782608
+        },
+        "state": {
+          "pull": {
+            "active": true,
+            "progress": 0.4746622907797855,
+            "ready": true
+          },
+          "holding": true,
+          "drag": null,
+          "detail": 0,
+          "extraction": 2.133,
+          "position": [
+            0,
+            -0.2638,
+            -2.17
+          ],
+          "hover": null,
+          "cell": {
+            "lane": 1,
+            "row": 13
+          },
+          "inert": false
+        }
+      }
+    ],
+    "interruptedClose": 0.8715000000000034,
+    "layouts": [
+      {
+        "width": 1920,
+        "height": 1080,
+        "dpr": 1,
+        "controls": [
+          {
+            "selector": ".read-file",
+            "rect": {
+              "x": 1028,
+              "y": 704,
+              "width": 185,
+              "height": 32,
+              "top": 704,
+              "right": 1213,
+              "bottom": 736,
+              "left": 1028
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": ".archive-session",
+            "rect": {
+              "x": 1028,
+              "y": 754,
+              "width": 86.90625,
+              "height": 36,
+              "top": 754,
+              "right": 1114.90625,
+              "bottom": 790,
+              "left": 1028
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": ".ssh-overview-restore",
+            "rect": {
+              "x": 781.671875,
+              "y": 46,
+              "width": 356.65625,
+              "height": 44,
+              "top": 46,
+              "right": 1138.328125,
+              "bottom": 90,
+              "left": 781.671875
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"prev\"]",
+            "rect": {
+              "x": 504,
+              "y": 903,
+              "width": 46,
+              "height": 46,
+              "top": 903,
+              "right": 550,
+              "bottom": 949,
+              "left": 504
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"next\"]",
+            "rect": {
+              "x": 630,
+              "y": 903,
+              "width": 46,
+              "height": 46,
+              "top": 903,
+              "right": 676,
+              "bottom": 949,
+              "left": 630
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"column-prev\"]",
+            "rect": {
+              "x": 1005,
+              "y": 903,
+              "width": 46,
+              "height": 46,
+              "top": 903,
+              "right": 1051,
+              "bottom": 949,
+              "left": 1005
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"column-next\"]",
+            "rect": {
+              "x": 1239,
+              "y": 903,
+              "width": 46,
+              "height": 46,
+              "top": 903,
+              "right": 1285,
+              "bottom": 949,
+              "left": 1239
+            },
+            "hit": true,
+            "visible": true
+          }
+        ]
+      },
+      {
+        "width": 1366,
+        "height": 768,
+        "dpr": 1.25,
+        "controls": [
+          {
+            "selector": ".read-file",
+            "rect": {
+              "x": 731.3555908203125,
+              "y": 500.6222229003906,
+              "width": 131.5555419921875,
+              "height": 22.755584716796875,
+              "top": 500.6222229003906,
+              "right": 862.9111328125,
+              "bottom": 523.3778076171875,
+              "left": 731.3555908203125
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": ".archive-session",
+            "rect": {
+              "x": 731.3555908203125,
+              "y": 536.1777954101562,
+              "width": 61.79998779296875,
+              "height": 25.5999755859375,
+              "top": 536.1777954101562,
+              "right": 793.1555786132812,
+              "bottom": 561.7777709960938,
+              "left": 731.3555908203125
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": ".ssh-overview-restore",
+            "rect": {
+              "x": 504.671875,
+              "y": 42,
+              "width": 356.65625,
+              "height": 44,
+              "top": 42,
+              "right": 861.328125,
+              "bottom": 86,
+              "left": 504.671875
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"prev\"]",
+            "rect": {
+              "x": 358.5666809082031,
+              "y": 642.1333618164062,
+              "width": 32.71112060546875,
+              "height": 32.71112060546875,
+              "top": 642.1333618164062,
+              "right": 391.2778015136719,
+              "bottom": 674.844482421875,
+              "left": 358.5666809082031
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"next\"]",
+            "rect": {
+              "x": 448.16668701171875,
+              "y": 642.1333618164062,
+              "width": 32.711090087890625,
+              "height": 32.71112060546875,
+              "top": 642.1333618164062,
+              "right": 480.8777770996094,
+              "bottom": 674.844482421875,
+              "left": 448.16668701171875
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"column-prev\"]",
+            "rect": {
+              "x": 715.0111083984375,
+              "y": 642.1333618164062,
+              "width": 32.71112060546875,
+              "height": 32.71112060546875,
+              "top": 642.1333618164062,
+              "right": 747.7222290039062,
+              "bottom": 674.844482421875,
+              "left": 715.0111083984375
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"column-next\"]",
+            "rect": {
+              "x": 881.4111328125,
+              "y": 642.1333618164062,
+              "width": 32.71112060546875,
+              "height": 32.71112060546875,
+              "top": 642.1333618164062,
+              "right": 914.1222534179688,
+              "bottom": 674.844482421875,
+              "left": 881.4111328125
+            },
+            "hit": true,
+            "visible": true
+          }
+        ]
+      },
+      {
+        "width": 2560,
+        "height": 1440,
+        "dpr": 1.5,
+        "controls": [
+          {
+            "selector": ".read-file",
+            "rect": {
+              "x": 1370.666748046875,
+              "y": 938.6666870117188,
+              "width": 246.6666259765625,
+              "height": 42.66668701171875,
+              "top": 938.6666870117188,
+              "right": 1617.3333740234375,
+              "bottom": 981.3333740234375,
+              "left": 1370.666748046875
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": ".archive-session",
+            "rect": {
+              "x": 1370.666748046875,
+              "y": 1005.3333740234375,
+              "width": 115.875,
+              "height": 48,
+              "top": 1005.3333740234375,
+              "right": 1486.541748046875,
+              "bottom": 1053.3333740234375,
+              "left": 1370.666748046875
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": ".ssh-overview-restore",
+            "rect": {
+              "x": 1101.671875,
+              "y": 46,
+              "width": 356.65625,
+              "height": 44,
+              "top": 46,
+              "right": 1458.328125,
+              "bottom": 90,
+              "left": 1101.671875
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"prev\"]",
+            "rect": {
+              "x": 672,
+              "y": 1204,
+              "width": 61.3333740234375,
+              "height": 61.3333740234375,
+              "top": 1204,
+              "right": 733.3333740234375,
+              "bottom": 1265.3333740234375,
+              "left": 672
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"next\"]",
+            "rect": {
+              "x": 840,
+              "y": 1204,
+              "width": 61.3333740234375,
+              "height": 61.3333740234375,
+              "top": 1204,
+              "right": 901.3333740234375,
+              "bottom": 1265.3333740234375,
+              "left": 840
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"column-prev\"]",
+            "rect": {
+              "x": 1340,
+              "y": 1204,
+              "width": 61.3333740234375,
+              "height": 61.3333740234375,
+              "top": 1204,
+              "right": 1401.3333740234375,
+              "bottom": 1265.3333740234375,
+              "left": 1340
+            },
+            "hit": true,
+            "visible": true
+          },
+          {
+            "selector": "[data-action=\"column-next\"]",
+            "rect": {
+              "x": 1652,
+              "y": 1204,
+              "width": 61.3333740234375,
+              "height": 61.3333740234375,
+              "top": 1204,
+              "right": 1713.3333740234375,
+              "bottom": 1265.3333740234375,
+              "left": 1652
+            },
+            "hit": true,
+            "visible": true
+          }
+        ]
+      }
+    ]
+  }
+}

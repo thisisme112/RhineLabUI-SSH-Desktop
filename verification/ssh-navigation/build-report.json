@@ -1,0 +1,25 @@
+{
+  "date": "2026-09-14",
+  "artifacts": [
+    {
+      "file": "release/desktop/RhineLab-Portable-1.0.0.exe",
+      "bytes": 157561285,
+      "sha256": "6f13da64b6183ec1327b01bedf556e7cda38b751d98bc420bfee490d40d3d5d8"
+    },
+    {
+      "file": "release/desktop/RhineLab-Setup-1.0.0.exe",
+      "bytes": 157782662,
+      "sha256": "c3f28ba15debc3b8759e7a43368181d90c01e1cdfe8f2ba8861e110f8a64874c"
+    }
+  ],
+  "renderer": {
+    "file": "assets/index-BBYi9xZN.js",
+    "sha256": "7e3cdcc791cfbc6154f838bad76273186dde6c89f5b5001518a73c51e3b665d6",
+    "packagedBytesMatch": true
+  },
+  "desktopOnlyChunksInWeb": [],
+  "webPwa": true,
+  "packagedTestPeer": false,
+  "packagedSmokeReport": false,
+  "stagedSnapshotTypecheck": true
+}

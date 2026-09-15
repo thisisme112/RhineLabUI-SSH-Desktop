@@ -1,0 +1,267 @@
+.ssh-utility-surface {
+  position: absolute;
+  inset: max(24px, env(safe-area-inset-top))
+    max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
+    max(24px, env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 20px;
+  color: var(--theme-ink, #273740);
+  background: rgb(var(--theme-glass-rgb, 240, 242, 235));
+  border: 1px solid #80808035;
+  font:
+    13px MiSans,
+    sans-serif;
+  letter-spacing: 0;
+  touch-action: pan-y;
+}
+.ssh-utility-surface[hidden] {
+  display: none;
+}
+.ssh-utility-surface header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #80808040;
+}
+.ssh-utility-surface header div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.ssh-utility-surface header small {
+  color: var(--theme-cyan, #477680);
+  letter-spacing: 0.1em;
+  font-size: 10px;
+}
+.ssh-utility-surface header strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ssh-utility-surface :is(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+  letter-spacing: 0;
+}
+.ssh-utility-surface button {
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid #80808040;
+  background: transparent;
+  cursor: pointer;
+}
+.ssh-utility-surface button:hover {
+  background: #80808018;
+}
+.ssh-utility-surface button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ssh-utility-surface :focus-visible {
+  outline: 1px solid var(--theme-cyan, #477680);
+  outline-offset: 2px;
+}
+.ssh-utility-surface nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 0;
+}
+.ssh-utility-surface input:not([type="checkbox"]),
+.ssh-utility-surface select,
+.ssh-utility-surface textarea {
+  min-height: 32px;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid #80808080;
+  background: #80808008;
+  padding: 5px;
+}
+.ssh-utility-surface footer {
+  padding-top: 8px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+.ssh-code-editor {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.ssh-editor-status {
+  min-height: 20px;
+  margin: 0 0 6px;
+}
+.ssh-text-editor .cm-scroller {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+.ssh-utility-surface[data-transition="opening"] {
+  animation: ssh-utility-in 0.25s ease both;
+}
+.ssh-utility-surface[data-transition="closing"] {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+@keyframes ssh-utility-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.ssh-quick-search {
+  max-width: 860px;
+  max-height: 720px;
+  margin: auto;
+}
+.ssh-quick-search > input {
+  flex: 0 0 auto;
+  margin-block: 12px;
+  width: 100%;
+}
+.ssh-quick-search [role="listbox"] {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+.ssh-quick-search [role="option"] {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 4px 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  border: 0;
+  border-bottom: 1px solid #80808025;
+}
+.ssh-quick-search [role="option"] small {
+  grid-row: span 2;
+  color: var(--theme-cyan, #477680);
+}
+.ssh-quick-search [role="option"] span {
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ssh-quick-search [aria-selected="true"] {
+  background: #80808015;
+  box-shadow: inset 2px 0 var(--theme-cyan, #477680);
+}
+.ssh-snippet-param {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.ssh-snippet-param input {
+  flex: 1;
+  min-width: 0;
+}
+.ssh-tunnel-list {
+  overflow-y: auto;
+  min-height: 0;
+}
+.ssh-tunnel-list article {
+  padding: 15px 0;
+  border-bottom: 1px solid #80808040;
+}
+.ssh-tunnel-list :is(strong, code) {
+  display: block;
+  margin-bottom: 7px;
+  overflow-wrap: anywhere;
+}
+.ssh-tunnel-list button {
+  margin-right: 8px;
+}
+.ssh-workspace-settings {
+  max-width: 900px;
+  margin-inline: auto;
+}
+.ssh-settings-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.ssh-workspace-settings fieldset {
+  margin: 0 0 18px;
+  padding: 14px 0 16px;
+  border: 0;
+  border-bottom: 1px solid #80808040;
+  min-width: 0;
+}
+.ssh-workspace-settings legend {
+  font-weight: 600;
+  color: var(--theme-cyan, #477680);
+}
+.ssh-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+.ssh-workspace-settings label:not(.ssh-setting-check) {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.ssh-setting-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ssh-settings-scroll p {
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.75;
+}
+.ssh-settings-scroll pre {
+  overflow-x: auto;
+  padding: 12px 0;
+  font-variant-ligatures: none;
+}
+.ssh-settings-import {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #80808030;
+}
+.ssh-settings-import [data-preview],
+.ssh-settings-message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ssh-settings-message {
+  margin: 8px 0 0;
+  max-height: 140px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+.ssh-workspace-settings [hidden] {
+  display: none;
+}
+.ssh-backup-password {
+  margin-bottom: 10px;
+}
+@media (max-width: 700px) {
+  .ssh-utility-surface {
+    inset: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    padding: 12px;
+    font-size: 12px;
+  }
+  .ssh-utility-surface header {
+    padding-bottom: 8px;
+  }
+  .ssh-utility-surface nav {
+    padding-block: 6px;
+  }
+}

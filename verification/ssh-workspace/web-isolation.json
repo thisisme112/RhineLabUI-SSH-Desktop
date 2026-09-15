@@ -1,0 +1,11 @@
+{
+  "files": 829,
+  "scripts": [
+    "dist\\assets\\index-B0cJ679S.js",
+    "dist\\sw.js",
+    "dist\\update.js"
+  ],
+  "unexpected": [],
+  "sshResources": [],
+  "passed": true
+}

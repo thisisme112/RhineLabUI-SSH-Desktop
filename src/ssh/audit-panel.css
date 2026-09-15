@@ -1,0 +1,33 @@
+/* Stored sessions reuse the archive index's modal shell. */
+.ssh-audit { position: absolute; inset: 0; z-index: 30; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; padding: 48px; background: rgba(var(--theme-paper-rgb), .82); color: var(--theme-ink); pointer-events: auto; }
+.ssh-audit[hidden] { display: none; }
+.ssh-audit .ssh-audit-panel { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto; width: min(920px, 100%); max-height: 100%; min-height: 0; box-sizing: border-box; overflow: hidden; padding: 26px 34px; background: var(--theme-panel); border-color: var(--theme-line); }
+.ssh-audit-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 18px; }
+.ssh-audit-head h2 { font-size: 32px; margin: 25px 0 20px; gap: 16px; }
+.ssh-audit-head h2 small { font-size: 13px; }
+.ssh-audit-outcome { color: var(--ssh-text-accent, var(--theme-accent)); font-size: 12px; letter-spacing: 1px; }
+.ssh-audit-summary { margin: 0 0 10px; padding: 12px 0; border-block: 1px solid var(--theme-line); font-size: 12px; color: var(--theme-muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ssh-audit-body { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 0 12px 8px 0; }
+.ssh-audit-body h3 { margin: 22px 0 13px; color: var(--theme-muted); font-size: 12px; font-weight: 500; letter-spacing: 1px; }
+.ssh-audit-phases, .ssh-audit-facts { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.ssh-audit-phases li { display: flex; align-items: baseline; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--theme-line); }
+.ssh-audit-at { margin-left: auto; color: var(--theme-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.ssh-audit-duration { min-width: 74px; text-align: right; font-variant-numeric: tabular-nums; }
+.ssh-audit-facts li { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 7px 18px; padding: 12px 0; border-bottom: 1px solid var(--theme-line); }
+.ssh-audit-fact-label { color: var(--theme-muted); font-size: 12px; }
+.ssh-audit-fact-value { overflow-wrap: anywhere; }
+.ssh-audit-fact-source { grid-column: 2; color: var(--theme-muted); font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
+.ssh-audit-grid { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px 18px; margin: 0; font-size: 13px; }
+.ssh-audit-grid dt { color: var(--theme-muted); font-size: 12px; }
+.ssh-audit-grid dd { margin: 0; font-variant-numeric: tabular-nums; }
+.ssh-audit-command, .ssh-audit-raw pre { margin: 0; padding: 0; color: var(--theme-ink); font: 12px/1.8 ui-monospace, "Cascadia Mono", Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ssh-audit-path { margin: 12px 0 0; color: var(--theme-muted); font: 12px/1.8 ui-monospace, "Cascadia Mono", Consolas, monospace; overflow-wrap: anywhere; }
+.ssh-audit-raw { margin-top: 20px; font-size: 12px; color: var(--theme-muted); }
+.ssh-audit-raw summary { cursor: pointer; }
+.ssh-audit-empty { color: var(--theme-muted); padding: 8px 0; font-size: 12px; }
+.ssh-audit-actions { margin-top: 18px; }
+.ssh-audit-actions .solid-button { flex: 0 1 330px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-audit { padding: 20px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-audit .ssh-audit-panel { padding: 18px 20px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-audit-head h2 { font-size: 24px; flex-wrap: wrap; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-audit-facts li { grid-template-columns: 95px minmax(0, 1fr); gap: 7px 12px; }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The application's own paper, the same value the window, the splash and
+         the web manifest use. The template ships #FFFFFF here. -->
+    <color name="ic_launcher_background">#e8e5e1</color>
+</resources>

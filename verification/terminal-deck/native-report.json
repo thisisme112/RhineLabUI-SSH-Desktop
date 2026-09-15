@@ -1,0 +1,61 @@
+{
+  "date": "2026-09-12",
+  "command": "npm run smoke:desktop:terminal",
+  "environment": "Electron file://, preload IPC, real Windows ConPTY, local fake-ssh child (no remote server)",
+  "bundle": {
+    "file": "assets/index-e9eZ3-EZ.js",
+    "sha256": "57a899847ca2ce78e4f46f259d8a4f92821fc11d671010cfb1afd72762bcb63a"
+  },
+  "checks": {
+    "native desktop loads the terminal insert and original package": true,
+    "native desktop operates on the projected model screen": true,
+    "native terminal includes actual authentication output": true,
+    "native keyboard reaches ConPTY and returns to the model screen": true,
+    "native hidden output survives reassembly and reopening": true,
+    "native exit keeps its final output readable": true,
+    "native resize does not duplicate authentication records": true,
+    "native window resize after exit remains responsive": true
+  },
+  "failed": [],
+  "screen": {
+    "corners": [
+      [
+        323.42675814679205,
+        260.2627496033013
+      ],
+      [
+        1657.489659870137,
+        260.2850699357646
+      ],
+      [
+        1657.46330081362,
+        970.4569293429655
+      ],
+      [
+        323.4533610839966,
+        970.4980086404654
+      ]
+    ],
+    "width": 1339,
+    "height": 713
+  },
+  "screenshots": [
+    {
+      "file": "11-native-terminal.png",
+      "bytes": 617955,
+      "size": "1584x861"
+    },
+    {
+      "file": "12-native-reopened.png",
+      "bytes": 628464,
+      "size": "1584x861"
+    }
+  ],
+  "warnings": [
+    {
+      "kind": "console",
+      "severity": "warning",
+      "message": "THREE.WebGLProgram: Program Info Log: (210,81-129): warning X4122: sum of 0.996094 and -2.98545e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n\n\n\u0000"
+    }
+  ]
+}

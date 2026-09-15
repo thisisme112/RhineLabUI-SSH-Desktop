@@ -1,0 +1,52 @@
+{
+  "checks": {
+    "the phone gets the portrait layout, not a shrunken desktop": true,
+    "the stage fills the viewport instead of being scaled down": true,
+    "back leaves the document for the archive, without leaving the page": true,
+    "back did not reload the app": true,
+    "back closes the viewer and keeps the document underneath": true,
+    "a second back then leaves the document": true,
+    "back closes a dialog rather than leaving the aborted screen": true,
+    "back at the archive is passed through, not swallowed": true,
+    "and the app is still running on the same document": true,
+    "the status bar colour follows the theme": true,
+    "and follows it back to light": true,
+    "every primary control clears 44px on both axes": true,
+    "frame loop stays alive": true
+  },
+  "errors": [],
+  "evidence": {
+    "themeColorLight": "rgb(234, 229, 225)",
+    "themeColorDark": {
+      "meta": "rgb(31, 38, 40)",
+      "paper": "rgb(31, 38, 40)"
+    },
+    "touchTargets": {
+      ".system-nav button": {
+        "width": 44,
+        "height": 44
+      },
+      ".read-file": {
+        "width": 139,
+        "height": 44
+      },
+      ".archive-navigation button": {
+        "width": 46,
+        "height": 46
+      },
+      ".column-navigation button": {
+        "width": 46,
+        "height": 46
+      },
+      ".file-title": {
+        "width": 243,
+        "height": 44
+      },
+      ".file-ticks button": {
+        "width": 27,
+        "height": 44,
+        "count": 8
+      }
+    }
+  }
+}

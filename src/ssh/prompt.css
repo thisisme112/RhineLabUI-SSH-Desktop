@@ -1,0 +1,71 @@
+/* A decision takes the place of the archive's right-hand detail page. */
+.ssh-prompt { position: absolute; inset: 0; z-index: 30; color: var(--theme-ink, #080a08); pointer-events: auto; background: linear-gradient(90deg, rgba(var(--theme-paper-rgb), .02) 35%, rgba(var(--theme-paper-rgb), .92) 58%, var(--theme-paper) 70%); }
+.ssh-prompt[hidden] { display: none; }
+/* The question takes the place of the detail page, so the detail page's own
+   furniture leaves — including its corner button, which the answer layer used
+   to cover and leave visibly dead underneath. */
+[data-ssh-prompt="true"] :is(#detail-content, .back-button) { visibility: hidden; }
+/* Same corner, same metrics as .back-button (style.css:685) — this is the one
+   that actually answers. */
+.ssh-prompt-back {
+  position: absolute;
+  left: 59px;
+  top: 289px;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 24px;
+  padding: 0;
+}
+.ssh-prompt-back span { font-size: 12px; letter-spacing: 1px; }
+.ssh-prompt-back kbd {
+  font-family: inherit;
+  font-size: 10px;
+  margin-left: 18px;
+  padding: 4px;
+  color: var(--theme-muted);
+  border: 1px solid var(--theme-line);
+}
+.ssh-prompt-back:hover { color: var(--theme-accent); }
+.ssh-prompt-panel { position: absolute; left: 60.104167%; top: 235px; width: min(636px, 33.125%); max-height: calc(100% - 395px); overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--theme-line) transparent; padding: 0 3px 14px 0; }
+.ssh-prompt-title { margin: 30px 0 16px; font-size: 40px; line-height: 1.25; letter-spacing: -1px; font-weight: 700; }
+.ssh-prompt .detail-rule { transform-origin: left center; background: var(--theme-ink); }
+.ssh-prompt-kind { color: var(--theme-muted); }
+.ssh-prompt-wait { display: flex; align-items: center; gap: 10px; margin-top: 18px; color: var(--theme-muted); font-size: 12px; letter-spacing: 1px; }
+.ssh-prompt-wait .status-light { margin: 0; background: var(--theme-accent); animation: ssh-await-input 1.8s ease-in-out infinite; }
+@keyframes ssh-await-input { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+.ssh-prompt[data-kind="failure"] .status-light, .reduce-motion .ssh-prompt-wait .status-light { animation: none; }
+.ssh-prompt[data-kind="failure"] .ssh-prompt-kind { color: var(--ssh-text-accent, var(--theme-accent)); }
+.ssh-prompt-lead { margin: 27px 0 24px; font-size: 16px; line-height: 1.9; color: var(--theme-muted); overflow-wrap: anywhere; }
+.ssh-prompt-lead code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px; color: var(--theme-ink); }
+.ssh-prompt-facts { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 14px 20px; margin: 0 0 24px; font-size: 13px; }
+.ssh-prompt-facts dt { color: var(--theme-muted); letter-spacing: .6px; }
+.ssh-prompt-facts dd { margin: 0; overflow-wrap: anywhere; }
+.ssh-prompt-fingerprint { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 15px; user-select: all; }
+.ssh-prompt-field { display: grid; gap: 12px; margin: 0 0 28px; font-size: 12px; color: var(--theme-muted); letter-spacing: 1px; }
+.ssh-prompt-field input { width: 100%; min-width: 0; box-sizing: border-box; height: 54px; padding: 0 4px; background: transparent; border: 0; border-bottom: 2px solid var(--theme-line); border-radius: 0; color: var(--theme-ink); font: inherit; font-size: 22px; letter-spacing: 4px; outline: none; transition: border-color 180ms; }
+.ssh-prompt-field input:focus-visible { border-color: var(--ssh-text-accent, var(--theme-accent)); }
+.ssh-prompt-actions { display: flex; align-items: center; gap: 24px; margin: 0 0 26px; }
+.ssh-prompt-actions .export-button { width: auto; flex-shrink: 0; }
+.ssh-prompt-actions .solid-button { min-width: 0; gap: 18px; }
+.ssh-prompt-actions button:disabled { opacity: .4; cursor: default; }
+.ssh-prompt-actions button:focus-visible { outline: 1px solid var(--theme-accent); outline-offset: 4px; }
+.ssh-prompt-raw { padding-top: 15px; border-top: 1px solid var(--theme-line); font-size: 12px; color: var(--theme-muted); }
+.ssh-prompt-raw summary { cursor: pointer; letter-spacing: .6px; }
+.ssh-prompt-raw pre { max-height: 220px; margin: 12px 0 0; padding: 0; overflow: auto; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ssh-prompt-timeline { margin: 0 0 24px; padding: 0; list-style: none; font-size: 13px; }
+.ssh-prompt-timeline li { display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--theme-line); }
+.ssh-prompt-time { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--theme-muted); }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-prompt-back { left: var(--edge); top: 84px; min-height: 44px; gap: 8px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-prompt-back span { font-size: 13px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-prompt-back kbd { display: none; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-prompt-panel { left: 53%; top: 84px; width: calc(47% - var(--edge)); max-height: none; bottom: 53px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-prompt-title { font-size: 27px; margin: 18px 0 12px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-prompt-lead { font-size: 14px; margin: 20px 0; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-prompt-actions { flex-wrap: wrap; gap: 16px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-prompt-facts { grid-template-columns: 62px minmax(0, 1fr); gap: 10px; }
+[data-layout="portrait"] .ssh-prompt { background: linear-gradient(180deg, transparent 25%, rgba(var(--theme-paper-rgb), .94) 44%, var(--theme-paper) 56%); }
+[data-layout="portrait"] .ssh-prompt-panel { left: var(--edge); right: var(--edge); width: auto; top: 50%; bottom: 35px; }
+[data-layout="portrait"] .ssh-prompt-back { top: 77px; }
+.reduce-motion .ssh-prompt-field input { transition: none; }

@@ -1,0 +1,337 @@
+{
+  "checks": {
+    "overview settings isolate background input": true,
+    "light overview fits 1920x1080 DPR1": true,
+    "light overview fits 2560x1440 DPR1.5": true,
+    "light overview fits 1280x800 DPR1.25": true,
+    "dark overview fits 1920x1080 DPR1": true,
+    "dark overview fits 2560x1440 DPR1.5": true,
+    "dark overview fits 1280x800 DPR1.25": true,
+    "credential failure preserves the saved host identity and input": true,
+    "retry updates the same host and keeps secrets out of profile and workspace JSON": true,
+    "saved passwords are indicated without being returned to the input": true,
+    "key import clears the private field after success": true,
+    "five physical host lanes sit behind a native translucent overview": true,
+    "preview positions the background without creating a session": true,
+    "files directory starts with a genuine empty state": true,
+    "command directory starts with a genuine empty state": true,
+    "history directory starts with a genuine empty state": true,
+    "authentication uses the current host deck and an independent texture source": true,
+    "identical request numbers stay bound to their own session": true,
+    "operating settings button is a real mouse target": true,
+    "native settings preserve the visible terminal and isolate its input": true,
+    "both connections retain independent authentication and buffers": true,
+    "hidden parsers and telemetry continue without chart rendering or fitting": true,
+    "native terminal input is routed only to the selected session": true,
+    "background auxiliary authentication never takes focus": true,
+    "auxiliary answers retain owner through active session switching": true,
+    "switching restores the original directory and scrollback": true,
+    "GPU overview precedes device detail and high load is not a fault": true,
+    "covered 3D stops rendering while terminal and monitoring remain live": true,
+    "resized operating surface stays outside the scaled stage": true,
+    "operating switches retain the open package and exactly one mounted terminal": true,
+    "background samples preserve editor nodes and the current draft": true,
+    "command insertion targets the chosen S ID without sending Enter": true,
+    "ending a session with transfers waits for inline confirmation": true,
+    "stopping from overview retains confirmation on its owning terminal": true,
+    "ending B preserves its output and A remains connected": true,
+    "background ending updates overview without a blocking dialog": true,
+    "history contains real ended sessions": true,
+    "eight sessions retain bounded independent buffers with one visible workspace": true,
+    "closing retains the terminal insert throughout reassembly": true,
+    "outgoing card retains its own host screen and label": true,
+    "quick return does not replace the terminal with the old internal model": true,
+    "reload restores local libraries without reconnecting or executing commands": true,
+    "offline command insertion is disabled": true,
+    "consecutive arrow, Home and End keys remain in the session tab bar": true,
+    "host click resumes its last used session instead of the newest creation": true,
+    "background close preserves the foreground buffer and input": true,
+    "canceling tab close keeps the transfer and session alive": true,
+    "confirmed active tab close returns to the remaining terminal": true,
+    "closing the last tab keeps its terminal picture during reassembly": true,
+    "last tab close returns to an empty interactive overview and retains history": true,
+    "closing the current overview tab does not reopen a terminal": true,
+    "overview can close its final tab without leaving an active connection": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {
+    "overviewGeometry": [
+      {
+        "theme": "light",
+        "width": 1920,
+        "height": 1080,
+        "dpr": 1,
+        "sheet": {
+          "x": 300,
+          "y": 173,
+          "width": 1320,
+          "height": 780
+        },
+        "overflow": false,
+        "brandOverlap": false,
+        "native": true
+      },
+      {
+        "theme": "light",
+        "width": 2560,
+        "height": 1440,
+        "dpr": 1.5,
+        "sheet": {
+          "x": 620,
+          "y": 353,
+          "width": 1320,
+          "height": 780
+        },
+        "overflow": false,
+        "brandOverlap": false,
+        "native": true
+      },
+      {
+        "theme": "light",
+        "width": 1280,
+        "height": 800,
+        "dpr": 1.25,
+        "sheet": {
+          "x": 50,
+          "y": 95,
+          "width": 1180,
+          "height": 652
+        },
+        "overflow": false,
+        "brandOverlap": false,
+        "native": true
+      },
+      {
+        "theme": "dark",
+        "width": 1920,
+        "height": 1080,
+        "dpr": 1,
+        "sheet": {
+          "x": 300,
+          "y": 173,
+          "width": 1320,
+          "height": 780
+        },
+        "overflow": false,
+        "brandOverlap": false,
+        "native": true
+      },
+      {
+        "theme": "dark",
+        "width": 2560,
+        "height": 1440,
+        "dpr": 1.5,
+        "sheet": {
+          "x": 620,
+          "y": 353,
+          "width": 1320,
+          "height": 780
+        },
+        "overflow": false,
+        "brandOverlap": false,
+        "native": true
+      },
+      {
+        "theme": "dark",
+        "width": 1280,
+        "height": 800,
+        "dpr": 1.25,
+        "sheet": {
+          "x": 50,
+          "y": 95,
+          "width": 1180,
+          "height": 652
+        },
+        "overflow": false,
+        "brandOverlap": false,
+        "native": true
+      }
+    ],
+    "fastSwitchMs": 308,
+    "eightSessions": {
+      "sessions": [
+        {
+          "key": "276d69f4-4522-4e65-930a-778d9bd69d16",
+          "id": "783f2a21-48ba-43f3-8ac5-d5932f276c8b",
+          "target": "review-host",
+          "phase": "failed",
+          "active": false,
+          "bufferLines": 26,
+          "directory": "/home/review-host/project",
+          "sampleSequence": 24
+        },
+        {
+          "key": "67d25922-0078-4a9f-9b15-01d55316d55f",
+          "id": "a1cdea23-f6b3-4841-a420-850a5c826079",
+          "target": "second-host",
+          "phase": "closed",
+          "active": false,
+          "bufferLines": 26,
+          "directory": "/home/second-host",
+          "sampleSequence": 27
+        },
+        {
+          "key": "ba375b9b-c959-4239-a4ad-68bb74a87f10",
+          "id": "3f606f0c-63f9-43d8-9956-7111ec3bcafe",
+          "target": "review-host",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/review-host",
+          "sampleSequence": 10
+        },
+        {
+          "key": "e53e151c-939b-4a79-8be5-d63c18267908",
+          "id": "5923baf0-08ed-4fa8-97e8-031eceacdc05",
+          "target": "second-host",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/second-host",
+          "sampleSequence": 10
+        },
+        {
+          "key": "a3465964-0409-49de-a9ba-5ec866e2a2f5",
+          "id": "02716761-70eb-479a-a219-f7f5016cc312",
+          "target": "host-3",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-3",
+          "sampleSequence": 10
+        },
+        {
+          "key": "9fc3acc1-7001-4718-9787-632f97265606",
+          "id": "718bd0c9-4c32-4c26-967f-916a08932612",
+          "target": "host-4",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-4",
+          "sampleSequence": 10
+        },
+        {
+          "key": "954ade09-d687-445e-94ac-431277f66d1d",
+          "id": "b011d06c-e398-4a42-9c43-0460e8bcacb5",
+          "target": "host-5",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-5",
+          "sampleSequence": 10
+        },
+        {
+          "key": "a5c753a8-add2-4b46-9ca1-bbeedae8ac1b",
+          "id": "618f19f7-d0a1-4323-9f50-778372c76255",
+          "target": "host-6",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-6",
+          "sampleSequence": 10
+        },
+        {
+          "key": "ee2ce884-6351-48ca-90bd-a8164721f71a",
+          "id": "0bed0fae-9f13-46c0-838b-b3b822c8517a",
+          "target": "host-7",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-7",
+          "sampleSequence": 10
+        },
+        {
+          "key": "ee57f731-9c28-4a5f-834b-2479cdc355e0",
+          "id": "19e54467-2c01-4494-8bdc-531aae638be6",
+          "target": "host-8",
+          "phase": "interactive",
+          "active": true,
+          "bufferLines": 602,
+          "directory": "/home/host-8",
+          "sampleSequence": 10
+        }
+      ],
+      "rendering": {
+        "frames": 1929,
+        "frozen": false,
+        "returning": 0
+      },
+      "heapBytes": 50477136
+    },
+    "savedWorkspace": {
+      "version": 1,
+      "commands": [
+        {
+          "id": "190335e1-9826-43f9-98fd-739e1d8a75da",
+          "name": "工作目录",
+          "command": "pwd",
+          "note": "只插入，按回车后执行"
+        }
+      ],
+      "bookmarks": [
+        {
+          "alias": "review-host",
+          "path": "/home/review-host/project",
+          "name": "project",
+          "id": "bd387265-0a82-47e8-befa-7fc44661ac1f"
+        }
+      ],
+      "numbers": {
+        "session:directory": 0,
+        "files:directory": 0,
+        "monitor:directory": 0,
+        "command:directory": 0,
+        "history:directory": 0,
+        "session:276d69f4-4522-4e65-930a-778d9bd69d16": 1,
+        "files:session:276d69f4-4522-4e65-930a-778d9bd69d16": 1,
+        "monitor:276d69f4-4522-4e65-930a-778d9bd69d16": 1,
+        "session:67d25922-0078-4a9f-9b15-01d55316d55f": 2,
+        "files:session:67d25922-0078-4a9f-9b15-01d55316d55f": 2,
+        "monitor:67d25922-0078-4a9f-9b15-01d55316d55f": 2,
+        "files:bookmark:bd387265-0a82-47e8-befa-7fc44661ac1f": 3,
+        "command:190335e1-9826-43f9-98fd-739e1d8a75da": 1,
+        "history:a1cdea23-f6b3-4841-a420-850a5c826079.json": 1,
+        "history:783f2a21-48ba-43f3-8ac5-d5932f276c8b.json": 2,
+        "session:ba375b9b-c959-4239-a4ad-68bb74a87f10": 3,
+        "files:session:ba375b9b-c959-4239-a4ad-68bb74a87f10": 4,
+        "monitor:ba375b9b-c959-4239-a4ad-68bb74a87f10": 3,
+        "session:e53e151c-939b-4a79-8be5-d63c18267908": 4,
+        "files:session:e53e151c-939b-4a79-8be5-d63c18267908": 5,
+        "monitor:e53e151c-939b-4a79-8be5-d63c18267908": 4,
+        "session:a3465964-0409-49de-a9ba-5ec866e2a2f5": 5,
+        "files:session:a3465964-0409-49de-a9ba-5ec866e2a2f5": 6,
+        "monitor:a3465964-0409-49de-a9ba-5ec866e2a2f5": 5,
+        "session:9fc3acc1-7001-4718-9787-632f97265606": 6,
+        "files:session:9fc3acc1-7001-4718-9787-632f97265606": 7,
+        "monitor:9fc3acc1-7001-4718-9787-632f97265606": 6,
+        "session:954ade09-d687-445e-94ac-431277f66d1d": 7,
+        "files:session:954ade09-d687-445e-94ac-431277f66d1d": 8,
+        "monitor:954ade09-d687-445e-94ac-431277f66d1d": 7,
+        "session:a5c753a8-add2-4b46-9ca1-bbeedae8ac1b": 8,
+        "files:session:a5c753a8-add2-4b46-9ca1-bbeedae8ac1b": 9,
+        "monitor:a5c753a8-add2-4b46-9ca1-bbeedae8ac1b": 8,
+        "session:ee2ce884-6351-48ca-90bd-a8164721f71a": 9,
+        "files:session:ee2ce884-6351-48ca-90bd-a8164721f71a": 10,
+        "monitor:ee2ce884-6351-48ca-90bd-a8164721f71a": 9,
+        "session:ee57f731-9c28-4a5f-834b-2479cdc355e0": 10,
+        "files:session:ee57f731-9c28-4a5f-834b-2479cdc355e0": 11,
+        "monitor:ee57f731-9c28-4a5f-834b-2479cdc355e0": 10
+      },
+      "layouts": {
+        "review-host": {
+          "width": 320,
+          "page": "files"
+        },
+        "host-8": {
+          "width": 320,
+          "page": "monitor"
+        }
+      }
+    },
+    "tabLifecycle": {
+      "ended": 5,
+      "finalSessions": 0
+    }
+  }
+}

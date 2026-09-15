@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-09-13T19:13:33.008Z",
+  "scope": "Built web and Wallpaper Engine artifacts: desktop SSH UI, xterm, credential IPC, terminal model and native programs must be absent.",
+  "runtimeMarkers": [
+    "rhine.ssh.workspace",
+    "ssh-overview-glass",
+    "ssh-session-navigation",
+    "ssh-workspace-tabs",
+    "ssh-terminal-screen",
+    "xterm-helper-textarea",
+    "credentials:save",
+    "keys:add",
+    "session:reserve"
+  ],
+  "targets": [
+    {
+      "folder": "dist",
+      "runtimeFilesChecked": 6,
+      "filesChecked": 829,
+      "runtimeMatches": [],
+      "nativeAssets": [],
+      "passed": true
+    },
+    {
+      "folder": "release/wallpaper",
+      "runtimeFilesChecked": 3,
+      "filesChecked": 826,
+      "runtimeMatches": [],
+      "nativeAssets": [],
+      "passed": true
+    }
+  ],
+  "desktop": {
+    "overview": true,
+    "sessionTabs": true,
+    "xterm": true,
+    "terminalAsset": true
+  },
+  "entryBundles": [
+    {
+      "file": "dist/assets/index-BWDqWq0U.js",
+      "sha256": "3e75be7ddd0e6a88ee9c2fd2b4d5ce8e441689c51cb654ed3e6be845a421b5b0"
+    },
+    {
+      "file": "release/wallpaper/assets/index-rhn42_Im.js",
+      "sha256": "a24e638f0b1052c452627b51fb9ba060e0430436c0e55cf66c0eec989042eda0"
+    },
+    {
+      "file": "dist-desktop/assets/index-D1drndDh.js",
+      "sha256": "e52d8ecea5e0ebfa7b3527703cf1215b4087d2fb239946c1abf718754d164646"
+    }
+  ]
+}

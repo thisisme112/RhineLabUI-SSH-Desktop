@@ -1,0 +1,423 @@
+/*
+ * Session terminal surface.
+ *
+ * Deliberately built from the same materials as the rest of the app — warm
+ * grey-white surface, hairline rules, near-black text, one warm accent — rather
+ * than a conventional dark terminal panel dropped on top of it.
+ */
+.ssh-terminal {
+  --terminal-bg: #eae5e1;
+  --terminal-fg: #080a08;
+  --terminal-line: #d5cfc7;
+  --terminal-muted: #626158;
+  --terminal-accent: #835b32;
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--terminal-bg);
+  color: var(--terminal-fg);
+  font-family: MiSans, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  pointer-events: auto;
+}
+
+.ssh-terminal[data-dark="true"] {
+  --terminal-bg: #232521;
+  --terminal-fg: #ece7dd;
+  --terminal-line: #494c43;
+  --terminal-muted: #b2ad9f;
+  --terminal-accent: #cda265;
+}
+
+.ssh-terminal[data-presentation="deck"] {
+  inset: auto;
+  top: 0;
+  left: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.ssh-terminal[data-surface-covered="true"] {
+  visibility: hidden;
+}
+
+.ssh-terminal[hidden],
+.ssh-terminal [hidden] {
+  display: none;
+}
+
+.ssh-terminal-bar,
+.ssh-terminal-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--terminal-muted);
+}
+
+.ssh-terminal-bar {
+  min-height: 44px;
+  border-bottom: 1px solid var(--terminal-line);
+}
+
+.ssh-terminal-foot {
+  border-top: 1px solid var(--terminal-line);
+  font-variant-numeric: tabular-nums;
+  color: var(--terminal-muted);
+  font-size: 12px;
+}
+
+.ssh-terminal-status {
+  min-height: 32px;
+}
+
+.ssh-terminal-target {
+  color: var(--terminal-fg);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ssh-terminal-phase {
+  color: var(--terminal-accent);
+  white-space: nowrap;
+}
+
+/* A stalled phase is a real state, so it is shown rather than animated over. */
+.ssh-terminal-phase[data-stalled="true"]::after {
+  content: " · 等待中";
+  color: #a8412f;
+}
+
+.ssh-terminal-phase[data-phase="failed"] {
+  color: #a8412f;
+}
+
+.ssh-terminal-close,
+.ssh-terminal-reconnect,
+.ssh-terminal-audit,
+.ssh-terminal-teardown {
+  padding: 8px 14px;
+  min-height: 32px;
+  border: 1px solid var(--terminal-line);
+  background: transparent;
+  color: var(--terminal-fg);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 180ms;
+}
+.ssh-terminal-audit {
+  margin-left: auto;
+}
+
+.ssh-terminal-close:hover,
+.ssh-terminal-close:focus-visible,
+.ssh-terminal-reconnect:hover,
+.ssh-terminal-reconnect:focus-visible,
+.ssh-terminal-audit:hover,
+.ssh-terminal-audit:focus-visible,
+.ssh-terminal-teardown:hover,
+.ssh-terminal-teardown:focus-visible {
+  border-color: var(--terminal-accent);
+  color: var(--terminal-accent);
+  outline: none;
+}
+/* The teardown reads as the one structural action in the bar, so it carries the
+   accent at rest rather than only on hover. (`.ssh-terminal-audit` already owns
+   the bar's auto margin, so this one adds none.) */
+.ssh-terminal-teardown {
+  color: var(--terminal-accent);
+}
+
+.ssh-terminal-screen {
+  min-height: 0;
+  padding: 6px 9px;
+  overflow: hidden;
+}
+.ssh-terminal-font-value { width: 48px; min-width: 0; border: 0; border-bottom: 1px solid var(--terminal-line); background: transparent; color: var(--terminal-fg); font: inherit; padding: 3px; text-align: center; }
+
+.ssh-terminal-auth {
+  min-height: 0;
+  margin: 0;
+  padding: 16px 20px;
+  overflow: auto;
+  font:
+    14px/1.6 "Cascadia Mono",
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ssh-terminal-shortcut {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.ssh-terminal-shortcut,
+.ssh-terminal-tools button {
+  padding: 4px 7px;
+  min-height: 28px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--terminal-fg);
+  font: inherit;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 180ms,
+    border-color 180ms;
+}
+
+.ssh-terminal-shortcut span {
+  margin-left: 10px;
+  color: var(--terminal-muted);
+  font-size: 12px;
+}
+
+.ssh-terminal-shortcut[aria-expanded="true"],
+.ssh-terminal-tools [aria-pressed="true"],
+.ssh-terminal-shortcut:is(:hover, :focus-visible),
+.ssh-terminal-tools button:is(:hover, :focus-visible):not(:disabled) {
+  border-color: var(--terminal-accent);
+  color: var(--terminal-accent);
+  outline: none;
+}
+
+.ssh-terminal-tools button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ssh-terminal-tools {
+  padding: 8px 20px 6px;
+  border-bottom: 1px solid var(--terminal-line);
+}
+
+.ssh-terminal-find-row {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 1fr)
+    max-content 30px 30px 34px max-content;
+  align-items: center;
+  gap: 10px;
+}
+
+.ssh-terminal-find {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ssh-terminal-find > span {
+  flex: 0 0 auto;
+  color: var(--terminal-accent);
+}
+
+.ssh-terminal .ssh-terminal-query {
+  min-width: 0;
+  width: 100%;
+  height: 32px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px solid var(--terminal-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--terminal-fg);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 180ms;
+}
+
+.ssh-terminal .ssh-terminal-query:focus {
+  border-color: var(--terminal-accent);
+}
+
+.ssh-terminal .ssh-terminal-query::placeholder {
+  color: var(--terminal-muted);
+}
+
+.ssh-terminal-search-count {
+  min-width: 64px;
+  text-align: right;
+}
+
+.ssh-terminal-search-count[data-empty="true"] {
+  color: var(--terminal-accent);
+}
+
+.ssh-terminal-tool-actions,
+.ssh-terminal-font {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ssh-terminal-tool-actions {
+  margin-top: 6px;
+}
+
+.ssh-terminal-font {
+  gap: 6px;
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px solid var(--terminal-line);
+}
+
+.ssh-terminal-font > span {
+  margin-right: 6px;
+}
+
+.ssh-terminal-font [data-terminal-tool="font"] {
+  min-width: 30px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ssh-terminal-tool-hint {
+  margin-left: auto;
+  letter-spacing: 0.02em;
+}
+
+.ssh-terminal-tool-feedback {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--terminal-accent);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#stage[data-ssh-deck="true"] .object-caption .viewer-open {
+  display: none;
+}
+#stage[data-ssh-deck="true"] .object-caption small {
+  opacity: calc(1 - var(--ssh-focus, 0));
+}
+#stage[data-ssh-deck="true"]
+  :is(.object-caption, .detail-ui > .back-button, .powered) {
+  opacity: calc(1 - var(--ssh-focus, 0));
+}
+#stage[data-ssh-deck="true"] :is(#inspection-marks, #inspection-text) {
+  visibility: hidden;
+}
+
+/* Keep the original brand above the closer screen. Follow the same continuous
+   opening progress, including a reversal; compact layouts already have a HUD. */
+#stage[data-layout="desktop"][data-ssh-deck="true"] .brand {
+  transform-origin: top left;
+  translate: 0 calc(-80px * var(--ssh-focus, 0));
+  scale: calc(1 - 0.5 * var(--ssh-focus, 0));
+}
+
+@media (max-width: 800px) {
+  .ssh-terminal-bar,
+  .ssh-terminal-status {
+    gap: 8px;
+    padding-inline: 12px;
+    letter-spacing: 0;
+  }
+  .ssh-terminal-screen {
+    padding-inline: 12px;
+  }
+  .ssh-terminal-tools {
+    padding-inline: 12px;
+  }
+  .ssh-terminal-shortcut span,
+  .ssh-terminal-tool-hint {
+    display: none;
+  }
+  .ssh-terminal-tool-actions {
+    gap: 6px;
+  }
+  .ssh-terminal-font {
+    margin-left: auto;
+    padding-left: 10px;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .ssh-terminal-tools {
+    padding: 5px 12px;
+  }
+  .ssh-terminal-find-row {
+    grid-template-columns:
+      minmax(140px, 1fr)
+      max-content 24px 24px 28px max-content;
+    gap: 6px;
+  }
+  .ssh-terminal-find {
+    gap: 8px;
+  }
+  .ssh-terminal .ssh-terminal-query {
+    height: 28px;
+    font-size: 13px;
+  }
+  .ssh-terminal-tools button {
+    min-height: 26px;
+    padding: 2px 4px;
+  }
+  .ssh-terminal-tool-actions {
+    margin-top: 3px;
+  }
+  .ssh-terminal-tool-hint {
+    display: none;
+  }
+}
+
+.ssh-terminal-screen .xterm {
+  height: 100%;
+  letter-spacing: 0;
+  font-kerning: none;
+  font-variant-ligatures: none;
+}
+
+.ssh-terminal-typography { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 6px; font-size: 12px; letter-spacing: 0; }
+.ssh-terminal-typography label { display: flex; align-items: center; gap: 6px; }
+.ssh-terminal-typography input { width: 58px; }
+.ssh-terminal-typography :is(select, input) { min-height: 28px; color: inherit; background: transparent; border: 0; border-bottom: 1px solid currentColor; font: inherit; }
+.ssh-terminal-typography select { max-width: 155px; }
+.ssh-terminal-tools { max-height: 45vh; overflow-y: auto; touch-action: pan-y; }
+
+.ssh-terminal-exit {
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #a8412f;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.ssh-terminal-stat {
+  white-space: nowrap;
+}
+
+.ssh-terminal :is(.ssh-terminal-search-all,.ssh-terminal-recovery,.ssh-terminal-split-select) { font: inherit; color: var(--terminal-fg); background: transparent; border: 0; padding: 5px; letter-spacing: 0; cursor: pointer; }
+.ssh-terminal-split-select { max-width: 95px; }
+.ssh-dual-layout { display: grid; grid-template-columns: minmax(0,var(--ssh-split-ratio,50%)) 7px minmax(0,1fr); min-width: 0; min-height: 0; overflow: hidden; }
+.ssh-dual-divider { background: var(--terminal-line); cursor: col-resize; touch-action: none; }
+.ssh-terminal.ssh-split-secondary, .ssh-terminal.ssh-split-secondary.has-session-navigation { position: relative; inset: auto !important; width: auto !important; height: 100% !important; min-width: 0; transform: none !important; border: 0; overflow: hidden; grid-template-rows: auto minmax(0,1fr) auto auto; }
+.ssh-split-secondary > .ssh-session-navigation { display: none; }
+.ssh-split-secondary :is(.ssh-terminal-split-select,.ssh-terminal-audit,.ssh-terminal-teardown,.ssh-terminal-settings,.ssh-terminal-search-all) { display: none; }
+.has-dual-terminal > .ssh-terminal-bar { flex-wrap: wrap; gap: 6px; }
+.ssh-split-secondary .ssh-terminal-bar { flex-wrap: wrap; gap: 6px; padding: 4px 8px; }
+.ssh-split-secondary .ssh-terminal-status { flex-wrap: wrap; gap: 6px; padding-inline: 8px; }
+.ssh-split-secondary .ssh-terminal-target { max-width: 70%; }
+.ssh-session-tab[data-unread=true] [role=tab] > i { background: var(--terminal-accent, #9b7247); }
+.ssh-session-tab[data-alert=true] small { color: #be6f4d; }
+@media (max-width: 959px) { .ssh-terminal-split-select { display: none; } }

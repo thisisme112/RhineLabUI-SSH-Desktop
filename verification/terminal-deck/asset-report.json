@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-12",
+  "model": {
+    "source": "art/build_terminal.py",
+    "blend": "art/ssh-terminal.blend",
+    "asset": "src/ssh/assets/ssh-terminal.glb",
+    "bytes": 294832,
+    "sha256": "6007d52a19271a29e493f44f8efb0cdddb65da4eed446165d6eeeb66ff8fb447",
+    "meshes": 5,
+    "screen": {
+      "terminalScreen": true,
+      "screenWidth": 4.17,
+      "screenHeight": 2.22,
+      "screenCenter": [
+        0,
+        1.565,
+        0.139
+      ],
+      "assetRole": "ssh-terminal-insert"
+    }
+  },
+  "builds": {
+    "web": {
+      "directory": "dist",
+      "sshAssets": []
+    },
+    "wallpaper": {
+      "directory": "release/wallpaper-terminal-check",
+      "sshAssets": []
+    },
+    "desktop": {
+      "directory": "dist-desktop",
+      "sshAssets": [
+        "audit-panel-BZW8fCz6.js",
+        "audit-panel-CZkkbBFw.css",
+        "audit-uNB9O-EN.js",
+        "client-BmoCkqrt.js",
+        "hosts-panel-DBki-4pd.css",
+        "hosts-panel-IXGuiO5z.js",
+        "prompt-CTUXFj29.css",
+        "prompt-sXVj0oJL.js",
+        "session-CQQUFFI_.js",
+        "ssh-terminal-B0e9dVdH.glb",
+        "terminal-CPpxV3oz.css",
+        "terminal-D2ENGacz.js",
+        "terminal-deck-CLd9_nrP.js",
+        "terminal-screen-B37nLx5L.js"
+      ],
+      "bundle": {
+        "file": "assets/index-e9eZ3-EZ.js",
+        "sha256": "57a899847ca2ce78e4f46f259d8a4f92821fc11d671010cfb1afd72762bcb63a"
+      }
+    }
+  },
+  "webOfflineCache": {
+    "version": "41389126a40e1b86",
+    "files": 818,
+    "bytes": 35455352,
+    "mebibytes": 33.8,
+    "terminalAssets": []
+  }
+}

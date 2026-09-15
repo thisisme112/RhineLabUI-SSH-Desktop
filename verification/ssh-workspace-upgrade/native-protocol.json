@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "system ssh -G resolves an isolated config alias",
+    "two simultaneous ConPTY + system OpenSSH sessions own separate log files, credentials and native service workers",
+    "independent native PTY input, output and simultaneous resize do not cross sessions",
+    "concurrent SFTP transfers, directory requests and per-second monitor streams remain session-scoped",
+    "ending A and late resize/auth callbacks leave B's terminal, SFTP and monitor alive"
+  ],
+  "error": null,
+  "scope": "Real OpenSSH and SFTP. Collector protocol frames simulated; no real GPU or Linux-runtime claim.",
+  "fixtureDirectory": "D:\\myproject\\RhineLab\\.tools\\ssh-fixtures\\run-tnthZG"
+}

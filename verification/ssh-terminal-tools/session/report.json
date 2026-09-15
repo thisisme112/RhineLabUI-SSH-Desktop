@@ -1,0 +1,655 @@
+{
+  "checks": {
+    "lifecycle regression scenarios completed": true,
+    "parallel start preserves the current terminal": true,
+    "closing terminal still isolates background input": true,
+    "hidden terminal output is retained": true,
+    "rapid reopen does not duplicate terminal output": true,
+    "shell text cannot fail a connection or request a password": true,
+    "finished record and phase durations stop advancing": true,
+    "empty password keeps its prompt and input": true,
+    "identical retry prompt has a new request identity": true,
+    "new session clears old terminal content": true,
+    "stale password reply is rejected by the main process": true,
+    "passwords do not enter the terminal transcript": true,
+    "long record stays inside the viewport": true,
+    "long record content scrolls to its final section": true,
+    "historical export uses the record being displayed": true,
+    "audit exit restores a visible focus target": true,
+    "log maintenance preserves recent session records": true,
+    "renderer client available": true,
+    "session reached interactive": true,
+    "session ended cleanly after exit": true,
+    "argv carries -v and no -E": true,
+    "target is the last argument": true,
+    "host key fingerprint captured": true,
+    "auth method captured": true,
+    "timeline is the real path": true,
+    "terminal received the prompt": true,
+    "terminal retains real authentication output": true,
+    "every log line parsed": true,
+    "exit reported": true,
+    "log lines counted": true,
+    "pty carried session bytes": true,
+    "scene reveal ended fully clear": true,
+    "scene reveal passed through real stages": true,
+    "scene reveal never ran ahead": true,
+    "scene reveal travelled gradually": true,
+    "handshake settled on the last real milestone": true,
+    "rejected session failed": true,
+    "rejected session froze the timeline": true,
+    "rejected session left the glass frosted": true,
+    "rejected session never entered the reveal": true,
+    "rejected session opened no terminal": true,
+    "terminal opened on interactive": true,
+    "xterm surface mounted": true,
+    "terminal holds the keyboard": true,
+    "global shortcuts yielded to the terminal": true,
+    "keystrokes reached the program and came back": true,
+    "measured bytes moved the array bands": true,
+    "array bands were quiet before any session": true,
+    "renderer async bridge works": true,
+    "unknown host key blocked the workflow": true,
+    "confirmation shows the real fingerprint": true,
+    "accepting the key lets the session proceed": true,
+    "rejecting the key ends the connection": true,
+    "rejection is explained, not just reported as a code": true,
+    "password prompt blocked the workflow": true,
+    "supplying the password completes the connection": true,
+    "no secret is left in the surface": true,
+    "session record surface opened": true,
+    "record lists phase timings": true,
+    "record shows the negotiated suite": true,
+    "record cites the raw line for each fact": true,
+    "record shows measured traffic": true,
+    "record export wrote a readable file": true,
+    "export contains the fingerprint and its source": true,
+    "session record surface closed": true,
+    "record persisted next to its event log": true,
+    "persisted record kept the raw sources": true,
+    "host picker opened": true,
+    "host picker read the real ssh config": true,
+    "host picker listed the configured host": true,
+    "connecting from the picker brought a session up": true,
+    "host picker closed after connecting": true,
+    "password field received focus": true,
+    "password field is not inert": true,
+    "typed characters accumulate": true,
+    "password field keeps focus while typing": true,
+    "typing never re-created the field": true,
+    "typing caused no re-render": true,
+    "password page uses a staggered entrance while accepting input": true,
+    "authentication shares the archive detail alignment": true,
+    "prompt surface stays open while typing": true,
+    "interrupted surfaces left every panel closed": true,
+    "interrupted surfaces left nothing extra inert": true,
+    "interrupted surfaces left the nav usable": true,
+    "interrupted surfaces preserved the archive input state": true,
+    "the archive still responds to the keyboard": true,
+    "no surface was left open": true
+  },
+  "skipped": [],
+  "failed": [],
+  "result": {
+    "bandsBeforeSession": {
+      "low": 0,
+      "activity": 0
+    },
+    "hostPicker": {
+      "open": true,
+      "closed": true,
+      "count": 2,
+      "list": [
+        {
+          "alias": "passhost",
+          "hostname": "10.20.30.41",
+          "user": "operator",
+          "port": "",
+          "raw": "Host passhost\n  HostName 10.20.30.41\n  User operator",
+          "source": "config"
+        },
+        {
+          "alias": "labnode",
+          "hostname": "10.20.30.42",
+          "user": "operator",
+          "port": "2222",
+          "raw": "Host labnode\n  HostName 10.20.30.42\n  User operator\n  Port 2222",
+          "source": "config"
+        }
+      ],
+      "text": "\n      H-001passhostoperator@10.20.30.41SSH config↗\n      H-002labnodeoperator@10.20.30.42:2222SSH config↗",
+      "clicked": "labnode",
+      "reachedInteractive": true,
+      "note": "",
+      "source": "D:\\myproject\\RhineLab\\scripts\\fixtures\\ssh-config",
+      "configMatches": true
+    },
+    "success": {
+      "target": "operator@lab-node-07",
+      "argv": [
+        "D:\\nodejs\\node.exe",
+        "D:\\myproject\\RhineLab\\scripts\\fixtures\\fake-ssh.mjs",
+        "-v",
+        "operator@lab-node-07"
+      ],
+      "logPath": "C:\\Users\\Kaze\\AppData\\Local\\Temp\\rhine-smoke-LY8H16\\ssh-logs\\2026-09-12T19-38-28-598Z-operator@lab-node-07.log",
+      "phase": "closed",
+      "interactivePhase": "interactive",
+      "finalPhase": "closed",
+      "failure": null,
+      "timeline": [
+        "resolving",
+        "connecting",
+        "handshake",
+        "hostkey",
+        "authenticating",
+        "opening",
+        "interactive",
+        "closed"
+      ],
+      "facts": {
+        "configPath": "C:\\Users\\operator/.ssh/config",
+        "host": "lab-node-07",
+        "address": "10.20.30.41",
+        "port": "22",
+        "localBanner": "SSH-2.0-OpenSSH_for_Windows_9.5",
+        "remoteProtocol": "2.0",
+        "remoteSoftware": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.5",
+        "kex": "sntrup761x25519-sha512@openssh.com",
+        "hostKeyAlgorithm": "ssh-ed25519",
+        "cipher": "chacha20-poly1305@openssh.com",
+        "mac": "<implicit>",
+        "compression": "none",
+        "hostKeyType": "ssh-ed25519",
+        "hostKeyFingerprint": "SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s",
+        "knownHosts": "C:\\Users\\operator/.ssh/known_hosts",
+        "knownHostsLine": "12",
+        "authMethods": "publickey password",
+        "authKey": "C:\\Users\\operator/.ssh/id_ed25519 ED25519",
+        "authMethod": "publickey"
+      },
+      "unknownLines": [],
+      "rawLogLines": 19,
+      "terminalHasPrompt": true,
+      "terminalHasDebug": true,
+      "traffic": {
+        "bytesIn": 2922,
+        "bytesOut": 10,
+        "logLines": 19,
+        "elapsedMs": 2574
+      },
+      "exit": {
+        "exitCode": 0,
+        "logPath": "C:\\Users\\Kaze\\AppData\\Local\\Temp\\rhine-smoke-LY8H16\\ssh-logs\\2026-09-12T19-38-28-598Z-operator@lab-node-07.log",
+        "bytesIn": 2922,
+        "bytesOut": 10,
+        "logLines": 19,
+        "elapsedMs": 2574
+      },
+      "decryption": {
+        "phase": "clear",
+        "clarity": 1
+      },
+      "decryptionSamples": [
+        [
+          "waiting",
+          0,
+          0
+        ],
+        [
+          "joining",
+          0,
+          0
+        ],
+        [
+          "connected",
+          0,
+          0
+        ],
+        [
+          "retracting",
+          0,
+          0
+        ],
+        [
+          "revealing",
+          0.081,
+          1
+        ],
+        [
+          "clear",
+          1,
+          1
+        ]
+      ],
+      "interactive": {
+        "autoOpened": true,
+        "mounted": true,
+        "focused": true,
+        "guardHeld": true,
+        "roundTrip": true,
+        "painted": "debug1: Reading configuration data C:\\Users\\operator/.ssh/configdebug1: Connecting to lab-node-07 [10.20.30.41] port 22.debug1: Connection established.debug1: identity file C:\\Users\\operator/.ssh/id_ed25519 type 3debug1: Local version string SSH-2.0-OpenSSH_for_Windows_9.5debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.5debug1: kex: algorithm: sntrup761x25519-sha512@openssh.comdebug1: kex: host key algorithm: ssh-ed25519debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: nonedebug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: nonedebug1: Server host key: ssh-ed25519 SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2sdebug1: Host 'lab-node-07' is known and matches the ED25519 host key.debug1: Found key in C:\\Users\\operator/.ssh/known_hosts:12debug1: Authentications that can continue: publickey,passworddebug1: Offering public key: C:\\Users\\operator/.ssh/id_ed25519 ED25519 SHA256:AAAAC3NzaC1lZDI1NTE5AAAAIExampledebug1: Server accepts key: C:\\Users\\operator/.ssh/id_ed25519 ED25519 SHA256:AAAAC3NzaC1lZDI1NTE5AAAAIExampledebug1: Authentication succeeded (publickey).debug1: Entering interactive session.debug1: pledge: networkoperator@lab-node-07:~$ ping[fake-ssh] pingoperator@lab-node-07:~$  ",
+        "bandsBefore": {
+          "low": 0.4521,
+          "activity": 0.4521
+        },
+        "bandsAfter": {
+          "low": 0.4169,
+          "activity": 0.4169
+        },
+        "paintedBefore": "debug1: Reading configuration data C:\\Users\\operator/.ssh/configdebug1: Connecting to lab-node-07 [10.20.30.41] port 22.",
+        "stillOpenAfterExit": true
+      },
+      "bands": {
+        "low": 0.0612,
+        "mid": 0.0127,
+        "high": 0,
+        "activity": 0.0612
+      },
+      "rates": {
+        "bytesPerSecondIn": 48.48581193886734,
+        "bytesPerSecondOut": 7.948493760470056,
+        "burstPerSecond": 0,
+        "peakBytesPerSecondIn": 4677.227722772277,
+        "peakBytesPerSecondOut": 7.973845785860401,
+        "samples": 7
+      },
+      "handshake": {
+        "reference": 39.56,
+        "target": 39.56,
+        "frozen": true,
+        "milestone": "session.prompt",
+        "clarity": 1,
+        "settled": true
+      }
+    },
+    "rejected": {
+      "target": "operator@reject-host",
+      "argv": [
+        "D:\\nodejs\\node.exe",
+        "D:\\myproject\\RhineLab\\scripts\\fixtures\\fake-ssh.mjs",
+        "-v",
+        "operator@reject-host"
+      ],
+      "logPath": "C:\\Users\\Kaze\\AppData\\Local\\Temp\\rhine-smoke-LY8H16\\ssh-logs\\2026-09-12T19-38-35-777Z-operator@reject-host.log",
+      "phase": "failed",
+      "interactivePhase": null,
+      "finalPhase": "failed",
+      "failure": "认证被拒绝：publickey,password",
+      "timeline": [
+        "resolving",
+        "connecting",
+        "handshake",
+        "authenticating",
+        "failed"
+      ],
+      "facts": {
+        "configPath": "C:\\Users\\operator/.ssh/config",
+        "host": "reject-host",
+        "address": "10.20.30.41",
+        "port": "22",
+        "localBanner": "SSH-2.0-OpenSSH_for_Windows_9.5",
+        "remoteProtocol": "2.0",
+        "remoteSoftware": "OpenSSH_9.6p1",
+        "authMethods": "publickey password"
+      },
+      "unknownLines": [],
+      "rawLogLines": 8,
+      "terminalHasPrompt": false,
+      "terminalHasDebug": true,
+      "traffic": {
+        "bytesIn": 501,
+        "bytesOut": 0,
+        "logLines": 8,
+        "elapsedMs": 1380
+      },
+      "exit": {
+        "exitCode": 255,
+        "logPath": "C:\\Users\\Kaze\\AppData\\Local\\Temp\\rhine-smoke-LY8H16\\ssh-logs\\2026-09-12T19-38-35-777Z-operator@reject-host.log",
+        "bytesIn": 501,
+        "bytesOut": 0,
+        "logLines": 8,
+        "elapsedMs": 1380
+      },
+      "decryption": {
+        "phase": "connected",
+        "clarity": 0
+      },
+      "decryptionSamples": [
+        [
+          "waiting",
+          0,
+          0
+        ],
+        [
+          "joining",
+          0,
+          0
+        ],
+        [
+          "connected",
+          0,
+          0
+        ]
+      ],
+      "interactive": null,
+      "bands": {
+        "low": 0.05,
+        "mid": 0,
+        "high": 0,
+        "activity": 0.05
+      },
+      "rates": {
+        "bytesPerSecondIn": 37.47372269363546,
+        "bytesPerSecondOut": 0,
+        "burstPerSecond": 0,
+        "peakBytesPerSecondIn": 159.59517321544857,
+        "peakBytesPerSecondOut": 0,
+        "samples": 6
+      },
+      "handshake": {
+        "reference": 36.5,
+        "target": 36.5,
+        "frozen": true,
+        "milestone": "auth.methods",
+        "clarity": 0,
+        "settled": true
+      }
+    },
+    "hostkeyAccepted": {
+      "target": "operator@newhost",
+      "opened": true,
+      "kind": "hostkey",
+      "text": "SSH / ACCESS REQUEST HOSTKEY 主机密钥确认 主 机 密 钥 确 认 AWAITING CONFIRMATION / 等待确认 这台主机的身份尚未被记录。确认指纹后再继续，否则可能正在连接一台冒充的服务器。 主机 newhost 密钥类型 ssh-ed25519 指纹 SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s TRUST HOST 确认并继续 → 拒绝 原始输出",
+      "reachedInteractive": true,
+      "phase": "closed",
+      "failure": null,
+      "exitCode": 0,
+      "panelAfter": null,
+      "panelTextAfter": "SSH / ACCESS REQUESTHOSTKEY 主机密钥确认主机密钥确认 AWAITING CONFIRMATION / 等待确认 这台主机的身份尚未被记录。确认指纹后再继续，否则可能正在连接一台冒充的服务器。 主机newhost 密钥类型ssh-ed25519 指纹SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s TRUST HOST确认并继续 → 拒绝 原始输出debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubu",
+      "seen": [
+        [
+          false,
+          null
+        ],
+        [
+          true,
+          "hostkey"
+        ]
+      ]
+    },
+    "hostkeyRejected": {
+      "target": "operator@newhost",
+      "opened": true,
+      "kind": "hostkey",
+      "text": "SSH / ACCESS REQUEST HOSTKEY 主机密钥确认 AWAITING CONFIRMATION / 等待确认 这台主机的身份尚未被记录。确认指纹后再继续，否则可能正在连接一台冒充的服务器。 主机 newhost 密钥类型 ssh-ed25519 指纹 SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s TRUST HOST 确认并继续 → 拒绝 原始输出",
+      "reachedInteractive": false,
+      "phase": "failed",
+      "failure": "主机密钥与已知记录不符",
+      "exitCode": 255,
+      "panelAfter": "failure",
+      "panelTextAfter": "SSH / ACCESS REQUEST FAILURE 连接未建立 连 接 未 建 立 CONNECTION ENDED / 本次连接已结束 主机密钥与已知记录不符 解析配置与主机 33ms 建立 TCP 连接 31ms 版本交换与密钥协商 253ms 核验主机密钥 77ms 连接失败 0ms RECONNECT 重新连接 → 查看完整记录 返回档案 ssh 原始输出（12 行） debug1: Reading configuration data C:\\Users\\operator/.ssh/config debug1: Connecting to newhost [10.20.30.41",
+      "seen": [
+        [
+          false,
+          null
+        ],
+        [
+          true,
+          "hostkey"
+        ]
+      ]
+    },
+    "passwordGiven": {
+      "target": "operator@passhost",
+      "opened": true,
+      "kind": "password",
+      "text": "SSH / ACCESS REQUEST PASSWORD 需要登录口令 需 要 登 录 口 令 AWAITING INPUT / 等待输入 operator@passhost 要求输入登录口令。密码不会保存。 口令 AUTHENTICATE 发送口令 → 中止连接 原始提示",
+      "reachedInteractive": true,
+      "phase": "closed",
+      "failure": null,
+      "exitCode": 0,
+      "panelAfter": null,
+      "panelTextAfter": "SSH / ACCESS REQUESTPASSWORD 需要登录口令需要登录口令 AWAITING INPUT / 等待输入 operator@passhost 要求输入登录口令。密码不会保存。 口令 AUTHENTICATE发送口令 → 中止连接 原始提示operator@passhost's password:",
+      "seen": [
+        [
+          false,
+          null
+        ],
+        [
+          true,
+          "password"
+        ]
+      ]
+    },
+    "audit": {
+      "open": true,
+      "closed": true,
+      "text": "\n      \n        阶段耗时\n        \n        \n          解析配置与主机\n          @0ms\n          40ms\n        \n        \n          建立 TCP 连接\n          @40ms\n          30ms\n        \n        \n          版本交换与密钥协商\n          @70ms\n          253ms\n        \n        \n          核验主机密钥\n          @323ms\n          29ms\n        \n        \n          身份认证\n          @352ms\n          195ms\n        \n        \n          请求终端会话\n          @546ms\n          23ms\n        \n        \n          会话已建立\n          @570ms\n          1.11s\n        \n        \n          连接已关闭\n          @1.68s\n          0ms\n        \n      \n      \n        协商结果与已验证事实\n        \n        \n          配置文件\n          C:\\Users\\operator/.ssh/config\n          debug1: Reading configuration data C:\\Users\\operator/.ssh/config\n        \n        \n          主机\n          passhost\n          debug1: Connecting to passhost [10.20.30.41] port 22.\n        \n        \n          地址\n          10.20.30.41\n          debug1: Connecting to passhost [10.20.30.41] port 22.\n        \n        \n          端口\n          22\n          debug1: Connecting to passhost [10.20.30.41] port 22.\n        \n        \n          本端版本\n          SSH-2.0-OpenSSH_for_Windows_9.5\n          debug1: Local version string SSH-2.0-OpenSSH_for_Windows_9.5\n        \n        \n          对端协议\n          2.0\n          debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.5\n        \n        \n          对端软件\n          OpenSSH_9.6p1 Ubuntu-3ubuntu13.5\n          debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.5\n        \n        \n          密钥交换算法\n          sntrup761x25519-sha512@openssh.com\n          debug1: kex: algorithm: sntrup761x25519-sha512@openssh.com\n        \n        \n          主机密钥算法\n          ssh-ed25519\n          debug1: kex: host key algorithm: ssh-ed25519\n        \n        \n          密码套件\n          chacha20-poly1305@openssh.com\n          debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none\n        \n        \n          消息认证码\n          <implicit>\n          debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none\n        \n        \n          压缩\n          none\n          debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none\n        \n        \n          主机密钥类型\n          ssh-ed25519\n          debug1: Server host key: ssh-ed25519 SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s\n        \n        \n          主机密钥指纹\n          SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s\n          debug1: Server host key: ssh-ed25519 SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s\n        \n        \n          已知主机文件\n          C:\\Users\\operator/.ssh/known_hosts\n          debug1: Found key in C:\\Users\\operator/.ssh/known_hosts:12\n        \n        \n          已知主机行号\n          12\n          debug1: Found key in C:\\Users\\operator/.ssh/known_hosts:12\n        \n        \n          可用认证方式\n          publickey password\n          debug1: Authentications that can continue: publickey,password\n        \n        \n          实际认证方式\n          password\n          debug1: Authentication succeeded (password).\n        \n      \n      \n        流量\n        \n          下行合计1.2 KiB\n          上行合计13 B\n          下行峰值2.1 KiB/s\n          上行峰值26 B/s\n          事件行数17\n        \n      \n      \n        执行的命令\n        D:\\nodejs\\node.exe D:\\myproject\\RhineLab\\scripts\\fixtures\\fake-ssh.mjs -v operator@passhost\n        事件日志 C:\\Users\\Kaze\\AppData\\Local\\Temp\\rhine-smoke-LY8H16\\ssh-logs\\2026-09-12T19-38-48-062Z-operator@passhost.log\n      \n      ",
+      "summary": "operator@passhost · 会话正常结束 · 1.76s · ↓1.2 KiB · ↑13 B",
+      "exportOk": true,
+      "exportPath": "D:\\myproject\\RhineLab\\dist-desktop\\session-record-export.txt",
+      "exportError": null
+    },
+    "interrupt": {
+      "baseline": 2,
+      "baselineNames": [
+        "boot",
+        "archive-ui"
+      ],
+      "after": {
+        "inertChildren": [
+          "boot",
+          "archive-ui"
+        ],
+        "visiblePanels": [],
+        "navInert": false,
+        "archiveInert": true,
+        "bodyFocusable": true
+      },
+      "moved": true,
+      "selection": {
+        "before": "H-002",
+        "after": "H-000"
+      },
+      "mode": "detail",
+      "ready": true,
+      "startup": "started",
+      "panelStates": {
+        "audit": false,
+        "hosts": false,
+        "prompt": false,
+        "terminal": false
+      }
+    },
+    "typing": {
+      "appeared": {
+        "present": true,
+        "kind": "password",
+        "inert": false,
+        "hidden": false,
+        "transition": "opening",
+        "renders": "6",
+        "motionCount": 6,
+        "animations": 10,
+        "aligned": true,
+        "marker": "original",
+        "active": "INPUT.",
+        "focused": true,
+        "value": "",
+        "valueLength": 0,
+        "title": "需要登录口令需要登录口令"
+      },
+      "settled": {
+        "present": true,
+        "kind": "password",
+        "inert": false,
+        "hidden": false,
+        "transition": "open",
+        "renders": "6",
+        "motionCount": 6,
+        "animations": 0,
+        "aligned": true,
+        "marker": "original",
+        "active": "INPUT.",
+        "focused": true,
+        "value": "abcd",
+        "valueLength": 4,
+        "title": "需要登录口令需要登录口令需要登录口令"
+      },
+      "steps": [
+        {
+          "label": "prompt open",
+          "present": true,
+          "kind": "password",
+          "inert": false,
+          "hidden": false,
+          "transition": "opening",
+          "renders": "6",
+          "motionCount": 6,
+          "animations": 10,
+          "aligned": true,
+          "marker": "original",
+          "active": "INPUT.",
+          "focused": true,
+          "value": "",
+          "valueLength": 0,
+          "title": "需要登录口令需要登录口令"
+        },
+        {
+          "label": "after typing a",
+          "present": true,
+          "kind": "password",
+          "inert": false,
+          "hidden": false,
+          "transition": "opening",
+          "renders": "6",
+          "motionCount": 6,
+          "animations": 10,
+          "aligned": true,
+          "marker": "original",
+          "active": "INPUT.",
+          "focused": true,
+          "value": "a",
+          "valueLength": 1,
+          "title": "需要登录口令需要登录口令需要登录口令"
+        },
+        {
+          "label": "after typing b",
+          "present": true,
+          "kind": "password",
+          "inert": false,
+          "hidden": false,
+          "transition": "open",
+          "renders": "6",
+          "motionCount": 6,
+          "animations": 0,
+          "aligned": true,
+          "marker": "original",
+          "active": "INPUT.",
+          "focused": true,
+          "value": "ab",
+          "valueLength": 2,
+          "title": "需要登录口令需要登录口令需要登录口令"
+        },
+        {
+          "label": "after typing c",
+          "present": true,
+          "kind": "password",
+          "inert": false,
+          "hidden": false,
+          "transition": "open",
+          "renders": "6",
+          "motionCount": 6,
+          "animations": 0,
+          "aligned": true,
+          "marker": "original",
+          "active": "INPUT.",
+          "focused": true,
+          "value": "abc",
+          "valueLength": 3,
+          "title": "需要登录口令需要登录口令需要登录口令"
+        },
+        {
+          "label": "after typing d",
+          "present": true,
+          "kind": "password",
+          "inert": false,
+          "hidden": false,
+          "transition": "open",
+          "renders": "6",
+          "motionCount": 6,
+          "animations": 0,
+          "aligned": true,
+          "marker": "original",
+          "active": "INPUT.",
+          "focused": true,
+          "value": "abcd",
+          "valueLength": 4,
+          "title": "需要登录口令需要登录口令需要登录口令"
+        },
+        {
+          "label": "after typing",
+          "present": true,
+          "kind": "password",
+          "inert": false,
+          "hidden": false,
+          "transition": "open",
+          "renders": "6",
+          "motionCount": 6,
+          "animations": 0,
+          "aligned": true,
+          "marker": "original",
+          "active": "INPUT.",
+          "focused": true,
+          "value": "abcd",
+          "valueLength": 4,
+          "title": "需要登录口令需要登录口令需要登录口令"
+        }
+      ],
+      "rendersDuringTyping": 0
+    },
+    "regression": {
+      "checks": {
+        "parallel start preserves the current terminal": true,
+        "closing terminal still isolates background input": true,
+        "hidden terminal output is retained": true,
+        "rapid reopen does not duplicate terminal output": true,
+        "shell text cannot fail a connection or request a password": true,
+        "finished record and phase durations stop advancing": true,
+        "empty password keeps its prompt and input": true,
+        "identical retry prompt has a new request identity": true,
+        "new session clears old terminal content": true,
+        "stale password reply is rejected by the main process": true,
+        "passwords do not enter the terminal transcript": true,
+        "long record stays inside the viewport": true,
+        "long record content scrolls to its final section": true,
+        "historical export uses the record being displayed": true,
+        "audit exit restores a visible focus target": true,
+        "log maintenance preserves recent session records": true
+      },
+      "evidence": {
+        "outputCounts": {
+          "received": 2,
+          "displayed": 2
+        },
+        "auditLayout": {
+          "bottom": 763.7388916015625,
+          "viewportHeight": 861,
+          "bodyHeight": 524,
+          "contentHeight": 1801
+        },
+        "exportedTarget": "labnode"
+      }
+    }
+  },
+  "problems": [
+    {
+      "kind": "console",
+      "severity": "warning",
+      "message": "THREE.WebGLProgram: Program Info Log: (210,81-129): warning X4122: sum of 0.996094 and -2.98545e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n\n\n\u0000",
+      "line": 17,
+      "source": "file:///D:/myproject/RhineLab/dist-desktop/assets/index-Bwhnm32l.js"
+    }
+  ]
+}

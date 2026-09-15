@@ -1,0 +1,3453 @@
+{
+  "checks": {
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {
+    "planBenchmark": {
+      "bundle": "existing dist-desktop",
+      "viewport": "1920x1080 DPR1",
+      "mode": "headless Edge / isolated fake hosts",
+      "phases": [
+        {
+          "kind": "idle",
+          "ms": 4014.7000000029802,
+          "frames": 120,
+          "p50": 25,
+          "p95": 45.80000000000109,
+          "p99": 270.8000000000011,
+          "max": 304.1999999999998,
+          "framesOver50": 5,
+          "longTasks": [
+            {
+              "start": 7834.20000000298,
+              "duration": 300
+            },
+            {
+              "start": 8137.10000000149,
+              "duration": 263
+            },
+            {
+              "start": 8400.89999999851,
+              "duration": 266
+            },
+            {
+              "start": 8667.89999999851,
+              "duration": 272
+            }
+          ],
+          "actions": 0,
+          "counts": [
+            {
+              "at": 466.4000000014903,
+              "returning": 1,
+              "candidates": 464,
+              "drawn": 320,
+              "calls": 199
+            },
+            {
+              "at": 728.8000000014908,
+              "returning": 1,
+              "candidates": 460,
+              "drawn": 318,
+              "calls": 214
+            },
+            {
+              "at": 995.5000000014898,
+              "returning": 1,
+              "candidates": 457,
+              "drawn": 319,
+              "calls": 226
+            },
+            {
+              "at": 1266.3000000014908,
+              "returning": 1,
+              "candidates": 459,
+              "drawn": 319,
+              "calls": 230
+            },
+            {
+              "at": 1520.5000000014898,
+              "returning": 1,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 1787.1000000014901,
+              "returning": 1,
+              "candidates": 456,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 2066.4000000014894,
+              "returning": 1,
+              "candidates": 459,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 2328.9000000014894,
+              "returning": 1,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 230
+            },
+            {
+              "at": 2583.0000000014898,
+              "returning": 1,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 2833.0000000014898,
+              "returning": 1,
+              "candidates": 458,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 3083.10000000149,
+              "returning": 1,
+              "candidates": 459,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 3349.7000000014905,
+              "returning": 0,
+              "candidates": 459,
+              "drawn": 314,
+              "calls": 131
+            },
+            {
+              "at": 3599.800000001491,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 315,
+              "calls": 131
+            },
+            {
+              "at": 3874.7000000014905,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 314,
+              "calls": 131
+            }
+          ],
+          "end": {
+            "sessionDeck": {
+              "available": true,
+              "state": "packed",
+              "progress": 0,
+              "focus": 0,
+              "ready": false,
+              "screen": {
+                "corners": [
+                  [
+                    567.6299886596296,
+                    414.4948580400244
+                  ],
+                  [
+                    885.4768291894655,
+                    250.23381097672652
+                  ],
+                  [
+                    885.8501575846681,
+                    551.7920859666816
+                  ],
+                  [
+                    569.6427386320305,
+                    722.4439126958827
+                  ]
+                ],
+                "width": 1704,
+                "height": 907
+              },
+              "contentKey": "host:review-host",
+              "cardId": "H-001",
+              "screenCurrent": true
+            },
+            "decryption": {
+              "time": -1,
+              "intervals": [],
+              "markers": 0,
+              "point": 0,
+              "label": 0,
+              "labelValue": 0,
+              "clarity": 0,
+              "phase": "waiting"
+            },
+            "topLeft": [
+              517,
+              284
+            ],
+            "topRight": [
+              899,
+              91
+            ],
+            "labelTopLeft": [
+              600,
+              325
+            ],
+            "labelBottomLeft": [
+              600,
+              389
+            ],
+            "modelPosition": [
+              -0.0003,
+              -1.9702,
+              -2.1712
+            ],
+            "cameraPosition": [
+              -114.5565,
+              45.5345,
+              68.6579
+            ],
+            "fieldOfView": 2.999158369565216,
+            "loaded": true,
+            "drawCalls": 131,
+            "superPerformance": false,
+            "presentation": 1,
+            "triangles": 5603463,
+            "archiveCount": 314,
+            "archiveCandidates": 458,
+            "archiveCulled": 144,
+            "archiveCapacity": 576,
+            "archiveCoverage": "standard",
+            "returningFiles": 0,
+            "selectionPhase": "settled",
+            "pendingPulse": null,
+            "pulses": [],
+            "referenceTime": 37.67,
+            "selectedSlot": 13,
+            "selectedLane": 0,
+            "selectedCell": {
+              "lane": 0,
+              "row": 13
+            },
+            "hoverCell": null,
+            "hoverLifts": {},
+            "dragTrack": null,
+            "archiveMomentum": null,
+            "holdingArchive": false,
+            "dragProjection": {
+              "lane": {
+                "x": -395.9452914876242,
+                "y": 207.63413370811855
+              },
+              "row": {
+                "x": -76.56419391480833,
+                "y": -14.871882607324887
+              }
+            },
+            "dragMapping": null,
+            "coordinateOrigin": {
+              "lane": 0,
+              "row": 0
+            },
+            "poolBounds": {
+              "minLane": -6,
+              "maxLane": 7,
+              "minRow": -27,
+              "maxRow": 52
+            },
+            "laneFocus": 0.000019436728053547512,
+            "columnCamera": -10.399725980763884,
+            "rotation": 0,
+            "clearance": -3.306812282269698,
+            "canInspect": false,
+            "returnPhase": "lowering",
+            "extraction": 0.4,
+            "appearance": 1,
+            "cameraDetail": 0,
+            "idleGain": 0.9128939469194864,
+            "flatten": 0,
+            "spectrumActivity": 0,
+            "selectedIndexDim": 0,
+            "returningIndexDims": [],
+            "cameraDistance": 139.99999896240263,
+            "cameraNear": 5,
+            "cameraFar": 300,
+            "fogNear": 144.99999896240263,
+            "fogFar": 164.99999896240263,
+            "returningAppearance": [],
+            "rail": -0.62,
+            "threeState": "on",
+            "fps": 38,
+            "mode": "archive",
+            "ready": true,
+            "startup": "started",
+            "motion": {
+              "reduced": false,
+              "systemReduced": false
+            },
+            "bootTime": null,
+            "selected": "H-001",
+            "selectedIndex": 6,
+            "saved": [],
+            "audio": {
+              "state": "locked",
+              "scene": "archive",
+              "tracks": 0,
+              "voices": 0,
+              "loaded": false,
+              "playedKeys": 0,
+              "error": "",
+              "preferences": {
+                "sound": false,
+                "music": false,
+                "soundVolume": 0.55,
+                "musicVolume": 0.5
+              }
+            },
+            "wallpaper": null
+          },
+          "metricDelta": {
+            "LayoutDuration": 0.016901,
+            "RecalcStyleDuration": 0.020949000000000002,
+            "ScriptDuration": 2.9650220000000003,
+            "TaskDuration": 3.1615710000000004
+          },
+          "hostCount": 32
+        },
+        {
+          "kind": "wheel",
+          "ms": 4034.10000000149,
+          "frames": 57,
+          "p50": 70.90000000000146,
+          "p95": 129.20000000000073,
+          "p99": 170.79999999999927,
+          "max": 170.79999999999927,
+          "framesOver50": 39,
+          "longTasks": [],
+          "actions": 31,
+          "counts": [
+            {
+              "at": 385.2999999985095,
+              "returning": 2,
+              "candidates": 458,
+              "drawn": 309,
+              "calls": 329
+            },
+            {
+              "at": 668.6999999985092,
+              "returning": 4,
+              "candidates": 456,
+              "drawn": 309,
+              "calls": 527
+            },
+            {
+              "at": 960.4999999985102,
+              "returning": 6,
+              "candidates": 456,
+              "drawn": 306,
+              "calls": 721
+            },
+            {
+              "at": 1260.3999999985099,
+              "returning": 9,
+              "candidates": 458,
+              "drawn": 302,
+              "calls": 963
+            },
+            {
+              "at": 1568.6999999985092,
+              "returning": 12,
+              "candidates": 456,
+              "drawn": 302,
+              "calls": 1115
+            },
+            {
+              "at": 1843.6999999985092,
+              "returning": 14,
+              "candidates": 457,
+              "drawn": 302,
+              "calls": 1123
+            },
+            {
+              "at": 2135.2999999985095,
+              "returning": 16,
+              "candidates": 455,
+              "drawn": 301,
+              "calls": 1140
+            },
+            {
+              "at": 2397.89999999851,
+              "returning": 18,
+              "candidates": 455,
+              "drawn": 300,
+              "calls": 1168
+            },
+            {
+              "at": 2656.2999999985095,
+              "returning": 21,
+              "candidates": 456,
+              "drawn": 302,
+              "calls": 1166
+            },
+            {
+              "at": 2922.89999999851,
+              "returning": 22,
+              "candidates": 458,
+              "drawn": 300,
+              "calls": 1149
+            },
+            {
+              "at": 3181.199999998509,
+              "returning": 24,
+              "candidates": 455,
+              "drawn": 301,
+              "calls": 1153
+            },
+            {
+              "at": 3510.39999999851,
+              "returning": 27,
+              "candidates": 458,
+              "drawn": 301,
+              "calls": 1174
+            },
+            {
+              "at": 3785.39999999851,
+              "returning": 27,
+              "candidates": 456,
+              "drawn": 301,
+              "calls": 1161
+            }
+          ],
+          "end": {
+            "sessionDeck": {
+              "available": true,
+              "state": "packed",
+              "progress": 0,
+              "focus": 0,
+              "ready": false,
+              "screen": {
+                "corners": [
+                  [
+                    2086.394784756366,
+                    1003.4798309705305
+                  ],
+                  [
+                    2378.758681665385,
+                    818.8655255898543
+                  ],
+                  [
+                    2372.839712180602,
+                    1128.6879829439495
+                  ],
+                  [
+                    2081.872549477517,
+                    1320.0351910351155
+                  ]
+                ],
+                "width": 1704,
+                "height": 907
+              },
+              "contentKey": "host:perf-host-27",
+              "cardId": "H-035",
+              "screenCurrent": true
+            },
+            "decryption": {
+              "time": -1,
+              "intervals": [],
+              "markers": 0,
+              "point": 0,
+              "label": 0,
+              "labelValue": 0,
+              "clarity": 0,
+              "phase": "waiting"
+            },
+            "topLeft": [
+              2040,
+              871
+            ],
+            "topRight": [
+              2391,
+              654
+            ],
+            "labelTopLeft": [
+              2120,
+              911
+            ],
+            "labelBottomLeft": [
+              2119,
+              977
+            ],
+            "modelPosition": [
+              0,
+              -4.0059,
+              9.561
+            ],
+            "cameraPosition": [
+              -114.5565,
+              45.5345,
+              68.6579
+            ],
+            "fieldOfView": 2.9991583129127553,
+            "loaded": true,
+            "drawCalls": 1186,
+            "superPerformance": false,
+            "presentation": 1,
+            "triangles": 7035851,
+            "archiveCount": 302,
+            "archiveCandidates": 458,
+            "archiveCulled": 156,
+            "archiveCapacity": 576,
+            "archiveCoverage": "standard",
+            "returningFiles": 26,
+            "selectionPhase": "wave",
+            "pendingPulse": null,
+            "pulses": [
+              {
+                "lane": 0,
+                "row": 101,
+                "time": 16.8285
+              },
+              {
+                "lane": 0,
+                "row": 102,
+                "time": 16.8285
+              },
+              {
+                "lane": 0,
+                "row": 103,
+                "time": 16.8285
+              },
+              {
+                "lane": 0,
+                "row": 104,
+                "time": 16.9785
+              },
+              {
+                "lane": 0,
+                "row": 105,
+                "time": 16.9785
+              },
+              {
+                "lane": 0,
+                "row": 106,
+                "time": 16.9785
+              }
+            ],
+            "referenceTime": 41.42,
+            "selectedSlot": 40,
+            "selectedLane": 0,
+            "selectedCell": {
+              "lane": 0,
+              "row": 106
+            },
+            "hoverCell": null,
+            "hoverLifts": {},
+            "dragTrack": null,
+            "archiveMomentum": null,
+            "holdingArchive": false,
+            "dragProjection": {
+              "lane": {
+                "x": -364.3497844792213,
+                "y": 233.1485537901649
+              },
+              "row": {
+                "x": -82.68782680466785,
+                "y": -16.699090270894807
+              }
+            },
+            "dragMapping": null,
+            "coordinateOrigin": {
+              "lane": 0,
+              "row": 0
+            },
+            "poolBounds": {
+              "minLane": -6,
+              "maxLane": 7,
+              "minRow": 47,
+              "maxRow": 126
+            },
+            "laneFocus": 1.1606454894740907e-11,
+            "columnCamera": -10.399999999496705,
+            "rotation": 0,
+            "clearance": -4.55511897850981,
+            "canInspect": false,
+            "returnPhase": "lowering",
+            "extraction": 0.008,
+            "appearance": 0,
+            "cameraDetail": 0,
+            "idleGain": 0.00007649940919233403,
+            "flatten": 0,
+            "spectrumActivity": 0,
+            "selectedIndexDim": 0,
+            "returningIndexDims": [
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 13
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 31
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 34
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 37
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 40
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 43
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 46
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 49
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 52
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 55
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 58
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 61
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 64
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 67
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 70
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 73
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 76
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 79
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 82
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 85
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 88
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 91
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 94
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 97
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 100
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 103
+                },
+                "dim": 0
+              }
+            ],
+            "cameraDistance": 139.99999999999997,
+            "cameraNear": 5,
+            "cameraFar": 300,
+            "fogNear": 144.99999999999997,
+            "fogFar": 164.99999999999997,
+            "returningAppearance": [
+              {
+                "slot": 13,
+                "cell": {
+                  "lane": 0,
+                  "row": 13
+                },
+                "lift": 0.00011244765978144099,
+                "quality": 2.2206910371330082e-10,
+                "rotation": 0,
+                "worldY": -4.599893801970314,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:review-host",
+                "cardId": "H-001"
+              },
+              {
+                "slot": 31,
+                "cell": {
+                  "lane": 0,
+                  "row": 31
+                },
+                "lift": 0.0002060054597642687,
+                "quality": 1.3649622988425974e-9,
+                "rotation": 0,
+                "worldY": -4.5997973538954335,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-18",
+                "cardId": "H-026"
+              },
+              {
+                "slot": 34,
+                "cell": {
+                  "lane": 0,
+                  "row": 34
+                },
+                "lift": 0.00013635627893455042,
+                "quality": 3.95934505988398e-10,
+                "rotation": 0,
+                "worldY": -4.599868080628828,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-21",
+                "cardId": "H-029"
+              },
+              {
+                "slot": 37,
+                "cell": {
+                  "lane": 0,
+                  "row": 37
+                },
+                "lift": 0.00016624563143950746,
+                "quality": 7.1746375109647e-10,
+                "rotation": 0,
+                "worldY": -4.599835259294202,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-24",
+                "cardId": "H-032"
+              },
+              {
+                "slot": 40,
+                "cell": {
+                  "lane": 0,
+                  "row": 40
+                },
+                "lift": 0.00020253714761755956,
+                "quality": 1.2971917647882096e-9,
+                "rotation": 0,
+                "worldY": -4.599793934047712,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-27",
+                "cardId": "H-035"
+              },
+              {
+                "slot": 43,
+                "cell": {
+                  "lane": 0,
+                  "row": 43
+                },
+                "lift": 0.0002465586920972625,
+                "quality": 2.3398032810709684e-9,
+                "rotation": 0,
+                "worldY": -4.599746520428375,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-30",
+                "cardId": "H-038"
+              },
+              {
+                "slot": 13,
+                "cell": {
+                  "lane": 0,
+                  "row": 46
+                },
+                "lift": 0.0002999006253528741,
+                "quality": 4.209820633787427e-9,
+                "rotation": 0,
+                "worldY": -4.599694190966867,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:review-host",
+                "cardId": "H-001"
+              },
+              {
+                "slot": 16,
+                "cell": {
+                  "lane": 0,
+                  "row": 49
+                },
+                "lift": 0.0008176667977721731,
+                "quality": 8.515624565503872e-8,
+                "rotation": 0,
+                "worldY": -4.599181483447969,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-3",
+                "cardId": "H-011"
+              },
+              {
+                "slot": 19,
+                "cell": {
+                  "lane": 0,
+                  "row": 52
+                },
+                "lift": 0.0012028243981144666,
+                "quality": 2.7068595541531967e-7,
+                "rotation": 0,
+                "worldY": -4.598802118462249,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-6",
+                "cardId": "H-014"
+              },
+              {
+                "slot": 22,
+                "cell": {
+                  "lane": 0,
+                  "row": 55
+                },
+                "lift": 0.0017616725214454558,
+                "quality": 8.486372064518577e-7,
+                "rotation": 0,
+                "worldY": -4.5982459061158565,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-9",
+                "cardId": "H-017"
+              },
+              {
+                "slot": 25,
+                "cell": {
+                  "lane": 0,
+                  "row": 58
+                },
+                "lift": 0.0020633609172964374,
+                "quality": 0.00000136200639797138,
+                "rotation": 0,
+                "worldY": -4.5979420463035705,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-12",
+                "cardId": "H-020"
+              },
+              {
+                "slot": 28,
+                "cell": {
+                  "lane": 0,
+                  "row": 61
+                },
+                "lift": 0.0031463978466911304,
+                "quality": 0.000004809750431080173,
+                "rotation": 0,
+                "worldY": -4.596853782167769,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-15",
+                "cardId": "H-023"
+              },
+              {
+                "slot": 31,
+                "cell": {
+                  "lane": 0,
+                  "row": 64
+                },
+                "lift": 0.002195278709640591,
+                "quality": 0.0000016394829271029077,
+                "rotation": 0,
+                "worldY": -4.597800418526351,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-18",
+                "cardId": "H-026"
+              },
+              {
+                "slot": 34,
+                "cell": {
+                  "lane": 0,
+                  "row": 67
+                },
+                "lift": 0.005840559749448637,
+                "quality": 0.00003045247265347527,
+                "rotation": 0,
+                "worldY": -4.594154411848239,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-21",
+                "cardId": "H-029"
+              },
+              {
+                "slot": 37,
+                "cell": {
+                  "lane": 0,
+                  "row": 70
+                },
+                "lift": 0.007912328390311883,
+                "quality": 0.00007512022994414998,
+                "rotation": 0,
+                "worldY": -4.60110577628831,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-24",
+                "cardId": "H-032"
+              },
+              {
+                "slot": 40,
+                "cell": {
+                  "lane": 0,
+                  "row": 73
+                },
+                "lift": 0.0052323347431725955,
+                "quality": 0.00002194552381484186,
+                "rotation": 0,
+                "worldY": -4.7885240236397575,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-27",
+                "cardId": "H-035"
+              },
+              {
+                "slot": 43,
+                "cell": {
+                  "lane": 0,
+                  "row": 76
+                },
+                "lift": 0.013686995553468287,
+                "quality": 0.0003803494355141705,
+                "rotation": 0,
+                "worldY": -4.982915565367288,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-30",
+                "cardId": "H-038"
+              },
+              {
+                "slot": 13,
+                "cell": {
+                  "lane": 0,
+                  "row": 79
+                },
+                "lift": 0.01891544135306096,
+                "quality": 0.0009838826067192455,
+                "rotation": 0,
+                "worldY": -4.530654898699602,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:review-host",
+                "cardId": "H-001"
+              },
+              {
+                "slot": 16,
+                "cell": {
+                  "lane": 0,
+                  "row": 82
+                },
+                "lift": 0.011736477325201123,
+                "quality": 0.00024161308510281187,
+                "rotation": 0,
+                "worldY": -4.059813556895151,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-3",
+                "cardId": "H-011"
+              },
+              {
+                "slot": 19,
+                "cell": {
+                  "lane": 0,
+                  "row": 85
+                },
+                "lift": 0.029638004958799802,
+                "quality": 0.0036291552472264596,
+                "rotation": 0,
+                "worldY": -3.546794835652528,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-6",
+                "cardId": "H-014"
+              },
+              {
+                "slot": 22,
+                "cell": {
+                  "lane": 0,
+                  "row": 88
+                },
+                "lift": 0.03862696644389348,
+                "quality": 0.007751144884897173,
+                "rotation": 0,
+                "worldY": -2.9906528629986977,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-9",
+                "cardId": "H-017"
+              },
+              {
+                "slot": 25,
+                "cell": {
+                  "lane": 0,
+                  "row": 91
+                },
+                "lift": 0.02265878055743545,
+                "quality": 0.0016667773938331474,
+                "rotation": 0,
+                "worldY": -2.4721707071070043,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-12",
+                "cardId": "H-020"
+              },
+              {
+                "slot": 28,
+                "cell": {
+                  "lane": 0,
+                  "row": 94
+                },
+                "lift": 0.024996809281004177,
+                "quality": 0.0022174249730005343,
+                "rotation": 0,
+                "worldY": -2.868547156654136,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-15",
+                "cardId": "H-023"
+              },
+              {
+                "slot": 31,
+                "cell": {
+                  "lane": 0,
+                  "row": 97
+                },
+                "lift": 0.05636822650587063,
+                "quality": 0.022402840725987267,
+                "rotation": 0,
+                "worldY": -3.267343577124982,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-18",
+                "cardId": "H-026"
+              },
+              {
+                "slot": 34,
+                "cell": {
+                  "lane": 0,
+                  "row": 100
+                },
+                "lift": 0.05579805919066178,
+                "quality": 0.021781404410486333,
+                "rotation": 0,
+                "worldY": -2.9864941910243457,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-21",
+                "cardId": "H-029"
+              },
+              {
+                "slot": 37,
+                "cell": {
+                  "lane": 0,
+                  "row": 103
+                },
+                "lift": 0.04472284487984802,
+                "quality": 0.011737589108921564,
+                "rotation": 0,
+                "worldY": -3.48682354486468,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-24",
+                "cardId": "H-032"
+              }
+            ],
+            "rail": -46.549,
+            "threeState": "on",
+            "fps": 12,
+            "mode": "archive",
+            "ready": true,
+            "startup": "started",
+            "motion": {
+              "reduced": false,
+              "systemReduced": false
+            },
+            "bootTime": null,
+            "selected": "H-035",
+            "selectedIndex": 40,
+            "saved": [],
+            "audio": {
+              "state": "locked",
+              "scene": "archive",
+              "tracks": 0,
+              "voices": 0,
+              "loaded": false,
+              "playedKeys": 0,
+              "error": "",
+              "preferences": {
+                "sound": false,
+                "music": false,
+                "soundVolume": 0.55,
+                "musicVolume": 0.5
+              }
+            },
+            "wallpaper": null
+          },
+          "metricDelta": {
+            "LayoutDuration": 0.053916,
+            "RecalcStyleDuration": 0.11261499999999999,
+            "ScriptDuration": 1.1681849999999994,
+            "TaskDuration": 1.788843
+          },
+          "hostCount": 32,
+          "cpuTop": [
+            {
+              "name": "(idle)",
+              "url": "",
+              "line": -1,
+              "hits": 958
+            },
+            {
+              "name": "(program)",
+              "url": "",
+              "line": -1,
+              "hits": 127
+            },
+            {
+              "name": "update",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4907,
+              "hits": 32
+            },
+            {
+              "name": "(garbage collector)",
+              "url": "",
+              "line": -1,
+              "hits": 31
+            },
+            {
+              "name": "animate",
+              "url": "",
+              "line": -1,
+              "hits": 18
+            },
+            {
+              "name": "Vp",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4903,
+              "hits": 16
+            },
+            {
+              "name": "x",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4907,
+              "hits": 13
+            },
+            {
+              "name": "getBoundingClientRect",
+              "url": "",
+              "line": -1,
+              "hits": 13
+            },
+            {
+              "name": "projectSessionScreen",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4903,
+              "hits": 9
+            },
+            {
+              "name": "S0",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4064,
+              "hits": 8
+            },
+            {
+              "name": "Ep.renderBufferDirect",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4064,
+              "hits": 7
+            },
+            {
+              "name": "S0",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4064,
+              "hits": 7
+            },
+            {
+              "name": "upload",
+              "url": "index-Dv5j0XMN.js",
+              "line": 3962,
+              "hits": 6
+            },
+            {
+              "name": "XM",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4903,
+              "hits": 6
+            }
+          ]
+        },
+        {
+          "kind": "far",
+          "ms": 4083,
+          "frames": 99,
+          "p50": 25,
+          "p95": 145.79999999999927,
+          "p99": 191.70000000000073,
+          "max": 191.70000000000073,
+          "framesOver50": 16,
+          "longTasks": [],
+          "actions": 15,
+          "counts": [
+            {
+              "at": 261.29999999701977,
+              "returning": 7,
+              "candidates": 457,
+              "drawn": 310,
+              "calls": 564
+            },
+            {
+              "at": 511.29999999701977,
+              "returning": 7,
+              "candidates": 459,
+              "drawn": 309,
+              "calls": 615
+            },
+            {
+              "at": 773.7999999970198,
+              "returning": 5,
+              "candidates": 455,
+              "drawn": 310,
+              "calls": 607
+            },
+            {
+              "at": 1032.099999997019,
+              "returning": 3,
+              "candidates": 455,
+              "drawn": 312,
+              "calls": 428
+            },
+            {
+              "at": 1282.1999999970212,
+              "returning": 2,
+              "candidates": 456,
+              "drawn": 314,
+              "calls": 329
+            },
+            {
+              "at": 1540.4999999970205,
+              "returning": 2,
+              "candidates": 459,
+              "drawn": 316,
+              "calls": 329
+            },
+            {
+              "at": 1798.8999999970183,
+              "returning": 2,
+              "candidates": 457,
+              "drawn": 315,
+              "calls": 329
+            },
+            {
+              "at": 2077.9999999970205,
+              "returning": 2,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 329
+            },
+            {
+              "at": 2332.199999997021,
+              "returning": 2,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 329
+            },
+            {
+              "at": 2598.7999999970198,
+              "returning": 2,
+              "candidates": 455,
+              "drawn": 316,
+              "calls": 329
+            },
+            {
+              "at": 2852.9999999970205,
+              "returning": 2,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 329
+            },
+            {
+              "at": 3107.199999997021,
+              "returning": 2,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 329
+            },
+            {
+              "at": 3365.4999999970205,
+              "returning": 2,
+              "candidates": 459,
+              "drawn": 316,
+              "calls": 329
+            },
+            {
+              "at": 3632.099999997019,
+              "returning": 2,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 329
+            },
+            {
+              "at": 3886.2999999970198,
+              "returning": 1,
+              "candidates": 459,
+              "drawn": 318,
+              "calls": 230
+            }
+          ],
+          "end": {
+            "sessionDeck": {
+              "available": true,
+              "state": "packed",
+              "progress": 0,
+              "focus": 0,
+              "ready": false,
+              "screen": {
+                "corners": [
+                  [
+                    493.949872517718,
+                    371.8916943780963
+                  ],
+                  [
+                    813.0392467967894,
+                    208.88503334738763
+                  ],
+                  [
+                    813.6356235563374,
+                    510.1609373753514
+                  ],
+                  [
+                    496.1960510607672,
+                    679.5473488716179
+                  ]
+                ],
+                "width": 1704,
+                "height": 907
+              },
+              "contentKey": "host:perf-host-31",
+              "cardId": "H-039",
+              "screenCurrent": true
+            },
+            "decryption": {
+              "time": -1,
+              "intervals": [],
+              "markers": 0,
+              "point": 0,
+              "label": 0,
+              "labelValue": 0,
+              "clarity": 0,
+              "phase": "waiting"
+            },
+            "topLeft": [
+              443,
+              242
+            ],
+            "topRight": [
+              827,
+              50
+            ],
+            "labelTopLeft": [
+              526,
+              283
+            ],
+            "labelBottomLeft": [
+              526,
+              347
+            ],
+            "modelPosition": [
+              0,
+              -1.7668,
+              -2.7627
+            ],
+            "cameraPosition": [
+              -114.5565,
+              45.5345,
+              68.6579
+            ],
+            "fieldOfView": 2.999158312912754,
+            "loaded": true,
+            "drawCalls": 230,
+            "superPerformance": false,
+            "presentation": 1,
+            "triangles": 5806709,
+            "archiveCount": 317,
+            "archiveCandidates": 459,
+            "archiveCulled": 142,
+            "archiveCapacity": 576,
+            "archiveCoverage": "standard",
+            "returningFiles": 1,
+            "selectionPhase": "wave",
+            "pendingPulse": null,
+            "pulses": [
+              {
+                "lane": 0,
+                "row": 112,
+                "time": 20.916
+              },
+              {
+                "lane": 0,
+                "row": 110,
+                "time": 21.1702
+              },
+              {
+                "lane": 0,
+                "row": 112,
+                "time": 21.424400000000002
+              },
+              {
+                "lane": 0,
+                "row": 110,
+                "time": 21.6827
+              },
+              {
+                "lane": 0,
+                "row": 112,
+                "time": 21.9493
+              },
+              {
+                "lane": 0,
+                "row": 110,
+                "time": 22.2035
+              }
+            ],
+            "referenceTime": 45.36,
+            "selectedSlot": 44,
+            "selectedLane": 0,
+            "selectedCell": {
+              "lane": 0,
+              "row": 110
+            },
+            "hoverCell": null,
+            "hoverLifts": {},
+            "dragTrack": null,
+            "archiveMomentum": null,
+            "holdingArchive": false,
+            "dragProjection": {
+              "lane": {
+                "x": -397.48694207847194,
+                "y": 206.06611156597995
+              },
+              "row": {
+                "x": -76.29051829166076,
+                "y": -14.759582363415497
+              }
+            },
+            "dragMapping": null,
+            "coordinateOrigin": {
+              "lane": 0,
+              "row": 0
+            },
+            "poolBounds": {
+              "minLane": -6,
+              "maxLane": 7,
+              "minRow": 71,
+              "maxRow": 150
+            },
+            "laneFocus": 2.5068207161770805e-18,
+            "columnCamera": -10.399999999999995,
+            "rotation": 0,
+            "clearance": -3.6287409017944494,
+            "canInspect": false,
+            "returnPhase": "lowering",
+            "extraction": 0.194,
+            "appearance": 0.472,
+            "cameraDetail": 0,
+            "idleGain": 1.0865510255007769e-11,
+            "flatten": 0,
+            "spectrumActivity": 0,
+            "selectedIndexDim": 0,
+            "returningIndexDims": [
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 112
+                },
+                "dim": 0
+              }
+            ],
+            "cameraDistance": 139.99999999999997,
+            "cameraNear": 5,
+            "cameraFar": 300,
+            "fogNear": 144.99999999999997,
+            "fogFar": 164.99999999999997,
+            "returningAppearance": [
+              {
+                "slot": 13,
+                "cell": {
+                  "lane": 0,
+                  "row": 112
+                },
+                "lift": 0.17951423233696714,
+                "quality": 0.4046425058269407,
+                "rotation": 0,
+                "worldY": -1.9254536003606835,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:review-host",
+                "cardId": "H-001"
+              }
+            ],
+            "rail": -61.353,
+            "threeState": "on",
+            "fps": 25,
+            "mode": "archive",
+            "ready": true,
+            "startup": "started",
+            "motion": {
+              "reduced": false,
+              "systemReduced": false
+            },
+            "bootTime": null,
+            "selected": "H-039",
+            "selectedIndex": 44,
+            "saved": [],
+            "audio": {
+              "state": "locked",
+              "scene": "archive",
+              "tracks": 0,
+              "voices": 0,
+              "loaded": false,
+              "playedKeys": 0,
+              "error": "",
+              "preferences": {
+                "sound": false,
+                "music": false,
+                "soundVolume": 0.55,
+                "musicVolume": 0.5
+              }
+            },
+            "wallpaper": null
+          },
+          "metricDelta": {
+            "LayoutDuration": 0.036745,
+            "RecalcStyleDuration": 0.095912,
+            "ScriptDuration": 0.9683570000000001,
+            "TaskDuration": 1.3606730000000002
+          },
+          "hostCount": 32
+        },
+        {
+          "kind": "idle",
+          "ms": 4022.8000000044703,
+          "frames": 192,
+          "p50": 20.899999999997817,
+          "p95": 33.39999999999782,
+          "p99": 37.5,
+          "max": 37.60000000000218,
+          "framesOver50": 0,
+          "longTasks": [],
+          "actions": 0,
+          "counts": [
+            {
+              "at": 281.50000000149157,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 318,
+              "calls": 131
+            },
+            {
+              "at": 560.7000000014887,
+              "returning": 0,
+              "candidates": 459,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 839.8000000014908,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1106.5000000014916,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1373.2000000014887,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1639.9000000014894,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1914.8000000014908,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 2181.5000000014916,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 315,
+              "calls": 131
+            },
+            {
+              "at": 2431.5000000014916,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 2685.7000000014887,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 2956.5000000014916,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3210.7000000014887,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3485.60000000149,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3739.9000000014894,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 3994.0000000014916,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            }
+          ],
+          "end": {
+            "sessionDeck": {
+              "available": true,
+              "state": "packed",
+              "progress": 0,
+              "focus": 0,
+              "ready": false,
+              "screen": {
+                "corners": [
+                  [
+                    567.790267929169,
+                    412.47948186514554
+                  ],
+                  [
+                    885.644676508689,
+                    248.26002292355335
+                  ],
+                  [
+                    886.0171772796007,
+                    549.8388931528434
+                  ],
+                  [
+                    569.8022688159551,
+                    720.4500713698206
+                  ]
+                ],
+                "width": 1704,
+                "height": 907
+              },
+              "contentKey": "host:review-host",
+              "cardId": "H-001",
+              "screenCurrent": true
+            },
+            "decryption": {
+              "time": -1,
+              "intervals": [],
+              "markers": 0,
+              "point": 0,
+              "label": 0,
+              "labelValue": 0,
+              "clarity": 0,
+              "phase": "waiting"
+            },
+            "topLeft": [
+              517,
+              282
+            ],
+            "topRight": [
+              899,
+              89
+            ],
+            "labelTopLeft": [
+              600,
+              323
+            ],
+            "labelBottomLeft": [
+              600,
+              387
+            ],
+            "modelPosition": [
+              0,
+              -1.9556,
+              -2.17
+            ],
+            "cameraPosition": [
+              -114.5565,
+              45.5345,
+              68.6579
+            ],
+            "fieldOfView": 2.999158312912754,
+            "loaded": true,
+            "drawCalls": 131,
+            "superPerformance": false,
+            "presentation": 1,
+            "triangles": 5638191,
+            "archiveCount": 316,
+            "archiveCandidates": 458,
+            "archiveCulled": 142,
+            "archiveCapacity": 576,
+            "archiveCoverage": "standard",
+            "returningFiles": 0,
+            "selectionPhase": "settled",
+            "pendingPulse": null,
+            "pulses": [],
+            "referenceTime": 52.92,
+            "selectedSlot": 13,
+            "selectedLane": 0,
+            "selectedCell": {
+              "lane": 0,
+              "row": 13
+            },
+            "hoverCell": null,
+            "hoverLifts": {},
+            "dragTrack": null,
+            "archiveMomentum": null,
+            "holdingArchive": false,
+            "dragProjection": {
+              "lane": {
+                "x": -395.95472298629096,
+                "y": 207.5827508693932
+              },
+              "row": {
+                "x": -76.56729858671216,
+                "y": -14.868202033187487
+              }
+            },
+            "dragMapping": null,
+            "coordinateOrigin": {
+              "lane": 0,
+              "row": 0
+            },
+            "poolBounds": {
+              "minLane": -6,
+              "maxLane": 7,
+              "minRow": -27,
+              "maxRow": 52
+            },
+            "laneFocus": 3.1302645999470493e-31,
+            "columnCamera": -10.399999999999995,
+            "rotation": 0,
+            "clearance": -3.3052727479674973,
+            "canInspect": false,
+            "returnPhase": "lowering",
+            "extraction": 0.4,
+            "appearance": 1,
+            "cameraDetail": 0,
+            "idleGain": 0.9612257921682782,
+            "flatten": 0,
+            "spectrumActivity": 0,
+            "selectedIndexDim": 0,
+            "returningIndexDims": [],
+            "cameraDistance": 139.99999999999997,
+            "cameraNear": 5,
+            "cameraFar": 300,
+            "fogNear": 144.99999999999997,
+            "fogFar": 164.99999999999997,
+            "returningAppearance": [],
+            "rail": -0.62,
+            "threeState": "on",
+            "fps": 58,
+            "mode": "archive",
+            "ready": true,
+            "startup": "started",
+            "motion": {
+              "reduced": false,
+              "systemReduced": false
+            },
+            "bootTime": null,
+            "selected": "H-001",
+            "selectedIndex": 6,
+            "saved": [],
+            "audio": {
+              "state": "locked",
+              "scene": "archive",
+              "tracks": 0,
+              "voices": 0,
+              "loaded": false,
+              "playedKeys": 0,
+              "error": "",
+              "preferences": {
+                "sound": false,
+                "music": false,
+                "soundVolume": 0.55,
+                "musicVolume": 0.5
+              }
+            },
+            "wallpaper": null
+          },
+          "metricDelta": {
+            "LayoutDuration": 0.023674999999999974,
+            "RecalcStyleDuration": 0.031171000000000004,
+            "ScriptDuration": 0.9297930000000001,
+            "TaskDuration": 1.1568280000000009
+          },
+          "hostCount": 256
+        },
+        {
+          "kind": "wheel",
+          "ms": 4031.10000000149,
+          "frames": 61,
+          "p50": 62.5,
+          "p95": 129.1999999999971,
+          "p99": 183.29999999999927,
+          "max": 183.29999999999927,
+          "framesOver50": 36,
+          "longTasks": [],
+          "actions": 33,
+          "counts": [
+            {
+              "at": 354.59999999999854,
+              "returning": 2,
+              "candidates": 458,
+              "drawn": 312,
+              "calls": 329
+            },
+            {
+              "at": 633.7999999999993,
+              "returning": 4,
+              "candidates": 458,
+              "drawn": 311,
+              "calls": 527
+            },
+            {
+              "at": 958.7000000000007,
+              "returning": 6,
+              "candidates": 458,
+              "drawn": 310,
+              "calls": 721
+            },
+            {
+              "at": 1258.7000000000007,
+              "returning": 9,
+              "candidates": 458,
+              "drawn": 304,
+              "calls": 963
+            },
+            {
+              "at": 1550.4000000000015,
+              "returning": 12,
+              "candidates": 457,
+              "drawn": 303,
+              "calls": 1119
+            },
+            {
+              "at": 1829.5999999999985,
+              "returning": 15,
+              "candidates": 458,
+              "drawn": 303,
+              "calls": 1143
+            },
+            {
+              "at": 2150.4000000000015,
+              "returning": 18,
+              "candidates": 457,
+              "drawn": 302,
+              "calls": 1189
+            },
+            {
+              "at": 2408.699999999997,
+              "returning": 20,
+              "candidates": 457,
+              "drawn": 302,
+              "calls": 1174
+            },
+            {
+              "at": 2671.199999999997,
+              "returning": 23,
+              "candidates": 456,
+              "drawn": 301,
+              "calls": 1190
+            },
+            {
+              "at": 2954.5999999999985,
+              "returning": 25,
+              "candidates": 458,
+              "drawn": 302,
+              "calls": 1174
+            },
+            {
+              "at": 3237.9000000000015,
+              "returning": 27,
+              "candidates": 457,
+              "drawn": 302,
+              "calls": 1153
+            },
+            {
+              "at": 3504.5999999999985,
+              "returning": 28,
+              "candidates": 458,
+              "drawn": 302,
+              "calls": 1186
+            },
+            {
+              "at": 3787.9000000000015,
+              "returning": 28,
+              "candidates": 457,
+              "drawn": 301,
+              "calls": 1134
+            }
+          ],
+          "end": {
+            "sessionDeck": {
+              "available": true,
+              "state": "packed",
+              "progress": 0,
+              "focus": 0,
+              "ready": false,
+              "screen": {
+                "corners": [
+                  [
+                    2160.2926760861083,
+                    1042.9714133678729
+                  ],
+                  [
+                    2451.2998818802444,
+                    857.1083797176017
+                  ],
+                  [
+                    2444.7582358753725,
+                    1167.159246606231
+                  ],
+                  [
+                    2155.1291457854036,
+                    1359.7635637130695
+                  ]
+                ],
+                "width": 1704,
+                "height": 907
+              },
+              "contentKey": "host:perf-host-99",
+              "cardId": "H-107",
+              "screenCurrent": true
+            },
+            "decryption": {
+              "time": -1,
+              "intervals": [],
+              "markers": 0,
+              "point": 0,
+              "label": 0,
+              "labelValue": 0,
+              "clarity": 0,
+              "phase": "waiting"
+            },
+            "topLeft": [
+              2114,
+              911
+            ],
+            "topRight": [
+              2464,
+              692
+            ],
+            "labelTopLeft": [
+              2194,
+              950
+            ],
+            "labelBottomLeft": [
+              2193,
+              1016
+            ],
+            "modelPosition": [
+              0,
+              -4.1763,
+              10.1091
+            ],
+            "cameraPosition": [
+              -114.5565,
+              45.5345,
+              68.6579
+            ],
+            "fieldOfView": 2.999158312912754,
+            "loaded": true,
+            "drawCalls": 1174,
+            "superPerformance": false,
+            "presentation": 1,
+            "triangles": 7001103,
+            "archiveCount": 301,
+            "archiveCandidates": 457,
+            "archiveCulled": 156,
+            "archiveCapacity": 576,
+            "archiveCoverage": "standard",
+            "returningFiles": 27,
+            "selectionPhase": "wave",
+            "pendingPulse": null,
+            "pulses": [
+              {
+                "lane": 0,
+                "row": 107,
+                "time": 35.261900000000004
+              },
+              {
+                "lane": 0,
+                "row": 108,
+                "time": 35.261900000000004
+              },
+              {
+                "lane": 0,
+                "row": 109,
+                "time": 35.261900000000004
+              },
+              {
+                "lane": 0,
+                "row": 110,
+                "time": 35.3911
+              },
+              {
+                "lane": 0,
+                "row": 111,
+                "time": 35.3911
+              },
+              {
+                "lane": 0,
+                "row": 112,
+                "time": 35.3911
+              }
+            ],
+            "referenceTime": 56.73,
+            "selectedSlot": 112,
+            "selectedLane": 0,
+            "selectedCell": {
+              "lane": 0,
+              "row": 112
+            },
+            "hoverCell": null,
+            "hoverLifts": {},
+            "dragTrack": null,
+            "archiveMomentum": null,
+            "holdingArchive": false,
+            "dragProjection": {
+              "lane": {
+                "x": -362.67014144079076,
+                "y": 234.7075733249838
+              },
+              "row": {
+                "x": -82.9767112528674,
+                "y": -16.81074162897898
+              }
+            },
+            "dragMapping": null,
+            "coordinateOrigin": {
+              "lane": 0,
+              "row": 0
+            },
+            "poolBounds": {
+              "minLane": -6,
+              "maxLane": 7,
+              "minRow": 53,
+              "maxRow": 131
+            },
+            "laneFocus": 8.797669284092826e-38,
+            "columnCamera": -10.399999999999995,
+            "rotation": 0,
+            "clearance": -4.565187717031823,
+            "canInspect": false,
+            "returnPhase": "lowering",
+            "extraction": 0.008,
+            "appearance": 0,
+            "cameraDetail": 0,
+            "idleGain": 0.000053795418653698544,
+            "flatten": 0,
+            "spectrumActivity": 0,
+            "selectedIndexDim": 0,
+            "returningIndexDims": [
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 28
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 34
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 37
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 40
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 43
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 46
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 49
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 52
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 55
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 58
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 61
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 64
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 67
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 70
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 73
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 76
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 79
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 82
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 85
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 88
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 91
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 94
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 97
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 100
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 103
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 106
+                },
+                "dim": 0
+              },
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 109
+                },
+                "dim": 0
+              }
+            ],
+            "cameraDistance": 139.99999999999997,
+            "cameraNear": 5,
+            "cameraFar": 300,
+            "fogNear": 144.99999999999997,
+            "fogFar": 164.99999999999997,
+            "returningAppearance": [
+              {
+                "slot": 28,
+                "cell": {
+                  "lane": 0,
+                  "row": 28
+                },
+                "lift": 0.0001288278068047907,
+                "quality": 3.3391738665698753e-10,
+                "rotation": 0,
+                "worldY": -4.599875427613295,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-15",
+                "cardId": "H-023"
+              },
+              {
+                "slot": 34,
+                "cell": {
+                  "lane": 0,
+                  "row": 34
+                },
+                "lift": 0.00010443854651753594,
+                "quality": 1.779231171337305e-10,
+                "rotation": 0,
+                "worldY": -4.599895471713708,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-21",
+                "cardId": "H-029"
+              },
+              {
+                "slot": 37,
+                "cell": {
+                  "lane": 0,
+                  "row": 37
+                },
+                "lift": 0.00012744992255044296,
+                "quality": 3.2331895395777044e-10,
+                "rotation": 0,
+                "worldY": -4.599870140400858,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-24",
+                "cardId": "H-032"
+              },
+              {
+                "slot": 40,
+                "cell": {
+                  "lane": 0,
+                  "row": 40
+                },
+                "lift": 0.00015542462123529355,
+                "quality": 5.863086741663791e-10,
+                "rotation": 0,
+                "worldY": -4.599842391960067,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-27",
+                "cardId": "H-035"
+              },
+              {
+                "slot": 43,
+                "cell": {
+                  "lane": 0,
+                  "row": 43
+                },
+                "lift": 0.0001894023010813114,
+                "quality": 1.0608824537302983e-9,
+                "rotation": 0,
+                "worldY": -4.599810874563013,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-30",
+                "cardId": "H-038"
+              },
+              {
+                "slot": 46,
+                "cell": {
+                  "lane": 0,
+                  "row": 46
+                },
+                "lift": 0.0002306312808777697,
+                "quality": 1.9151331601438428e-9,
+                "rotation": 0,
+                "worldY": -4.599772189017452,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-33",
+                "cardId": "H-041"
+              },
+              {
+                "slot": 49,
+                "cell": {
+                  "lane": 0,
+                  "row": 49
+                },
+                "lift": 0.0006299676616653107,
+                "quality": 3.8971602192853784e-8,
+                "rotation": 0,
+                "worldY": -4.59937319093211,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-36",
+                "cardId": "H-044"
+              },
+              {
+                "slot": 52,
+                "cell": {
+                  "lane": 0,
+                  "row": 52
+                },
+                "lift": 0.00041430629673677705,
+                "quality": 1.109454872657427e-8,
+                "rotation": 0,
+                "worldY": -4.599586383986188,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-39",
+                "cardId": "H-047"
+              },
+              {
+                "slot": 55,
+                "cell": {
+                  "lane": 0,
+                  "row": 55
+                },
+                "lift": 0.0008521973034265421,
+                "quality": 9.639434683075542e-8,
+                "rotation": 0,
+                "worldY": -4.59914484651759,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-42",
+                "cardId": "H-050"
+              },
+              {
+                "slot": 58,
+                "cell": {
+                  "lane": 0,
+                  "row": 58
+                },
+                "lift": 0.0012965212898164106,
+                "quality": 3.388793183712085e-7,
+                "rotation": 0,
+                "worldY": -4.598698384872496,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-45",
+                "cardId": "H-053"
+              },
+              {
+                "slot": 61,
+                "cell": {
+                  "lane": 0,
+                  "row": 61
+                },
+                "lift": 0.0017080134922054084,
+                "quality": 7.7358506051025e-7,
+                "rotation": 0,
+                "worldY": -4.5982879943159,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-48",
+                "cardId": "H-056"
+              },
+              {
+                "slot": 64,
+                "cell": {
+                  "lane": 0,
+                  "row": 64
+                },
+                "lift": 0.001300376333265684,
+                "quality": 3.419062067590482e-7,
+                "rotation": 0,
+                "worldY": -4.5986994081649435,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-51",
+                "cardId": "H-059"
+              },
+              {
+                "slot": 67,
+                "cell": {
+                  "lane": 0,
+                  "row": 67
+                },
+                "lift": 0.0015662088017170644,
+                "quality": 5.967807019381363e-7,
+                "rotation": 0,
+                "worldY": -4.598437526853804,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-54",
+                "cardId": "H-062"
+              },
+              {
+                "slot": 70,
+                "cell": {
+                  "lane": 0,
+                  "row": 70
+                },
+                "lift": 0.0035753874673133917,
+                "quality": 0.000007046090035174371,
+                "rotation": 0,
+                "worldY": -4.596429838306047,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-57",
+                "cardId": "H-065"
+              },
+              {
+                "slot": 73,
+                "cell": {
+                  "lane": 0,
+                  "row": 73
+                },
+                "lift": 0.005763211014094541,
+                "quality": 0.00002926711899092396,
+                "rotation": 0,
+                "worldY": -4.59424017763787,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-60",
+                "cardId": "H-068"
+              },
+              {
+                "slot": 76,
+                "cell": {
+                  "lane": 0,
+                  "row": 76
+                },
+                "lift": 0.008630840804420068,
+                "quality": 0.00009723351298370264,
+                "rotation": 0,
+                "worldY": -4.650748323133753,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-63",
+                "cardId": "H-071"
+              },
+              {
+                "slot": 79,
+                "cell": {
+                  "lane": 0,
+                  "row": 79
+                },
+                "lift": 0.010590101706883029,
+                "quality": 0.00017828371808858867,
+                "rotation": 0,
+                "worldY": -4.860717477803062,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-66",
+                "cardId": "H-074"
+              },
+              {
+                "slot": 82,
+                "cell": {
+                  "lane": 0,
+                  "row": 82
+                },
+                "lift": 0.015909639849044508,
+                "quality": 0.000592275286105112,
+                "rotation": 0,
+                "worldY": -4.8767683912426625,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-69",
+                "cardId": "H-077"
+              },
+              {
+                "slot": 85,
+                "cell": {
+                  "lane": 0,
+                  "row": 85
+                },
+                "lift": 0.009943509031877636,
+                "quality": 0.00014794578193299214,
+                "rotation": 0,
+                "worldY": -4.378944424573471,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-72",
+                "cardId": "H-080"
+              },
+              {
+                "slot": 88,
+                "cell": {
+                  "lane": 0,
+                  "row": 88
+                },
+                "lift": 0.01159244750159578,
+                "quality": 0.00023295499074770328,
+                "rotation": 0,
+                "worldY": -3.9025053779803436,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-75",
+                "cardId": "H-083"
+              },
+              {
+                "slot": 91,
+                "cell": {
+                  "lane": 0,
+                  "row": 91
+                },
+                "lift": 0.029297786384507855,
+                "quality": 0.003510323475746213,
+                "rotation": 0,
+                "worldY": -3.3723248814985896,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-78",
+                "cardId": "H-086"
+              },
+              {
+                "slot": 94,
+                "cell": {
+                  "lane": 0,
+                  "row": 94
+                },
+                "lift": 0.038236987623117086,
+                "quality": 0.00753053245125818,
+                "rotation": 0,
+                "worldY": -2.8104824174092364,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-81",
+                "cardId": "H-089"
+              },
+              {
+                "slot": 97,
+                "cell": {
+                  "lane": 0,
+                  "row": 97
+                },
+                "lift": 0.047874140710198944,
+                "quality": 0.014213874785765626,
+                "rotation": 0,
+                "worldY": -2.3385432229107685,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-84",
+                "cardId": "H-092"
+              },
+              {
+                "slot": 100,
+                "cell": {
+                  "lane": 0,
+                  "row": 100
+                },
+                "lift": 0.026917879399277256,
+                "quality": 0.002748152276095888,
+                "rotation": 0,
+                "worldY": -3.0196274729336654,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-87",
+                "cardId": "H-095"
+              },
+              {
+                "slot": 103,
+                "cell": {
+                  "lane": 0,
+                  "row": 103
+                },
+                "lift": 0.058398657334728786,
+                "quality": 0.024702246445066203,
+                "rotation": 0,
+                "worldY": -3.5023063487815933,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-90",
+                "cardId": "H-098"
+              },
+              {
+                "slot": 106,
+                "cell": {
+                  "lane": 0,
+                  "row": 106
+                },
+                "lift": 0.05433705329518644,
+                "quality": 0.020237064762290115,
+                "rotation": 0,
+                "worldY": -3.1542358865076014,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-93",
+                "cardId": "H-101"
+              },
+              {
+                "slot": 109,
+                "cell": {
+                  "lane": 0,
+                  "row": 109
+                },
+                "lift": 0.01892747480878456,
+                "quality": 0.0009857155535349378,
+                "rotation": 0,
+                "worldY": -3.6675926048589385,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:perf-host-96",
+                "cardId": "H-104"
+              }
+            ],
+            "rail": -49.721,
+            "threeState": "on",
+            "fps": 16,
+            "mode": "archive",
+            "ready": true,
+            "startup": "started",
+            "motion": {
+              "reduced": false,
+              "systemReduced": false
+            },
+            "bootTime": null,
+            "selected": "H-107",
+            "selectedIndex": 112,
+            "saved": [],
+            "audio": {
+              "state": "locked",
+              "scene": "archive",
+              "tracks": 0,
+              "voices": 0,
+              "loaded": false,
+              "playedKeys": 0,
+              "error": "",
+              "preferences": {
+                "sound": false,
+                "music": false,
+                "soundVolume": 0.55,
+                "musicVolume": 0.5
+              }
+            },
+            "wallpaper": null
+          },
+          "metricDelta": {
+            "LayoutDuration": 0.05252799999999999,
+            "RecalcStyleDuration": 0.108823,
+            "ScriptDuration": 1.1195190000000004,
+            "TaskDuration": 1.7117310000000003
+          },
+          "hostCount": 256,
+          "cpuTop": [
+            {
+              "name": "(idle)",
+              "url": "",
+              "line": -1,
+              "hits": 959
+            },
+            {
+              "name": "(program)",
+              "url": "",
+              "line": -1,
+              "hits": 134
+            },
+            {
+              "name": "(garbage collector)",
+              "url": "",
+              "line": -1,
+              "hits": 39
+            },
+            {
+              "name": "update",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4907,
+              "hits": 24
+            },
+            {
+              "name": "animate",
+              "url": "",
+              "line": -1,
+              "hits": 16
+            },
+            {
+              "name": "XM",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4903,
+              "hits": 14
+            },
+            {
+              "name": "x",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4907,
+              "hits": 11
+            },
+            {
+              "name": "Vp",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4903,
+              "hits": 11
+            },
+            {
+              "name": "projectSessionScreen",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4903,
+              "hits": 10
+            },
+            {
+              "name": "getBoundingClientRect",
+              "url": "",
+              "line": -1,
+              "hits": 8
+            },
+            {
+              "name": "Ep.renderBufferDirect",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4064,
+              "hits": 6
+            },
+            {
+              "name": "Ep.renderBufferDirect",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4064,
+              "hits": 5
+            },
+            {
+              "name": "S0",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4064,
+              "hits": 5
+            },
+            {
+              "name": "r",
+              "url": "index-Dv5j0XMN.js",
+              "line": 4064,
+              "hits": 5
+            }
+          ]
+        },
+        {
+          "kind": "far",
+          "ms": 4056.7999999970198,
+          "frames": 119,
+          "p50": 25,
+          "p95": 125.09999999999854,
+          "p99": 158.40000000000146,
+          "max": 166.6999999999971,
+          "framesOver50": 16,
+          "longTasks": [],
+          "actions": 15,
+          "counts": [
+            {
+              "at": 256.79999999701977,
+              "returning": 7,
+              "candidates": 457,
+              "drawn": 309,
+              "calls": 564
+            },
+            {
+              "at": 523.4999999970169,
+              "returning": 5,
+              "candidates": 459,
+              "drawn": 304,
+              "calls": 483
+            },
+            {
+              "at": 785.8999999970183,
+              "returning": 3,
+              "candidates": 457,
+              "drawn": 311,
+              "calls": 32
+            },
+            {
+              "at": 1044.1999999970212,
+              "returning": 2,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 56
+            },
+            {
+              "at": 1298.3999999970183,
+              "returning": 2,
+              "candidates": 459,
+              "drawn": 310,
+              "calls": 168
+            },
+            {
+              "at": 1548.3999999970183,
+              "returning": 2,
+              "candidates": 456,
+              "drawn": 310,
+              "calls": 214
+            },
+            {
+              "at": 1823.3999999970183,
+              "returning": 2,
+              "candidates": 456,
+              "drawn": 312,
+              "calls": 230
+            },
+            {
+              "at": 2085.8999999970183,
+              "returning": 2,
+              "candidates": 457,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 2335.8999999970183,
+              "returning": 2,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 2585.8999999970183,
+              "returning": 2,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 2848.499999997017,
+              "returning": 2,
+              "candidates": 456,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 3102.5999999970227,
+              "returning": 2,
+              "candidates": 458,
+              "drawn": 314,
+              "calls": 230
+            },
+            {
+              "at": 3365.0999999970227,
+              "returning": 1,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 230
+            },
+            {
+              "at": 3615.0999999970227,
+              "returning": 1,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 3865.0999999970227,
+              "returning": 1,
+              "candidates": 457,
+              "drawn": 317,
+              "calls": 230
+            }
+          ],
+          "end": {
+            "sessionDeck": {
+              "available": true,
+              "state": "packed",
+              "progress": 0,
+              "focus": 0,
+              "ready": false,
+              "screen": {
+                "corners": [
+                  [
+                    475.8894461656569,
+                    376.8337981463274
+                  ],
+                  [
+                    795.2016890861025,
+                    213.81392447988208
+                  ],
+                  [
+                    795.7324400854355,
+                    514.8455779897512
+                  ],
+                  [
+                    478.06989847374103,
+                    684.2344452389573
+                  ]
+                ],
+                "width": 1704,
+                "height": 907
+              },
+              "contentKey": "host:perf-host-255",
+              "cardId": "H-263",
+              "screenCurrent": true
+            },
+            "decryption": {
+              "time": -1,
+              "intervals": [],
+              "markers": 0,
+              "point": 0,
+              "label": 0,
+              "labelValue": 0,
+              "clarity": 0,
+              "phase": "waiting"
+            },
+            "topLeft": [
+              425,
+              247
+            ],
+            "topRight": [
+              809,
+              55
+            ],
+            "labelTopLeft": [
+              508,
+              288
+            ],
+            "labelBottomLeft": [
+              508,
+              352
+            ],
+            "modelPosition": [
+              0,
+              -1.8274,
+              -2.9101
+            ],
+            "cameraPosition": [
+              -114.5565,
+              45.5345,
+              68.6579
+            ],
+            "fieldOfView": 2.999158312912754,
+            "loaded": true,
+            "drawCalls": 230,
+            "superPerformance": false,
+            "presentation": 1,
+            "triangles": 5789345,
+            "archiveCount": 316,
+            "archiveCandidates": 457,
+            "archiveCulled": 141,
+            "archiveCapacity": 576,
+            "archiveCoverage": "standard",
+            "returningFiles": 1,
+            "selectionPhase": "wave",
+            "pendingPulse": null,
+            "pulses": [
+              {
+                "lane": 0,
+                "row": 13,
+                "time": 39.3286
+              },
+              {
+                "lane": 0,
+                "row": 11,
+                "time": 39.5912
+              },
+              {
+                "lane": 0,
+                "row": 13,
+                "time": 39.8453
+              },
+              {
+                "lane": 0,
+                "row": 11,
+                "time": 40.107800000000005
+              },
+              {
+                "lane": 0,
+                "row": 13,
+                "time": 40.357800000000005
+              },
+              {
+                "lane": 0,
+                "row": 11,
+                "time": 40.607800000000005
+              }
+            ],
+            "referenceTime": 61.08,
+            "selectedSlot": 268,
+            "selectedLane": 0,
+            "selectedCell": {
+              "lane": 0,
+              "row": 11
+            },
+            "hoverCell": null,
+            "hoverLifts": {},
+            "dragTrack": null,
+            "archiveMomentum": null,
+            "holdingArchive": false,
+            "dragProjection": {
+              "lane": {
+                "x": -397.76405350111463,
+                "y": 206.07738583967733
+              },
+              "row": {
+                "x": -76.20376213382316,
+                "y": -14.760393993862388
+              }
+            },
+            "dragMapping": null,
+            "coordinateOrigin": {
+              "lane": 0,
+              "row": 0
+            },
+            "poolBounds": {
+              "minLane": -6,
+              "maxLane": 7,
+              "minRow": -27,
+              "maxRow": 51
+            },
+            "laneFocus": 2.907831294266082e-45,
+            "columnCamera": -10.399999999999995,
+            "rotation": 0,
+            "clearance": -3.74012816849691,
+            "canInspect": false,
+            "returnPhase": "lowering",
+            "extraction": 0.153,
+            "appearance": 0.287,
+            "cameraDetail": 0,
+            "idleGain": 1.4940624201155492e-12,
+            "flatten": 0,
+            "spectrumActivity": 0,
+            "selectedIndexDim": 0,
+            "returningIndexDims": [
+              {
+                "cell": {
+                  "lane": 0,
+                  "row": 13
+                },
+                "dim": 0
+              }
+            ],
+            "cameraDistance": 139.99999999999997,
+            "cameraNear": 5,
+            "cameraFar": 300,
+            "fogNear": 144.99999999999997,
+            "fogFar": 164.99999999999997,
+            "returningAppearance": [
+              {
+                "slot": 13,
+                "cell": {
+                  "lane": 0,
+                  "row": 13
+                },
+                "lift": 0.22145061777783878,
+                "quality": 0.5997813341034467,
+                "rotation": 0,
+                "worldY": -1.8472771710965092,
+                "phase": "lowering",
+                "terminal": true,
+                "contentKey": "host:review-host",
+                "cardId": "H-001"
+              }
+            ],
+            "rail": -0.12,
+            "threeState": "on",
+            "fps": 26,
+            "mode": "archive",
+            "ready": true,
+            "startup": "started",
+            "motion": {
+              "reduced": false,
+              "systemReduced": false
+            },
+            "bootTime": null,
+            "selected": "H-263",
+            "selectedIndex": 268,
+            "saved": [],
+            "audio": {
+              "state": "locked",
+              "scene": "archive",
+              "tracks": 0,
+              "voices": 0,
+              "loaded": false,
+              "playedKeys": 0,
+              "error": "",
+              "preferences": {
+                "sound": false,
+                "music": false,
+                "soundVolume": 0.55,
+                "musicVolume": 0.5
+              }
+            },
+            "wallpaper": null
+          },
+          "metricDelta": {
+            "LayoutDuration": 0.04215800000000003,
+            "RecalcStyleDuration": 0.11976599999999998,
+            "ScriptDuration": 0.9815490000000011,
+            "TaskDuration": 1.4621180000000003
+          },
+          "hostCount": 256
+        }
+      ],
+      "renderer": {
+        "vendor": "Google Inc. (NVIDIA)",
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "stats": {
+          "sessionDeck": {
+            "available": true,
+            "state": "packed",
+            "progress": 0,
+            "focus": 0,
+            "ready": false,
+            "screen": {
+              "corners": [
+                [
+                  -1024.3835592832288,
+                  675.2519925810262
+                ],
+                [
+                  -691.1348435642166,
+                  515.6606512614999
+                ],
+                [
+                  -682.0224974673433,
+                  787.4781286989783
+                ],
+                [
+                  -1013.1531667719112,
+                  953.0843181314694
+                ]
+              ],
+              "width": 1704,
+              "height": 907
+            },
+            "contentKey": "host:directory",
+            "cardId": "H-000",
+            "screenCurrent": true
+          },
+          "decryption": {
+            "time": -1,
+            "intervals": [],
+            "markers": 0,
+            "point": 0,
+            "label": 0,
+            "labelValue": 0,
+            "clarity": 0,
+            "phase": "waiting"
+          },
+          "topLeft": [
+            -1079,
+            559
+          ],
+          "topRight": [
+            -678,
+            371
+          ],
+          "labelTopLeft": [
+            -996,
+            594
+          ],
+          "labelBottomLeft": [
+            -994,
+            652
+          ],
+          "modelPosition": [
+            -6.4232,
+            -3.6831,
+            -12.4344
+          ],
+          "cameraPosition": [
+            -105.8425,
+            43.9425,
+            64.4293
+          ],
+          "fieldOfView": 3.524172296886541,
+          "loaded": true,
+          "drawCalls": 44,
+          "superPerformance": false,
+          "presentation": 1,
+          "triangles": 6004693,
+          "archiveCount": 345,
+          "archiveCandidates": 493,
+          "archiveCulled": 148,
+          "archiveCapacity": 576,
+          "archiveCoverage": "standard",
+          "returningFiles": 0,
+          "selectionPhase": "wave",
+          "pendingPulse": null,
+          "pulses": [
+            {
+              "lane": 0,
+              "row": 12,
+              "time": 3.5201
+            }
+          ],
+          "referenceTime": 34.46,
+          "selectedSlot": 12,
+          "selectedLane": 0,
+          "selectedCell": {
+            "lane": 0,
+            "row": 12
+          },
+          "hoverCell": null,
+          "hoverLifts": {},
+          "dragTrack": null,
+          "archiveMomentum": null,
+          "holdingArchive": false,
+          "dragProjection": {
+            "lane": {
+              "x": -414.86362966889556,
+              "y": 201.63019496505387
+            },
+            "row": {
+              "x": -65.66709445075155,
+              "y": -14.661875384173213
+            }
+          },
+          "dragMapping": null,
+          "coordinateOrigin": {
+            "lane": 0,
+            "row": 0
+          },
+          "poolBounds": {
+            "minLane": -5,
+            "maxLane": 8,
+            "minRow": -13,
+            "maxRow": 69
+          },
+          "laneFocus": 1.1605787731781216,
+          "columnCamera": -3.9768397108415643,
+          "rotation": 0,
+          "clearance": -3.9943665689213526,
+          "canInspect": false,
+          "returnPhase": "lowering",
+          "extraction": 0.178,
+          "appearance": 0.396,
+          "cameraDetail": 0,
+          "idleGain": 0.01394813935625674,
+          "flatten": 0,
+          "spectrumActivity": 0,
+          "selectedIndexDim": 0,
+          "returningIndexDims": [],
+          "cameraDistance": 130.39469535745215,
+          "cameraNear": 5,
+          "cameraFar": 300,
+          "fogNear": 135.39469535745215,
+          "fogFar": 155.39469535745215,
+          "returningAppearance": [],
+          "rail": 0,
+          "threeState": "on",
+          "fps": 0,
+          "mode": "archive",
+          "ready": true,
+          "startup": "started",
+          "motion": {
+            "reduced": false,
+            "systemReduced": false
+          },
+          "bootTime": null,
+          "selected": "H-000",
+          "selectedIndex": 0,
+          "saved": [],
+          "audio": {
+            "state": "locked",
+            "scene": "archive",
+            "tracks": 0,
+            "voices": 0,
+            "loaded": false,
+            "playedKeys": 0,
+            "error": "",
+            "preferences": {
+              "sound": false,
+              "music": false,
+              "soundVolume": 0.55,
+              "musicVolume": 0.5
+            }
+          },
+          "wallpaper": null
+        }
+      }
+    }
+  }
+}

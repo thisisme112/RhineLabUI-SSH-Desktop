@@ -1,0 +1,79 @@
+# Distribution build. `npm run dist` builds the renderer first — electron-builder
+# only copies what is already on disk, and `prebuild:desktop` is what verifies
+# the SSH bridge binaries and their checksums.
+#
+# `appId` is the AppUserModelID the main process sets with
+# `app.setAppUserModelId`; the two must match or a pinned shortcut and the
+# running window become two separate taskbar buttons.
+appId: com.rhinelab.analysis-os
+productName: Rhine Lab
+copyright: Rhine Lab · Analysis OS
+
+directories:
+  # `release/` also holds the Wallpaper Engine build (`release/wallpaper`), so
+  # the desktop installers go in their own directory rather than beside it.
+  output: release/desktop
+  buildResources: build
+
+# The app ships unwrapped. Two reasons, both load-bearing:
+#   - the SSH bridge is a spawned executable, and a binary cannot be run from
+#     inside an asar archive;
+#   - every path in the main process is resolved relative to `__dirname`
+#     (the renderer, the icon, the preload, the probes, the bridge), which only
+#     keeps working if those are real files.
+asar: false
+
+# node-pty's prebuilt binaries are N-API (`node-addon-api`), so they load under
+# Electron as they are; rebuilding would need a Python and a C++ toolchain for
+# no gain. Measured: with this on, the build fails at "Could not find any Python
+# installation to use" and the app that already runs sessions is unaffected.
+npmRebuild: false
+
+files:
+  - package.json
+  - LICENSE
+  - electron/**/*
+  - dist-desktop/**/*
+  # Development surfaces. The probes are the smoke harness's renderer scripts,
+  # and the two `.cjs` files are the dev launcher and the Electron bootstrap;
+  # none of them is reachable from the shipped UI.
+  - "!electron/probes/**"
+  - "!electron/fixtures/**"
+  - "!electron/ssh-config/**"
+  - "!electron/dev.cjs"
+  - "!electron/ensure.cjs"
+
+win:
+  icon: electron/assets/app-icon.ico
+  # One run produces both shapes: an installer for a normal install, and a
+  # single executable for running without installing.
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Rhine Lab
+  artifactName: RhineLab-Setup-${version}.${ext}
+  # Stated explicitly rather than copied into `build/`: the installer, the
+  # uninstaller and the header all use the app's own icon, the same file the
+  # window and the executable carry.
+  installerIcon: electron/assets/app-icon.ico
+  uninstallerIcon: electron/assets/app-icon.ico
+  installerHeaderIcon: electron/assets/app-icon.ico
+  # Saved hosts, credentials and session logs belong to the user, not to the
+  # install; uninstalling must not take them.
+  deleteAppDataOnUninstall: false
+
+portable:
+  artifactName: RhineLab-Portable-${version}.${ext}
+
+# No publish step: this repository has never had one, and `--publish never`
+# on the command line keeps a stray config from trying.
+publish: null

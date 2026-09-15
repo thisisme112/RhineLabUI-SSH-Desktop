@@ -1,0 +1,46 @@
+.ssh-library { --library-muted: var(--theme-muted, #615f57); font-size: 14px; }
+.ssh-library h2 { font-size: 32px; line-height: 1.25; }
+.ssh-library-intro { margin: 18px 0; color: var(--library-muted); font-size: 14px; }
+.ssh-library-toolbar, .ssh-library-tools, .ssh-library-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.ssh-library-toolbar { justify-content: space-between; margin: 20px 0 12px; }
+.ssh-library :is(input, textarea, select) { box-sizing: border-box; min-width: 0; border: 0; border-bottom: 1px solid var(--theme-line); background: transparent; color: var(--theme-ink); padding: 9px 2px; font: inherit; border-radius: 0; }
+.ssh-library :is(input, textarea, select):focus { outline: none; border-bottom-color: var(--ssh-text-accent, var(--theme-accent)); }
+.ssh-library :is(input, textarea)::placeholder { color: var(--library-muted); }
+.ssh-library-toolbar > input { width: 190px; }
+.ssh-library button { font: inherit; font-size: 13px; color: var(--theme-ink); cursor: pointer; border: 0; border-bottom: 1px solid transparent; background: transparent; padding: 8px 0; text-align: left; transition: color 180ms, border-color 180ms; }
+.ssh-library button:is(:hover, :focus-visible):not(:disabled) { color: var(--ssh-text-accent, var(--theme-accent)); border-bottom-color: currentColor; outline: none; }
+.ssh-library button:disabled { opacity: .45; cursor: default; }
+.ssh-library-overview, .ssh-library-note, .ssh-library-feedback { font-size: 12px; color: var(--library-muted); line-height: 1.8; }
+.ssh-library-overview:empty { display: none; }
+.ssh-library-list { margin-top: 14px; }
+.ssh-library .ssh-library-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(60px, auto) 16px; align-items: center; width: 100%; gap: 16px; min-height: 68px; border-bottom-color: var(--theme-line); }
+.ssh-library-row-main { min-width: 0; display: block; }
+.ssh-library-row strong { display: block; font-size: 14px; font-weight: 500; line-height: 1.5; }
+.ssh-library-row small { display: block; font-size: 12px; line-height: 1.7; color: var(--library-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ssh-library-state { font-size: 12px; max-width: 170px; color: var(--library-muted); }
+.ssh-library [data-tone="connected"] .ssh-library-state { color: var(--ssh-success, #436657); }
+.ssh-library [data-tone="waiting"] .ssh-library-state, .ssh-library [data-tone="directory"] .ssh-library-state { color: var(--ssh-text-accent, var(--theme-accent)); }
+.ssh-library-empty { padding: 28px 0; font-size: 14px; line-height: 1.9; color: var(--library-muted); }
+.ssh-library-selection { margin-top: 24px; }
+.ssh-library :is(pre, .ssh-library-command) { margin: 16px 0; font: 14px/1.8 "Cascadia Mono", Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--theme-ink); }
+.ssh-library-selection > p { font-size: 13px; line-height: 1.8; }
+.ssh-library-target { display: flex; align-items: baseline; gap: 18px; font-size: 13px; }
+.ssh-library-target select { max-width: 380px; flex: 1; }
+.ssh-library-editor { padding-top: 25px; margin-top: 22px; border-top: 1px solid var(--theme-line); }
+.ssh-library-editor label { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: baseline; gap: 12px; margin: 12px 0; font-size: 13px; }
+.ssh-library-editor textarea { resize: vertical; max-height: 260px; font-family: "Cascadia Mono", Consolas, monospace; }
+.ssh-library-editor .ssh-library-actions { margin-left: 92px; }
+.ssh-library [hidden] { display: none; }
+.ssh-detail :is(.detail-kicker, .metadata dt, .host-verified, .detail-footnote, .host-session-row small, .host-session-row b, .panel-label, .log-note) { font-size: 12px; }
+.ssh-library :is(.detail-kicker, .detail-footnote, .panel-label), .ssh-prompt .detail-kicker, .ssh-record .detail-kicker { font-size: 12px; }
+.ssh-detail :is(.host-raw, .host-session-row, .host-loading, .metadata dd) { font-size: 13px; }
+.ssh-detail .detail-actions { flex-wrap: wrap; }
+#stage[data-ssh-workspace="true"] {
+  --theme-muted: color-mix(in srgb, var(--theme-ink) 70%, transparent);
+  --ssh-text-accent: color-mix(in srgb, var(--theme-accent) 70%, var(--theme-ink));
+  --ssh-success: color-mix(in srgb, #436657 60%, var(--theme-ink));
+}
+#stage[data-ssh-workspace="true"] :is(.detail-kicker, .detail-kicker span, .detail-title-cn > span, .metadata dt, .panel-label, .detail-footnote, .system-footer, .archive-hint, .tiny-label, .column-navigation > div > span) { font-size: 12px; color: var(--theme-muted); }
+#stage[data-ssh-workspace="true"] .viewer-open { display: none; }
+#stage[data-ssh-workspace="true"] .object-caption > small { font-size: 12px; }
+.reduce-motion .ssh-library * { transition: none; }

@@ -1,0 +1,19 @@
+.ssh-shortcuts { min-width: 0; color: var(--theme-ink); font-size: 14px; }
+.ssh-shortcut-list { display: grid; gap: 10px; }
+.ssh-shortcut-list article { border-top: 1px solid var(--theme-line); padding: 16px 0 8px; }
+.ssh-shortcut-heading { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.ssh-shortcut-heading strong { font-size: 17px; font-weight: 500; }
+.ssh-shortcut-heading span, .ssh-shortcut-address { color: var(--theme-muted); font-size: 12px; }
+.ssh-shortcut-address { overflow-wrap: anywhere; margin: 8px 0; }
+.ssh-shortcuts .ssh-shortcut-note { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.8; margin: 10px 0; }
+.ssh-shortcut-actions { display: flex; gap: 20px; flex-wrap: wrap; margin: 12px 0; }
+.ssh-shortcut-actions button { border: 0; border-bottom: 1px solid var(--theme-line); background: transparent; color: var(--theme-ink); padding: 7px 0; font: inherit; cursor: pointer; }
+.ssh-shortcut-actions button:first-child { color: var(--theme-accent); border-color: var(--theme-accent); }
+.ssh-shortcut-editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.ssh-shortcut-editor label { display: flex; flex-direction: column; gap: 7px; color: var(--theme-muted); font-size: 12px; }
+.ssh-shortcut-editor label:has(textarea), .ssh-shortcut-editor label:first-child, .ssh-shortcut-editor [data-shortcut-path], .ssh-shortcut-editor .ssh-catalog-note, .ssh-shortcut-auto, .ssh-shortcut-actions { grid-column: 1 / -1; }
+.ssh-shortcut-editor :is(input, select, textarea) { min-width: 0; max-width: 100%; border: 0; border-bottom: 1px solid var(--theme-line); border-radius: 0; background: var(--theme-field); color: var(--theme-ink); font: 13px/1.6 MiSans, sans-serif; padding: 8px; }
+.ssh-shortcut-editor textarea { resize: vertical; }
+.ssh-shortcut-editor .ssh-shortcut-auto { flex-direction: row; align-items: center; }
+.ssh-shortcut-editor [hidden] { display: none; }
+.ssh-shortcut-feedback { font-size: 13px; color: var(--theme-accent); }

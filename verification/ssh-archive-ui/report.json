@@ -1,0 +1,157 @@
+{
+  "generatedAt": "2026-09-12T16:05:57.977Z",
+  "timezone": "Asia/Shanghai",
+  "scope": "Desktop SSH archive column, connection pages and authentication motion",
+  "desktopBuild": {
+    "status": "passed",
+    "command": "npm run build:desktop",
+    "indexSha256": "9275aaaba6fda1f9e75d859d7666457664262a1ae8674b681bb38afce8067aa3",
+    "entry": "dist-desktop\\assets\\index-BunldjqV.js",
+    "entrySha256": "6ba87c3f684468ab2657e1fea7681efdccc0b04cce2c9c07543820408d2cfb5b"
+  },
+  "checks": {
+    "status": "passed",
+    "total": 172,
+    "tests": [
+      {
+        "command": "npm run smoke:desktop:hosts",
+        "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-hosts-smoke.json",
+        "file": "hosts.json",
+        "total": 62,
+        "passed": 62,
+        "failed": [],
+        "capturedAt": "2026-09-12T15:42:40.949Z",
+        "sha256": "dc2a8558b93b304780cbbacb2572f3d3321c953f7491d39f793bb6e6678eaab7"
+      },
+      {
+        "command": "npm run smoke:desktop:session",
+        "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-session-smoke.json",
+        "file": "session.json",
+        "total": 87,
+        "passed": 87,
+        "failed": [],
+        "capturedAt": "2026-09-12T15:49:40.241Z",
+        "sha256": "5d35145fafbe8394fb25ec9e0deb00c60a9bef82445d8a2652e13daed6ecdb5a"
+      },
+      {
+        "command": "npm run smoke:desktop:terminal",
+        "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-terminal-smoke.json",
+        "file": "terminal.json",
+        "total": 8,
+        "passed": 8,
+        "failed": [],
+        "capturedAt": "2026-09-12T15:50:29.216Z",
+        "sha256": "a23527713c36074bf285d70bd2ac837698ce87c8dfa26a06563129efc695c42b"
+      },
+      {
+        "command": "npm run smoke:desktop",
+        "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke.json",
+        "file": "desktop.json",
+        "total": 15,
+        "passed": 15,
+        "failed": [],
+        "capturedAt": "2026-09-12T15:53:21.994Z",
+        "sha256": "c41fc6e467e1dd1f8f86c24f310467d8739d6f6100a5dff491e1d816f6d8e107"
+      }
+    ]
+  },
+  "supportingChecks": [
+    {
+      "command": "npm run check:ssh-column",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:ssh-profiles",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:ssh-client",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:ssh-pty-lifecycle",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:ssh-handshake",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:ssh-audit",
+      "status": "passed"
+    }
+  ],
+  "runtime": {
+    "electron": "44.3.0",
+    "host": "Windows ConPTY",
+    "sshPeer": "scripts/fixtures/fake-ssh.mjs",
+    "isolatedUserData": true,
+    "realServerValidated": false,
+    "wallpaperBuilt": false
+  },
+  "screenshots": [
+    {
+      "file": "editor-light.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-hosts-editor-light.png",
+      "capturedAt": "2026-09-12T15:42:04.290Z",
+      "bytes": 885599,
+      "sha256": "30346ee8fa1d1f9a8ff2213ebadb2de53e519eed1d8e1de7c22bb8e630485005"
+    },
+    {
+      "file": "list-light.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-hosts-list-light.png",
+      "capturedAt": "2026-09-12T15:42:05.435Z",
+      "bytes": 846229,
+      "sha256": "b226669b455ce499cbc7e1bf8f80626c3e9b27c97b0dbaecfe57a8bac86247f0"
+    },
+    {
+      "file": "connected.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-hosts-connected.png",
+      "capturedAt": "2026-09-12T15:42:11.216Z",
+      "bytes": 617612,
+      "sha256": "53843fc41c3b790d18ac2af126a946bb99b3afda082da613ac189c284e7e55b8"
+    },
+    {
+      "file": "audit.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-ssh-audit-page.png",
+      "capturedAt": "2026-09-12T15:42:20.811Z",
+      "bytes": 312633,
+      "sha256": "b4d72c5bcc415ec4585e77b26a632bbd59244cb8eaac30bc4045d19e106c71d4"
+    },
+    {
+      "file": "editor-dark.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-hosts-editor-dark.png",
+      "capturedAt": "2026-09-12T15:42:35.578Z",
+      "bytes": 721980,
+      "sha256": "d4fb04a868228c8c6b3eb3984f6da20c330d5ca24bfead050a6eabd03d46b9e5"
+    },
+    {
+      "file": "editor-compact.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-hosts-editor-compact.png",
+      "capturedAt": "2026-09-12T15:42:36.830Z",
+      "bytes": 289042,
+      "sha256": "8874f6a2b1e2c0e5e034acf404ad5e9350da99481e3b45c1ea0deba63bd8d2c4"
+    },
+    {
+      "file": "password-entering.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-ssh-password-entering.png",
+      "capturedAt": "2026-09-12T15:49:30.172Z",
+      "bytes": 1183375,
+      "sha256": "10a401209f0913ef1a41cff8ed748f8ba883272d304d93d92b52e0984f83dec6"
+    },
+    {
+      "file": "password-ready.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-ssh-password-ready.png",
+      "capturedAt": "2026-09-12T15:49:31.073Z",
+      "bytes": 709537,
+      "sha256": "82ae8f3e9e942a5e8e759c8859e8b2b784c38e61e151360a002e415178384e22"
+    },
+    {
+      "file": "password-dark-reduced.png",
+      "source": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-ssh-password-dark-reduced.png",
+      "capturedAt": "2026-09-12T15:42:39.031Z",
+      "bytes": 318001,
+      "sha256": "7d1855774f45bf57211939d96e2d48d2491dd6f3a8b7b357ee8f026139d834a2"
+    }
+  ]
+}

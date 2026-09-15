@@ -1,0 +1,90 @@
+{
+  "checks": {
+    "loads from the app origin": true,
+    "desktop flag set": true,
+    "preload bridge exposed": true,
+    "stage rendered": true,
+    "host list opens from its keyboard shortcut": true,
+    "session layer loaded": true,
+    "PWA surface removed": true,
+    "no service worker": true,
+    "entry gate accepted input": true,
+    "3D scene live (WebGL)": true,
+    "startup entered boot": true,
+    "loading overlay retired": true,
+    "entry screen not blank": true,
+    "boot screen not blank": true,
+    "running screen not blank": true
+  },
+  "failed": [],
+  "before": {
+    "base": "file:///D:/myproject/RhineLab/dist-desktop/index.html",
+    "protocol": "file:",
+    "desktopFlag": "true",
+    "desktopBridge": true,
+    "hasStage": true,
+    "stageMode": null,
+    "canvases": 1,
+    "loading": true,
+    "entryState": "waiting",
+    "loadingText": "RHINE·LAB INTERNAL DATABASE / READY 点击进入 → 轻触屏幕或按 Enter 开始",
+    "pwaSection": false,
+    "navButtons": 3,
+    "sessionEntry": true,
+    "rhineSshLoaded": true,
+    "serviceWorker": false
+  },
+  "after": {
+    "base": "file:///D:/myproject/RhineLab/dist-desktop/index.html",
+    "protocol": "file:",
+    "desktopFlag": "true",
+    "desktopBridge": true,
+    "hasStage": true,
+    "stageMode": "boot",
+    "canvases": 1,
+    "loading": false,
+    "entryState": null,
+    "loadingText": "",
+    "pwaSection": false,
+    "navButtons": 3,
+    "sessionEntry": true,
+    "rhineSshLoaded": true,
+    "serviceWorker": false
+  },
+  "shots": [
+    {
+      "name": "entry",
+      "file": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-entry.png",
+      "bytes": 16995,
+      "size": "1584x861",
+      "sampled": 54841,
+      "meanLuma": 228.5,
+      "lumaRange": 0.9,
+      "distinctColors": 71,
+      "dominantShare": 0.994
+    },
+    {
+      "name": "boot",
+      "file": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-boot.png",
+      "bytes": 170521,
+      "size": "1584x861",
+      "sampled": 54841,
+      "meanLuma": 224.8,
+      "lumaRange": 0.905,
+      "distinctColors": 20,
+      "dominantShare": 0.902
+    },
+    {
+      "name": "running",
+      "file": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-running.png",
+      "bytes": 196031,
+      "size": "1584x861",
+      "sampled": 54841,
+      "meanLuma": 223.7,
+      "lumaRange": 0.908,
+      "distinctColors": 31,
+      "dominantShare": 0.89
+    }
+  ],
+  "problems": []
+}

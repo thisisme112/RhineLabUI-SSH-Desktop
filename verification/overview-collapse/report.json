@@ -1,0 +1,15 @@
+{
+  "checks": {
+    "the overview starts expanded": true,
+    "stowing takes the sheet out of the frame": true,
+    "the sheet stops taking clicks where it used to be": true,
+    "the archive underneath receives pointer events again": true,
+    "the stowed tab carries the live counts": true,
+    "the tab brings the sheet back": true,
+    "Ctrl+Shift+H stows it from the keyboard": true,
+    "the stowed state is remembered": true,
+    "a reload comes back stowed": true,
+    "the host picker expands a stowed sheet before routing": true
+  },
+  "errors": []
+}

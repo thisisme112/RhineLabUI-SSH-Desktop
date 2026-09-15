@@ -1,0 +1,985 @@
+{
+  "checks": {
+    "settled motion releases outgoing models": true,
+    "performance fixture never starts SSH": true,
+    "returning hover to the starting host interrupts the old preview without intermediate selections": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {
+    "overviewPerformance": {
+      "viewport": "1920x1080 DPR1",
+      "quality": "original default, no effects disabled",
+      "phases": [
+        {
+          "hosts": 32,
+          "kind": "idle",
+          "ms": 4000.499999995529,
+          "frames": 845,
+          "p50": 4.199999999999818,
+          "p95": 8.399999999999636,
+          "p99": 8.400000000001455,
+          "max": 8.5,
+          "framesOver50": 0,
+          "longTasks": [],
+          "actions": 0,
+          "counts": [
+            {
+              "at": 254.69999999552965,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 512.9999999955298,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 771.4999999955289,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 1025.499999995529,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1275.5999999955293,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1529.6999999955297,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1783.999999995529,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 2037.999999995529,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 2292.0999999955293,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 2542.1999999955297,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 2796.3999999955304,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 3050.499999995529,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 3304.79999999553,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 3558.79999999553,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 3808.8999999955304,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 314,
+              "calls": 131
+            }
+          ],
+          "heap": 34968576
+        },
+        {
+          "hosts": 32,
+          "kind": "wheel",
+          "ms": 4000.3999999970183,
+          "frames": 641,
+          "p50": 4.200000000000728,
+          "p95": 21,
+          "p99": 29.30000000000109,
+          "max": 91.39999999999964,
+          "framesOver50": 1,
+          "longTasks": [],
+          "actions": 47,
+          "counts": [
+            {
+              "at": 250.39999999702013,
+              "returning": 2,
+              "candidates": 458,
+              "drawn": 318,
+              "calls": 230
+            },
+            {
+              "at": 504.4999999970205,
+              "returning": 5,
+              "candidates": 459,
+              "drawn": 314,
+              "calls": 226
+            },
+            {
+              "at": 758.599999997019,
+              "returning": 8,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 202
+            },
+            {
+              "at": 1012.8999999970201,
+              "returning": 11,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 115
+            },
+            {
+              "at": 1266.9999999970205,
+              "returning": 14,
+              "candidates": 457,
+              "drawn": 313,
+              "calls": 104
+            },
+            {
+              "at": 1521.1999999970194,
+              "returning": 17,
+              "candidates": 458,
+              "drawn": 314,
+              "calls": 104
+            },
+            {
+              "at": 1771.1999999970212,
+              "returning": 20,
+              "candidates": 456,
+              "drawn": 313,
+              "calls": 100
+            },
+            {
+              "at": 2025.1999999970212,
+              "returning": 23,
+              "candidates": 455,
+              "drawn": 313,
+              "calls": 100
+            },
+            {
+              "at": 2279.599999997019,
+              "returning": 25,
+              "candidates": 458,
+              "drawn": 312,
+              "calls": 104
+            },
+            {
+              "at": 2533.599999997019,
+              "returning": 25,
+              "candidates": 458,
+              "drawn": 312,
+              "calls": 104
+            },
+            {
+              "at": 2787.7999999970198,
+              "returning": 25,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 56
+            },
+            {
+              "at": 3046.099999997019,
+              "returning": 25,
+              "candidates": 456,
+              "drawn": 315,
+              "calls": 72
+            },
+            {
+              "at": 3300.4999999970205,
+              "returning": 25,
+              "candidates": 458,
+              "drawn": 315,
+              "calls": 76
+            },
+            {
+              "at": 3554.3999999970183,
+              "returning": 25,
+              "candidates": 456,
+              "drawn": 316,
+              "calls": 76
+            },
+            {
+              "at": 3804.4999999970205,
+              "returning": 25,
+              "candidates": 455,
+              "drawn": 316,
+              "calls": 76
+            }
+          ],
+          "heap": 30147414
+        },
+        {
+          "hosts": 32,
+          "kind": "jump",
+          "ms": 4000.9000000014894,
+          "frames": 696,
+          "p50": 4.200000000000728,
+          "p95": 8.400000000001455,
+          "p99": 54.20000000000073,
+          "max": 58.400000000001455,
+          "framesOver50": 15,
+          "longTasks": [],
+          "actions": 15,
+          "counts": [
+            {
+              "at": 250.9000000014894,
+              "returning": 1,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 505.1000000014901,
+              "returning": 2,
+              "candidates": 453,
+              "drawn": 312,
+              "calls": 329
+            },
+            {
+              "at": 759.3000000014908,
+              "returning": 2,
+              "candidates": 460,
+              "drawn": 313,
+              "calls": 329
+            },
+            {
+              "at": 1013.5000000014916,
+              "returning": 2,
+              "candidates": 454,
+              "drawn": 313,
+              "calls": 230
+            },
+            {
+              "at": 1267.6000000014901,
+              "returning": 2,
+              "candidates": 455,
+              "drawn": 313,
+              "calls": 230
+            },
+            {
+              "at": 1571.8000000014908,
+              "returning": 2,
+              "candidates": 454,
+              "drawn": 314,
+              "calls": 230
+            },
+            {
+              "at": 1830.1000000014901,
+              "returning": 2,
+              "candidates": 452,
+              "drawn": 311,
+              "calls": 230
+            },
+            {
+              "at": 2084.2000000014887,
+              "returning": 2,
+              "candidates": 453,
+              "drawn": 314,
+              "calls": 230
+            },
+            {
+              "at": 2338.4000000014894,
+              "returning": 2,
+              "candidates": 453,
+              "drawn": 312,
+              "calls": 230
+            },
+            {
+              "at": 2592.800000001491,
+              "returning": 2,
+              "candidates": 453,
+              "drawn": 313,
+              "calls": 230
+            },
+            {
+              "at": 2846.800000001491,
+              "returning": 1,
+              "candidates": 453,
+              "drawn": 312,
+              "calls": 230
+            },
+            {
+              "at": 3096.9000000014894,
+              "returning": 1,
+              "candidates": 453,
+              "drawn": 313,
+              "calls": 230
+            },
+            {
+              "at": 3350.9000000014894,
+              "returning": 1,
+              "candidates": 453,
+              "drawn": 312,
+              "calls": 230
+            },
+            {
+              "at": 3601.0000000014916,
+              "returning": 1,
+              "candidates": 453,
+              "drawn": 313,
+              "calls": 230
+            },
+            {
+              "at": 3855.10000000149,
+              "returning": 1,
+              "candidates": 453,
+              "drawn": 312,
+              "calls": 230
+            }
+          ],
+          "heap": 35429479
+        },
+        {
+          "hosts": 32,
+          "kind": "preview",
+          "ms": 4003.900000001493,
+          "frames": 833,
+          "p50": 4.200000000000728,
+          "p95": 8.400000000001455,
+          "p99": 8.400000000001455,
+          "max": 8.600000000002183,
+          "framesOver50": 0,
+          "longTasks": [],
+          "actions": 15,
+          "counts": [
+            {
+              "at": 254.00000000149157,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 508.1000000014901,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 762.3000000014908,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1016.4000000014894,
+              "returning": 0,
+              "candidates": 455,
+              "drawn": 312,
+              "calls": 131
+            },
+            {
+              "at": 1270.5000000014916,
+              "returning": 0,
+              "candidates": 455,
+              "drawn": 312,
+              "calls": 131
+            },
+            {
+              "at": 1520.8000000014908,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 314,
+              "calls": 131
+            },
+            {
+              "at": 1774.8000000014908,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 313,
+              "calls": 131
+            },
+            {
+              "at": 2028.9000000014894,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 312,
+              "calls": 131
+            },
+            {
+              "at": 2283.2000000014887,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 314,
+              "calls": 131
+            },
+            {
+              "at": 2537.300000001491,
+              "returning": 0,
+              "candidates": 452,
+              "drawn": 313,
+              "calls": 131
+            },
+            {
+              "at": 2787.4000000014894,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 314,
+              "calls": 131
+            },
+            {
+              "at": 3041.4000000014894,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 313,
+              "calls": 131
+            },
+            {
+              "at": 3295.7000000014887,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 314,
+              "calls": 131
+            },
+            {
+              "at": 3549.7000000014887,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 314,
+              "calls": 131
+            },
+            {
+              "at": 3803.900000001493,
+              "returning": 0,
+              "candidates": 453,
+              "drawn": 314,
+              "calls": 131
+            }
+          ],
+          "heap": 28335147
+        },
+        {
+          "hosts": 256,
+          "kind": "idle",
+          "ms": 4003.5,
+          "frames": 850,
+          "p50": 4.19999999999709,
+          "p95": 8.39999999999418,
+          "p99": 8.400000000001455,
+          "max": 8.5,
+          "framesOver50": 0,
+          "longTasks": [],
+          "actions": 0,
+          "counts": [
+            {
+              "at": 253.40000000000146,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 507.5,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 761.6999999999971,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1011.8000000000029,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1269.9000000000015,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1524.199999999997,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 1782.5999999999985,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 2041,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 2294.9000000000015,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 2545,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 2795.0999999999985,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3049.199999999997,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3303.300000000003,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3557.5999999999985,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3811.699999999997,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            }
+          ],
+          "heap": 54699934
+        },
+        {
+          "hosts": 256,
+          "kind": "wheel",
+          "ms": 4002.699999998513,
+          "frames": 664,
+          "p50": 4.19999999999709,
+          "p95": 20.900000000001455,
+          "p99": 29.19999999999709,
+          "max": 58.400000000001455,
+          "framesOver50": 1,
+          "longTasks": [],
+          "actions": 47,
+          "counts": [
+            {
+              "at": 252.59999999850697,
+              "returning": 3,
+              "candidates": 456,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 502.6999999985128,
+              "returning": 6,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 218
+            },
+            {
+              "at": 786.1999999985128,
+              "returning": 9,
+              "candidates": 458,
+              "drawn": 316,
+              "calls": 191
+            },
+            {
+              "at": 1040.3999999985099,
+              "returning": 12,
+              "candidates": 457,
+              "drawn": 318,
+              "calls": 100
+            },
+            {
+              "at": 1294.3999999985099,
+              "returning": 15,
+              "candidates": 457,
+              "drawn": 318,
+              "calls": 100
+            },
+            {
+              "at": 1552.7999999985113,
+              "returning": 18,
+              "candidates": 458,
+              "drawn": 315,
+              "calls": 115
+            },
+            {
+              "at": 1806.9999999985084,
+              "returning": 20,
+              "candidates": 459,
+              "drawn": 311,
+              "calls": 115
+            },
+            {
+              "at": 2065.199999998513,
+              "returning": 24,
+              "candidates": 455,
+              "drawn": 313,
+              "calls": 104
+            },
+            {
+              "at": 2315.2999999985113,
+              "returning": 25,
+              "candidates": 455,
+              "drawn": 311,
+              "calls": 104
+            },
+            {
+              "at": 2569.4999999985084,
+              "returning": 24,
+              "candidates": 457,
+              "drawn": 314,
+              "calls": 68
+            },
+            {
+              "at": 2827.7999999985113,
+              "returning": 24,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 76
+            },
+            {
+              "at": 3081.89999999851,
+              "returning": 24,
+              "candidates": 457,
+              "drawn": 317,
+              "calls": 76
+            },
+            {
+              "at": 3331.9999999985084,
+              "returning": 25,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 76
+            },
+            {
+              "at": 3586.199999998513,
+              "returning": 25,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 76
+            },
+            {
+              "at": 3840.2999999985113,
+              "returning": 25,
+              "candidates": 459,
+              "drawn": 316,
+              "calls": 76
+            }
+          ],
+          "heap": 37210428
+        },
+        {
+          "hosts": 256,
+          "kind": "jump",
+          "ms": 4002.8999999955267,
+          "frames": 725,
+          "p50": 4.19999999999709,
+          "p95": 8.400000000001455,
+          "p99": 54.099999999998545,
+          "max": 58.39999999999418,
+          "framesOver50": 10,
+          "longTasks": [],
+          "actions": 15,
+          "counts": [
+            {
+              "at": 252.89999999552674,
+              "returning": 1,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 507.0999999955311,
+              "returning": 2,
+              "candidates": 457,
+              "drawn": 311,
+              "calls": 143
+            },
+            {
+              "at": 761.1999999955297,
+              "returning": 2,
+              "candidates": 454,
+              "drawn": 311,
+              "calls": 275
+            },
+            {
+              "at": 1019.5999999955311,
+              "returning": 2,
+              "candidates": 456,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 1273.7999999955282,
+              "returning": 2,
+              "candidates": 458,
+              "drawn": 313,
+              "calls": 230
+            },
+            {
+              "at": 1527.8999999955267,
+              "returning": 2,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 1777.9999999955326,
+              "returning": 2,
+              "candidates": 455,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 2031.9999999955326,
+              "returning": 2,
+              "candidates": 456,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 2282.099999995531,
+              "returning": 2,
+              "candidates": 457,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 2536.1999999955297,
+              "returning": 2,
+              "candidates": 456,
+              "drawn": 315,
+              "calls": 230
+            },
+            {
+              "at": 2831.9999999955326,
+              "returning": 1,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 3086.299999995528,
+              "returning": 1,
+              "candidates": 455,
+              "drawn": 314,
+              "calls": 230
+            },
+            {
+              "at": 3340.3999999955267,
+              "returning": 1,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 230
+            },
+            {
+              "at": 3602.799999995528,
+              "returning": 1,
+              "candidates": 455,
+              "drawn": 314,
+              "calls": 230
+            },
+            {
+              "at": 3852.8999999955267,
+              "returning": 1,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 230
+            }
+          ],
+          "heap": 47238993
+        },
+        {
+          "hosts": 256,
+          "kind": "preview",
+          "ms": 4002.0999999970227,
+          "frames": 854,
+          "p50": 4.19999999999709,
+          "p95": 8.39999999999418,
+          "p99": 8.400000000008731,
+          "max": 8.599999999998545,
+          "framesOver50": 0,
+          "longTasks": [],
+          "actions": 15,
+          "counts": [
+            {
+              "at": 252.09999999702268,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 506.1999999970212,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 760.2999999970198,
+              "returning": 0,
+              "candidates": 458,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 1018.6999999970212,
+              "returning": 0,
+              "candidates": 457,
+              "drawn": 315,
+              "calls": 131
+            },
+            {
+              "at": 1272.9999999970169,
+              "returning": 0,
+              "candidates": 457,
+              "drawn": 315,
+              "calls": 131
+            },
+            {
+              "at": 1527.0999999970227,
+              "returning": 0,
+              "candidates": 456,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 1777.1999999970212,
+              "returning": 0,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 131
+            },
+            {
+              "at": 2031.199999997014,
+              "returning": 0,
+              "candidates": 457,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 2281.3999999970256,
+              "returning": 0,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 131
+            },
+            {
+              "at": 2539.499999997017,
+              "returning": 0,
+              "candidates": 456,
+              "drawn": 317,
+              "calls": 131
+            },
+            {
+              "at": 2789.5999999970227,
+              "returning": 0,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 131
+            },
+            {
+              "at": 3043.699999997014,
+              "returning": 0,
+              "candidates": 456,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3297.7999999970198,
+              "returning": 0,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 131
+            },
+            {
+              "at": 3547.999999997017,
+              "returning": 0,
+              "candidates": 456,
+              "drawn": 316,
+              "calls": 131
+            },
+            {
+              "at": 3802.0999999970227,
+              "returning": 0,
+              "candidates": 455,
+              "drawn": 315,
+              "calls": 131
+            }
+          ],
+          "heap": 43251407
+        }
+      ]
+    }
+  }
+}

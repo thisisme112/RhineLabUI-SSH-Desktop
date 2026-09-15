@@ -1,0 +1,46 @@
+/* Host management uses the archive detail's existing controls and type scale. */
+.ssh-hosts { color: var(--theme-ink, #080a08); min-width: 0; }
+.ssh-hosts [hidden], .ssh-detail > [hidden], .file-ticks button[hidden] { display: none; }
+.ssh-hosts .search-field { height: 48px; gap: 14px; background: transparent; border-color: var(--theme-line); }
+.ssh-hosts .search-field input { font-size: 16px; }
+.ssh-hosts .search-field input::placeholder { font-size: 14px; }
+.ssh-hosts-count { color: var(--theme-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.ssh-hosts .category-filters { padding: 17px 0; gap: 24px; }
+.ssh-hosts-list { margin: 0; padding: 0; list-style: none; }
+.ssh-hosts-list > li { margin: 0; }
+.ssh-hosts .ssh-hosts-row { grid-template-columns: minmax(0, 1fr) 70px 16px; gap: 14px; padding: 15px 2px; min-height: 76px; border-color: var(--theme-line); }
+.ssh-hosts .result-name { min-width: 0; gap: 18px; }
+.ssh-hosts .result-name > span { min-width: 0; overflow-wrap: anywhere; }
+.ssh-hosts .result-name b { min-width: 43px; font-size: 12px; }
+.ssh-hosts .result-name small { font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.ssh-hosts .ssh-hosts-source { font-size: 12px; color: var(--theme-muted); }
+.ssh-hosts .ssh-hosts-empty { padding: 24px 0; font-size: 14px; line-height: 1.9; color: var(--theme-muted); }
+.ssh-detail .ssh-hosts-note { font-size: 12px; color: var(--ssh-text-accent, var(--theme-accent)); margin: 10px 0 0; }
+.ssh-host-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 10px; }
+.ssh-host-editor-head .export-button { min-height: 28px; width: auto; }
+.ssh-host-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 26px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.ssh-host-fields label { display: flex; flex-direction: column; gap: 7px; min-width: 0; font-size: 12px; letter-spacing: .5px; line-height: 1.5; color: var(--theme-muted); }
+.ssh-host-wide { grid-column: 1 / -1; }
+.ssh-host-fields input { box-sizing: border-box; width: 100%; min-width: 0; height: 36px; border: 0; border-bottom: 1px solid var(--theme-line); border-radius: 0; padding: 4px 0; background: transparent; color: var(--theme-ink); font: inherit; font-size: 14px; letter-spacing: 0; }
+.ssh-host-fields input::placeholder { font-size: 12px; color: var(--theme-muted); opacity: 1; }
+.ssh-host-fields input:focus-visible { outline: none; border-color: var(--ssh-text-accent, var(--theme-accent)); box-shadow: 0 1px var(--theme-accent); }
+.ssh-host-key { display: flex; gap: 8px; }
+.ssh-host-key .export-button { min-height: 36px; width: auto; flex-shrink: 0; color: var(--theme-muted); }
+.ssh-host-fields details { border-block: 1px solid var(--theme-line); padding: 12px 0; font-size: 12px; }
+.ssh-host-fields summary { cursor: pointer; color: var(--theme-ink); }
+.ssh-host-fields summary span { font-size: 12px; color: var(--theme-muted); margin-left: 14px; }
+.ssh-host-advanced { margin-top: 18px; padding-bottom: 8px; }
+.ssh-detail :is(.ssh-host-editor-note, .ssh-host-config-note, .ssh-host-editor-message) { font-size: 12px; line-height: 1.8; text-align: left; margin: 12px 0; color: var(--theme-muted); }
+.ssh-detail .ssh-host-editor-message { color: var(--ssh-text-accent, var(--theme-accent)); }
+.ssh-host-editor-message:empty { display: none; }
+.ssh-host-editor-actions { gap: 22px; margin-top: 14px; }
+.ssh-host-editor-actions .solid-button { min-width: 0; }
+.ssh-host-editor-actions .export-button { width: auto; white-space: nowrap; }
+.ssh-host-remove { color: var(--theme-muted); margin-top: 14px; width: auto; min-height: 28px; font-size: 12px; }
+.ssh-host-reload { width: auto; min-height: 28px; color: var(--ssh-text-accent, var(--theme-accent)); }
+.ssh-hosts button:disabled { opacity: .4; cursor: default; }
+.ssh-hosts button:focus-visible { outline: 1px solid var(--theme-accent); outline-offset: 3px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-host-fields { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-hosts .ssh-hosts-row { grid-template-columns: minmax(0, 1fr) 16px; gap: 8px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-hosts .ssh-hosts-source { display: none; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-host-editor-actions { flex-wrap: wrap; gap: 12px; }

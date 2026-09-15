@@ -1,0 +1,23 @@
+{
+  "checks": [
+    "system ssh -G resolves an isolated config alias",
+    "real OpenSSH host-key and password askpass; monitor connections reuse only this session's secret",
+    "Linux collector travels through real SFTP and its remote checksum matches the packaged binary",
+    "native Windows bridge transfers nested Unicode folders, hidden files and binary bytes in both directions",
+    "native conflict tokens, keep-both, rename, mkdir and symlink-safe deletion",
+    "canceling a waiting transfer does not alter the remote directory",
+    "a fingerprint-bound primary-session credential authenticates auxiliary channels without another password page",
+    "system SSH private-key authentication",
+    "encrypted private key is unlocked through the same isolated askpass channel",
+    "keyboard-interactive OTP is requested independently for SFTP, probe and collector, never reused",
+    "ProxyJump and inherited config work through real OpenSSH forwarding",
+    "primary ConPTY target authentication through ProxyJump activates auxiliary services once",
+    "canceling one auxiliary authentication ends that SSH channel without closing the owning session",
+    "server disconnect marks both auxiliary channels failed and closes the bridge",
+    "native worker crash releases descendant SSH processes and the collector channel",
+    "a changed known host key is rejected before any password is sent"
+  ],
+  "error": null,
+  "scope": "Real OpenSSH and SFTP. Collector protocol frames simulated; no real GPU or Linux-runtime claim.",
+  "fixtureDirectory": "D:\\myproject\\RhineLab\\.tools\\ssh-fixtures\\run-rcuAdU"
+}

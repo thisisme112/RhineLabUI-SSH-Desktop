@@ -1,0 +1,13 @@
+# Fixture ssh config for the desktop smoke checks.
+#
+# Pointed at with RHINE_SSH_CONFIG so the host picker lists deterministic
+# entries instead of whatever is on the machine running the check. The target
+# names select the stand-in's scenario (see fake-ssh.mjs).
+Host passhost
+  HostName 10.20.30.41
+  User operator
+
+Host labnode
+  HostName 10.20.30.42
+  User operator
+  Port 2222

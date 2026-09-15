@@ -1,0 +1,75 @@
+{
+  "checks": {
+    "native desktop loads the terminal insert and original package": true,
+    "native desktop operates on the projected model screen": true,
+    "native terminal includes actual authentication output": true,
+    "native keyboard reaches ConPTY and returns to the model screen": true,
+    "native hidden output survives reassembly and reopening": true,
+    "native exit keeps its final output readable": true,
+    "native resize does not duplicate authentication records": true,
+    "native window resize after exit remains responsive": true
+  },
+  "failed": [],
+  "result": {
+    "checks": {
+      "native desktop loads the terminal insert and original package": true,
+      "native desktop operates on the projected model screen": true,
+      "native terminal includes actual authentication output": true
+    },
+    "screen": {
+      "corners": [
+        [
+          322.2052601859897,
+          260.7754509829702
+        ],
+        [
+          1654.9028957141647,
+          260.80106417959087
+        ],
+        [
+          1654.8712328317056,
+          970.2368934504594
+        ],
+        [
+          322.2373999945462,
+          970.2859129775346
+        ]
+      ],
+      "width": 1339,
+      "height": 713
+    }
+  },
+  "shots": [
+    {
+      "name": "terminal-deck-native",
+      "file": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-terminal-deck-native.png",
+      "bytes": 614271,
+      "size": "1584x861",
+      "sampled": 54841,
+      "meanLuma": 221,
+      "lumaRange": 0.872,
+      "distinctColors": 53,
+      "dominantShare": 0.666
+    },
+    {
+      "name": "terminal-deck-reopened",
+      "file": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-terminal-deck-reopened.png",
+      "bytes": 626923,
+      "size": "1584x861",
+      "sampled": 54841,
+      "meanLuma": 220.8,
+      "lumaRange": 0.872,
+      "distinctColors": 54,
+      "dominantShare": 0.664
+    }
+  ],
+  "problems": [
+    {
+      "kind": "console",
+      "severity": "warning",
+      "message": "THREE.WebGLProgram: Program Info Log: (210,81-129): warning X4122: sum of 0.996094 and -2.98545e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n\n\n\u0000",
+      "line": 17,
+      "source": "file:///D:/myproject/RhineLab/dist-desktop/assets/index-Brkk3dnk.js"
+    }
+  ]
+}

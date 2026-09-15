@@ -1,0 +1,12 @@
+{
+  "appId": "cc.lubeiluchen.rhine",
+  "appName": "Rhine Lab",
+  "webDir": "dist-android",
+  "loggingBehavior": "none",
+  "android": {
+    "backgroundColor": "#e8e5e1"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

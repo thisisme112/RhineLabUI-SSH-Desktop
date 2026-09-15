@@ -1,0 +1,116 @@
+/* Host card detail — same palette and rhythm as the archive detail (style.css). */
+
+.host-verified {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--ssh-text-accent, #835b32);
+}
+.detail-actions [hidden] {
+  display: none;
+}
+
+[data-layout="desktop"] .detail-content.ssh-detail { top: 235px; max-height: calc(100% - 395px); scrollbar-color: var(--theme-line) transparent; }
+.ssh-detail h2 { overflow-wrap: anywhere; }
+.ssh-detail .detail-title-cn { font-size: 19px; overflow-wrap: anywhere; }
+.ssh-detail .detail-title-cn > span { flex-shrink: 0; }
+.ssh-detail .detail-rule { transform-origin: left center; }
+.ssh-detail .metadata { gap: 18px 30px; margin: 23px 0 25px; max-height: 150px; overflow: hidden; transition: max-height 180ms, margin 180ms, opacity 150ms; }
+.ssh-detail[data-ssh-page="config"] .metadata { max-height: 0; margin-block: 0; opacity: 0; }
+.reduce-motion .ssh-detail .metadata { transition: none; }
+.ssh-detail .metadata dd { overflow-wrap: anywhere; }
+.ssh-detail .detail-tabs { gap: 24px; }
+.ssh-detail .tab-panel { height: 248px; padding-top: 18px; }
+.ssh-detail.ssh-directory .tab-panel { height: 288px; }
+.ssh-detail[data-ssh-page="config"] .tab-panel { height: auto; overflow: visible; }
+.ssh-detail .detail-actions { gap: 22px; }
+.ssh-detail .detail-footnote { padding-bottom: 8px; }
+.host-directory-session small { display: block; margin-top: 6px; font-size: 12px; color: var(--theme-muted); }
+.host-prune { width: auto; }
+.ssh-detail :is(.host-raw, .host-session-row, .host-loading, .host-default) { color: var(--theme-muted); border-color: var(--theme-line); }
+.ssh-detail .host-raw { background: transparent; border: 0; padding: 0; }
+.ssh-detail .host-session-row { padding-block: 12px; }
+.ssh-detail .host-session-row:is(:hover, :focus-visible) { color: var(--theme-ink); }
+.ssh-detail .host-session-row b { color: var(--ssh-text-accent, var(--theme-accent)); }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-detail .tab-panel { height: auto; overflow: visible; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-detail .detail-tabs { flex-wrap: wrap; gap: 14px; }
+:is([data-layout="compact"], [data-layout="portrait"]) .ssh-detail .detail-tabs button span { margin-left: 5px; font-size: 12px; }
+
+.host-raw {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #5a584e;
+  background: rgba(8, 10, 8, 0.035);
+  border: 1px solid rgba(8, 10, 8, 0.08);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.host-log {
+  max-height: 420px;
+}
+
+.host-loading {
+  font-size: 13px;
+  color: #888074;
+  margin: 14px 0 0;
+}
+
+.host-default {
+  color: #a89e8c;
+  font-style: normal;
+}
+
+.host-sessions {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.host-session-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 2px;
+  border: none;
+  border-bottom: 1px solid rgba(8, 10, 8, 0.07);
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: #5a584e;
+  text-align: left;
+  cursor: pointer;
+}
+
+.host-session-row:hover,
+.host-session-row:focus-visible {
+  color: #080a08;
+  background: rgba(163, 142, 114, 0.08);
+  outline: none;
+}
+
+.host-session-row b {
+  font-size: 12px;
+  font-weight: 400;
+  color: #7a8163;
+  white-space: nowrap;
+}
+
+/* A bound card's tick in the column strip gets a small marker, nothing more. */
+.file-ticks button.host::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  background: #a38e72;
+}

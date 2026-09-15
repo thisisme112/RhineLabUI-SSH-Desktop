@@ -1,0 +1,158 @@
+{
+  "checks": {
+    "native desktop loads the terminal insert and original package": true,
+    "native desktop operates on the projected model screen": true,
+    "native terminal includes actual authentication output": true,
+    "native keyboard reaches ConPTY and returns to the model screen": true,
+    "native hidden output survives reassembly and reopening": true,
+    "native search finds the actual ConPTY output": true,
+    "native copy uses the preload and text clipboard IPC": true,
+    "native clipboard IPC rejects a non-text payload without changing content": true,
+    "native paste does not append Enter": true,
+    "native pasted text reaches ConPTY and returns": true,
+    "native font controls update terminal text": true,
+    "native exit keeps its final output readable": true,
+    "native resize does not duplicate authentication records": true,
+    "native window resize after exit remains responsive": true,
+    "no native renderer errors": true
+  },
+  "failed": [],
+  "result": {
+    "checks": {
+      "native desktop loads the terminal insert and original package": true,
+      "native desktop operates on the projected model screen": true,
+      "native terminal includes actual authentication output": true
+    },
+    "screen": {
+      "corners": [
+        [
+          142.1762028949451,
+          106.99708023231965
+        ],
+        [
+          1832.5846338427175,
+          107.03954003220659
+        ],
+        [
+          1832.5425804952356,
+          1006.8963327057958
+        ],
+        [
+          142.21887434541017,
+          1006.9529803803423
+        ]
+      ],
+      "width": 1704,
+      "height": 907
+    }
+  },
+  "evidence": {
+    "beforeTools": [
+      "debug1: Reading configuration data C:\\Users\\operator/.ssh/config",
+      "debug1: Connecting to labnode [10.20.30.41] port 22.",
+      "debug1: Connection established.",
+      "debug1: identity file C:\\Users\\operator/.ssh/id_ed25519 type 3",
+      "debug1: Local version string SSH-2.0-OpenSSH_for_Windows_9.5",
+      "debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.5",
+      "debug1: kex: algorithm: sntrup761x25519-sha512@openssh.com",
+      "debug1: kex: host key algorithm: ssh-ed25519",
+      "debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none",
+      "debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none",
+      "debug1: Server host key: ssh-ed25519 SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s",
+      "debug1: Host 'labnode' is known and matches the ED25519 host key.",
+      "debug1: Found key in C:\\Users\\operator/.ssh/known_hosts:12",
+      "debug1: Authentications that can continue: publickey,password",
+      "debug1: Offering public key: C:\\Users\\operator/.ssh/id_ed25519 ED25519 SHA256:AAAAC3NzaC1lZDI1NTE5AAAAIExample",
+      "debug1: Server accepts key: C:\\Users\\operator/.ssh/id_ed25519 ED25519 SHA256:AAAAC3NzaC1lZDI1NTE5AAAAIExample",
+      "debug1: Authentication succeeded (publickey).",
+      "debug1: Entering interactive session.",
+      "debug1: pledge: network"
+    ],
+    "afterTools": [
+      "debug1: Reading configuration data C:\\Users\\operator/.ssh/config",
+      "debug1: Connecting to labnode [10.20.30.41] port 22.",
+      "debug1: Connection established.",
+      "debug1: identity file C:\\Users\\operator/.ssh/id_ed25519 type 3",
+      "debug1: Local version string SSH-2.0-OpenSSH_for_Windows_9.5",
+      "debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.5",
+      "debug1: kex: algorithm: sntrup761x25519-sha512@openssh.com",
+      "debug1: kex: host key algorithm: ssh-ed25519",
+      "debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none",
+      "debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none",
+      "debug1: Server host key: ssh-ed25519 SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s",
+      "debug1: Host 'labnode' is known and matches the ED25519 host key.",
+      "debug1: Found key in C:\\Users\\operator/.ssh/known_hosts:12",
+      "debug1: Authentications that can continue: publickey,password",
+      "debug1: Offering public key: C:\\Users\\operator/.ssh/id_ed25519 ED25519 SHA256:AAAAC3NzaC1lZDI1NTE5AAAAIExample",
+      "debug1: Server accepts key: C:\\Users\\operator/.ssh/id_ed25519 ED25519 SHA256:AAAAC3NzaC1lZDI1NTE5AAAAIExample",
+      "debug1: Authentication succeeded (publickey).",
+      "debug1: Entering interactive session.",
+      "debug1: pledge: network"
+    ],
+    "finalLog": [
+      "debug1: Reading configuration data C:\\Users\\operator/.ssh/config",
+      "debug1: Connecting to labnode [10.20.30.41] port 22.",
+      "debug1: Connection established.",
+      "debug1: identity file C:\\Users\\operator/.ssh/id_ed25519 type 3",
+      "debug1: Local version string SSH-2.0-OpenSSH_for_Windows_9.5",
+      "debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.5",
+      "debug1: kex: algorithm: sntrup761x25519-sha512@openssh.com",
+      "debug1: kex: host key algorithm: ssh-ed25519",
+      "debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none",
+      "debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none",
+      "debug1: Server host key: ssh-ed25519 SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s",
+      "debug1: Host 'labnode' is known and matches the ED25519 host key.",
+      "debug1: Found key in C:\\Users\\operator/.ssh/known_hosts:12",
+      "debug1: Authentications that can continue: publickey,password",
+      "debug1: Offering public key: C:\\Users\\operator/.ssh/id_ed25519 ED25519 SHA256:AAAAC3NzaC1lZDI1NTE5AAAAIExample",
+      "debug1: Server accepts key: C:\\Users\\operator/.ssh/id_ed25519 ED25519 SHA256:AAAAC3NzaC1lZDI1NTE5AAAAIExample",
+      "debug1: Authentication succeeded (publickey).",
+      "debug1: Entering interactive session.",
+      "debug1: pledge: network"
+    ]
+  },
+  "shots": [
+    {
+      "name": "terminal-deck-native",
+      "file": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-terminal-deck-native.png",
+      "bytes": 373690,
+      "size": "1584x861",
+      "sampled": 54841,
+      "meanLuma": 220.2,
+      "lumaRange": 0.871,
+      "distinctColors": 55,
+      "dominantShare": 0.781
+    },
+    {
+      "name": "terminal-deck-reopened",
+      "file": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-terminal-deck-reopened.png",
+      "bytes": 360972,
+      "size": "1584x861",
+      "sampled": 54841,
+      "meanLuma": 221.3,
+      "lumaRange": 0.871,
+      "distinctColors": 56,
+      "dominantShare": 0.79
+    },
+    {
+      "name": "terminal-tools",
+      "file": "D:\\myproject\\RhineLab\\dist-desktop\\desktop-smoke-terminal-tools.png",
+      "bytes": 376902,
+      "size": "1584x861",
+      "sampled": 54841,
+      "meanLuma": 223.4,
+      "lumaRange": 0.871,
+      "distinctColors": 72,
+      "dominantShare": 0.804
+    }
+  ],
+  "problems": [
+    {
+      "kind": "console",
+      "severity": "warning",
+      "message": "THREE.WebGLProgram: Program Info Log: (210,81-129): warning X4122: sum of 0.996094 and -2.98545e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n\n\n\u0000",
+      "line": 17,
+      "source": "file:///D:/myproject/RhineLab/dist-desktop/assets/index-KU0Ey3UD.js"
+    }
+  ]
+}
