@@ -15,7 +15,9 @@ const hasNovecento = ["Normal", "DemiBold", "Bold"].every(weight =>
 export default defineConfig(({ mode, command }) => ({
   // Both non-web hosts load the built app from file://, so every asset URL has
   // to stay relative. `src/asset-url.ts` already routes through BASE_URL.
-  base: ["wallpaper", "desktop", "android"].includes(mode) ? "./" : "/",
+  base: ["wallpaper", "desktop", "android"].includes(mode)
+    ? "./"
+    : process.env.VITE_BASE || "/",
   define: {
     __RHINE_MODELS__: JSON.stringify(Object.fromEntries(models.map(model => [model.key,model.fileName]))),
     __RHINE_NOVECENTO__: JSON.stringify(hasNovecento),
