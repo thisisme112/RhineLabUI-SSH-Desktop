@@ -57,10 +57,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.27.1'
-          cache: false
+      - name: Install pinned Go toolchain
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 https://go.dev/dl/go1.27.1.linux-amd64.tar.gz --output /tmp/go1.27.1.linux-amd64.tar.gz
+          sudo tar -C /opt -xzf /tmp/go1.27.1.linux-amd64.tar.gz
+          echo '/opt/go/bin' >> "$GITHUB_PATH"
+          /opt/go/bin/go version
       - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
