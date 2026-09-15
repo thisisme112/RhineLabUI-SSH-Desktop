@@ -36,8 +36,20 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Cache desktop toolchains
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+            .tools/ssh-toolchain
+          key: desktop-tools-${{ runner.os }}-${{ hashFiles('package-lock.json', 'services/ssh/toolchain.json') }}
       - run: npm ci
-      - run: npm run dist:dir
+      - name: Build Windows desktop
+        shell: pwsh
+        env:
+          ELECTRON_GET_USE_PROXY: 'true'
+        run: npm run dist:dir
       - uses: actions/upload-artifact@v4
         with:
           name: rhine-lab-windows-unpacked
