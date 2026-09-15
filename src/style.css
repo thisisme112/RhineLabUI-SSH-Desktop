@@ -393,6 +393,21 @@ button {
 .system-nav button:hover {
   color: #9b7247;
 }
+.demo-ssh-entry {
+  position: absolute;
+  top: 28px;
+  left: 59px;
+  z-index: 8;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  color: var(--theme-accent, #b87532);
+  border: 1px solid currentColor;
+  padding: 9px 13px;
+  letter-spacing: 0.08em;
+}
+.demo-ssh-entry span { margin-left: 8px; }
+.demo-ssh-entry small { font-size: 10px; letter-spacing: 0; opacity: 0.8; }
 .nav-glyph {
   width: 23px;
   height: 23px;
