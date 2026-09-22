@@ -1,5 +1,6 @@
 import { escapeHtml } from "../html";
 import { hostLabel, hostSubtitle } from "./host-cards";
+import { MAX_HOST_GROUPS, UNGROUPED, type HostGroupStore } from "./host-groups";
 import { SshPageMotion } from "./page-motion";
 import type { SshHostEntry, SshHostProfile, SshHostProfilesBridge, SshHostsResult, SshLaunchDescriptor } from "./client";
 import "./hosts-panel.css";
@@ -15,6 +16,8 @@ type Options = {
   removed(): void;
   back(): void;
   cardId(alias: string): string;
+  /** Which group each host is in. Owned by the archive; this panel only edits it. */
+  groups(): HostGroupStore;
 };
 const optionNames = ["user", "port", "identityFile", "authMode", "keyId", "jumpHost", "connectTimeout", "keepAliveInterval", "keepAliveCountMax"] as const;
 const numeric = new Set<string>(["port", "connectTimeout", "keepAliveInterval", "keepAliveCountMax"]);
@@ -35,6 +38,9 @@ export class SshHostsPanel {
   private editing: string | undefined;
   private editorMode: "quick" | "saved" = "saved";
   private source = "all";
+  /** The alias the membership checkboxes belong to, or "" before it is saved. */
+  private membershipAlias = "";
+  private offGroups: (() => void) | undefined;
   private route = "";
   private page: Page = "list";
   private busy = false;
@@ -70,6 +76,7 @@ export class SshHostsPanel {
           <label data-ssh-reveal>AUTHENTICATION / 登录方式<select name="authMode"><option value="password">密码登录</option><option value="key">指定私钥</option><option value="auto">跟随系统 SSH 配置</option></select></label>
           <label class="ssh-host-wide" data-key-choice data-ssh-reveal>IDENTITY / 登录密钥<span class="ssh-host-key"><select name="keyId"><option value="">使用下方已有私钥路径</option></select><button type="button" class="export-button" data-action="identity">选择本机私钥 ↗</button></span></label>
           <div class="ssh-host-wide ssh-host-credential" data-ssh-reveal><p class="ssh-credential-state" role="status"></p><label class="ssh-remember"><input type="checkbox" name="rememberCredential">保存或更新<span data-credential-label>登录密码</span></label><input name="credential" type="password" autocomplete="new-password" placeholder="留空保留已保存的凭据" maxlength="16384" hidden><small>由当前 Windows 账户加密，下次连接自动使用。</small><button type="button" class="export-button" data-action="forget-credential" hidden>删除已保存凭据</button></div>
+          <div class="ssh-host-wide ssh-host-membership" data-ssh-reveal><p class="ssh-host-membership-state" role="status"></p><div class="ssh-host-group-choices" role="group" aria-label="所属分组"></div></div>
           <details class="ssh-host-wide" data-ssh-reveal><summary>连接选项 <span>跳板机 · 超时 · 保活</span></summary><div class="ssh-host-fields ssh-host-advanced">
             <label class="ssh-host-wide">IDENTITY FILE / 已有私钥路径<input name="identityFile" placeholder="已有配置可继续使用；密钥库选择优先" spellcheck="false"></label>
             <label class="ssh-host-wide">JUMP HOST / 跳板机<input name="jumpHost" placeholder="user@bastion:22，或配置别名" spellcheck="false"></label>
@@ -109,9 +116,16 @@ export class SshHostsPanel {
     });
     this.form.addEventListener("input", () => { this.deleteArmed = false; this.message.textContent = ""; });
     this.form.addEventListener("change", event => {
-      const name = (event.target as HTMLInputElement).name;
+      const target = event.target as HTMLInputElement;
+      const name = target.name;
       if (name === "authMode") { this.field("credential").value = ""; this.syncAuthentication(); void this.refreshCredentials(); }
       if (name === "rememberCredential") this.field("credential").hidden = !this.field("rememberCredential").checked;
+      // Matched on the data attribute, not `name`: these checkboxes are generated
+      // per group and have no name to key on.
+      if (target.dataset.groupMember) {
+        this.options.groups().setMembership(this.membershipAlias, target.dataset.groupMember, target.checked);
+        this.renderMembership(this.membershipAlias);
+      }
     });
     this.root.addEventListener("click", event => {
       const button = (event.target as Element).closest<HTMLButtonElement>("button");
@@ -184,6 +198,12 @@ export class SshHostsPanel {
       this.form.querySelector<HTMLButtonElement>("[data-action=reload-editor]")!.hidden = true;
       this.syncMode();
     }
+    // Re-rendered even when the route repeats: the groups live on the archive's
+    // host page, so a group created since this editor last opened must appear.
+    if (page !== "list") {
+      this.watchGroups();
+      this.renderMembership(host?.alias || "");
+    }
     if (page === "list") this.renderList();
     container.append(this.root);
     if (page !== "list") { this.syncAuthentication(); void this.refreshCredentials(); if (!changed) void this.refreshKeys(); }
@@ -194,7 +214,13 @@ export class SshHostsPanel {
     if (this.route && !this.form.hidden)
       this.drafts.set(this.route, { values: this.values(false), revision: this.editRevision });
   }
-  unmount() { this.rememberDraft(); this.editorGeneration++; this.field("credential").value = ""; this.field("rememberCredential").checked = false; this.motion.cancel(); this.root.remove(); }
+  /** Keep the group chips current while the editor is open. */
+  private watchGroups() {
+    if (this.offGroups) return;
+    this.offGroups = this.options.groups().onChange(() => this.renderMembership(this.membershipAlias));
+  }
+  private stopWatchingGroups() { this.offGroups?.(); this.offGroups = undefined; }
+  unmount() { this.rememberDraft(); this.stopWatchingGroups(); this.editorGeneration++; this.field("credential").value = ""; this.field("rememberCredential").checked = false; this.motion.cancel(); this.root.remove(); }
   finishMotion() { this.motion.finish(); }
 
   async refresh() {
@@ -215,8 +241,52 @@ export class SshHostsPanel {
     return result;
   }
 
+  /**
+   * Which groups the host being edited belongs to.
+   *
+   * Only an existing host can be in a group — the store keys membership by
+   * alias, and a host that has not been saved has none yet.
+   */
+  private renderMembership(alias: string) {
+    this.membershipAlias = alias;
+    const store = this.options.groups();
+    const choices = this.form.querySelector<HTMLElement>(".ssh-host-group-choices")!;
+    const state = this.form.querySelector<HTMLElement>(".ssh-host-membership-state")!;
+    if (!alias) {
+      choices.replaceChildren();
+      state.textContent = "保存这台主机后即可加入分组。";
+      return;
+    }
+    state.textContent = store.groups.length
+      ? "可加入多个分组；每个分组在档案阵列里是一列。"
+      : "还没有分组。在主机列表上方新建一个。";
+    // The store notifies on every membership toggle, so a rebuild would drop
+    // focus from the checkbox just clicked: reuse the row when it still matches.
+    const rendered = `${alias}|${store.groups.map((group) => `${group.id}:${group.name}`).join(",")}`;
+    if (choices.dataset.rendered === rendered) {
+      for (const input of choices.querySelectorAll<HTMLInputElement>("input[data-group-member]"))
+        input.checked = store.group(input.dataset.groupMember ?? "")?.aliases.includes(alias) ?? false;
+      return;
+    }
+    choices.dataset.rendered = rendered;
+    choices.replaceChildren(
+      ...store.groups.map((group) => {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.dataset.groupMember = group.id;
+        input.checked = group.aliases.includes(alias);
+        const text = document.createElement("span");
+        text.textContent = group.name;
+        label.append(input, text);
+        return label;
+      }),
+    );
+  }
   private renderList() {
     const query = this.search.value.trim().toLocaleLowerCase();
+    // Grouping is filtered and managed on the overview's host page, which is the
+    // list this panel's editor is opened from; this page only picks a host.
     const filtered = this.hosts.filter(entry =>
       (this.source === "all" || (entry.source ?? "config") === this.source) &&
       [hostLabel(entry), entry.hostname, entry.user].join(" ").toLocaleLowerCase().includes(query));
@@ -383,5 +453,5 @@ export class SshHostsPanel {
     if (!result?.ok) this.message.textContent = result?.error || "凭据删除失败";
     else { this.field("credential").value = ""; await this.refreshCredentials(); }
   }
-  dispose() { this.request++; this.editorGeneration++; this.motion.cancel(); this.root.remove(); this.drafts.clear(); }
+  dispose() { this.request++; this.stopWatchingGroups(); this.editorGeneration++; this.motion.cancel(); this.root.remove(); this.drafts.clear(); }
 }

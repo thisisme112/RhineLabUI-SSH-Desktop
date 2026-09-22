@@ -6,11 +6,17 @@
  * than a conventional dark terminal panel dropped on top of it.
  */
 .ssh-terminal {
-  --terminal-bg: #eae5e1;
-  --terminal-fg: #080a08;
-  --terminal-line: #d5cfc7;
-  --terminal-muted: #626158;
-  --terminal-accent: #835b32;
+  /* Derived from the theme rather than fixed: the panel is a full-window
+     surface, so a palette of its own would sit beside the application's instead
+     of belonging to it — and the window caption, which follows the theme, would
+     disagree with the bar directly under it. `cyan` is the accent this panel has
+     always used, so the terminal stays the cooler surface it was designed as. */
+  --terminal-bg: var(--theme-paper);
+  --terminal-fg: var(--theme-ink);
+  --terminal-line: var(--theme-line);
+  --terminal-muted: var(--theme-muted);
+  --terminal-accent: var(--theme-cyan);
+  --terminal-error: #a8412f;
   position: absolute;
   inset: 0;
   z-index: 25;
@@ -20,14 +26,14 @@
   color: var(--terminal-fg);
   font-family: MiSans, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   pointer-events: auto;
+  isolation: isolate;
 }
 
+/* Everything above already flips with the theme's own light/dark endpoints, so
+   the only value that still needs a switch is the error tone, which has no
+   theme token of its own. */
 .ssh-terminal[data-dark="true"] {
-  --terminal-bg: #232521;
-  --terminal-fg: #ece7dd;
-  --terminal-line: #494c43;
-  --terminal-muted: #b2ad9f;
-  --terminal-accent: #cda265;
+  --terminal-error: #e0927c;
 }
 
 .ssh-terminal[data-presentation="deck"] {
@@ -64,6 +70,19 @@
   border-bottom: 1px solid var(--terminal-line);
 }
 
+/* The terminal fills the window, so its bar runs under the caption buttons the
+   OS draws on top (electron/window-chrome.cjs). Leave that corner empty, and let
+   the empty strip drag the window — the SSH surface has no other drag region, so
+   without this the window cannot be moved while a session is open. The bar's own
+   controls opt back out so they stay clickable. */
+html[data-desktop="true"] .ssh-terminal-bar {
+  padding-right: calc(20px + var(--window-controls-width, 0px));
+  -webkit-app-region: drag;
+}
+html[data-desktop="true"] .ssh-terminal-bar > * {
+  -webkit-app-region: no-drag;
+}
+
 .ssh-terminal-foot {
   border-top: 1px solid var(--terminal-line);
   font-variant-numeric: tabular-nums;
@@ -91,17 +110,16 @@
 /* A stalled phase is a real state, so it is shown rather than animated over. */
 .ssh-terminal-phase[data-stalled="true"]::after {
   content: " · 等待中";
-  color: #a8412f;
+  color: var(--terminal-error);
 }
 
 .ssh-terminal-phase[data-phase="failed"] {
-  color: #a8412f;
+  color: var(--terminal-error);
 }
 
 .ssh-terminal-close,
 .ssh-terminal-reconnect,
-.ssh-terminal-audit,
-.ssh-terminal-teardown {
+.ssh-terminal-audit {
   padding: 8px 14px;
   min-height: 32px;
   border: 1px solid var(--terminal-line);
@@ -125,20 +143,11 @@
 .ssh-terminal-reconnect:hover,
 .ssh-terminal-reconnect:focus-visible,
 .ssh-terminal-audit:hover,
-.ssh-terminal-audit:focus-visible,
-.ssh-terminal-teardown:hover,
-.ssh-terminal-teardown:focus-visible {
+.ssh-terminal-audit:focus-visible {
   border-color: var(--terminal-accent);
   color: var(--terminal-accent);
   outline: none;
 }
-/* The teardown reads as the one structural action in the bar, so it carries the
-   accent at rest rather than only on hover. (`.ssh-terminal-audit` already owns
-   the bar's auto margin, so this one adds none.) */
-.ssh-terminal-teardown {
-  color: var(--terminal-accent);
-}
-
 .ssh-terminal-screen {
   min-height: 0;
   padding: 6px 9px;
@@ -398,7 +407,7 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #a8412f;
+  color: var(--terminal-error);
   text-transform: none;
   letter-spacing: 0.02em;
 }
@@ -413,11 +422,14 @@
 .ssh-dual-divider { background: var(--terminal-line); cursor: col-resize; touch-action: none; }
 .ssh-terminal.ssh-split-secondary, .ssh-terminal.ssh-split-secondary.has-session-navigation { position: relative; inset: auto !important; width: auto !important; height: 100% !important; min-width: 0; transform: none !important; border: 0; overflow: hidden; grid-template-rows: auto minmax(0,1fr) auto auto; }
 .ssh-split-secondary > .ssh-session-navigation { display: none; }
-.ssh-split-secondary :is(.ssh-terminal-split-select,.ssh-terminal-audit,.ssh-terminal-teardown,.ssh-terminal-settings,.ssh-terminal-search-all) { display: none; }
+.ssh-split-secondary :is(.ssh-terminal-split-select,.ssh-terminal-audit,.ssh-terminal-settings,.ssh-terminal-search-all) { display: none; }
 .has-dual-terminal > .ssh-terminal-bar { flex-wrap: wrap; gap: 6px; }
 .ssh-split-secondary .ssh-terminal-bar { flex-wrap: wrap; gap: 6px; padding: 4px 8px; }
 .ssh-split-secondary .ssh-terminal-status { flex-wrap: wrap; gap: 6px; padding-inline: 8px; }
 .ssh-split-secondary .ssh-terminal-target { max-width: 70%; }
-.ssh-session-tab[data-unread=true] [role=tab] > i { background: var(--terminal-accent, #9b7247); }
 .ssh-session-tab[data-alert=true] small { color: #be6f4d; }
+html[data-dark-surface="true"] .ssh-terminal :is(select, option, optgroup) {
+  color: var(--terminal-fg);
+  background-color: var(--terminal-bg);
+}
 @media (max-width: 959px) { .ssh-terminal-split-select { display: none; } }

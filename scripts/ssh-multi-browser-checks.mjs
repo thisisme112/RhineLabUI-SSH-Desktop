@@ -1,3 +1,4 @@
+import { enterInspection } from './enter-inspection.mjs';
 /** Real DOM, xterm and Three.js; transport frames are explicitly simulated. */
 export async function checkSshMultisession({ evaluate, until: waitFor, check, shot, key, send, sleep, evidence }) {
   const until = (name, expression) => waitFor(name, expression, 20000);
@@ -31,11 +32,13 @@ export async function checkSshMultisession({ evaluate, until: waitFor, check, sh
   await shot('01-empty-command-library');
   await column('host');
   await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
   await until('first authentication', `rhineSshUi.promptKind === 'password' && rhine.stats().sessionDeck.screenCurrent && rhine.stats().cameraDetail > .99`);
   await evaluate(`window.__sessionA = rhineSshUi.sessions.find(session => session.target === 'review-host')`);
   await check('authentication uses the current host deck and an independent texture source', `rhine.stats().sessionDeck.contentKey === 'host:review-host' && rhine.stats().sessionDeck.cardId === rhine.stats().selected && rhine.stats().sessionDeck.screenCurrent && rhine.stats().sessionDeck.progress === 0`);
   await shot('02-host-authentication');
   await evaluate(`rhineSshUi.connectHost('second-host')`);
+  await enterInspection({ evaluate, until });
   await until('second authentication', `rhineSshUi.promptKind === 'password' && rhineSsh.target === 'second-host'`);
   await evaluate(`window.__sessionB = rhineSshUi.sessions.find(session => session.target === 'second-host'); rhineSshUi.answerSecret('only-b')`);
   await until('second terminal ready', `rhineSshUi.hasFocus && rhine.stats().sessionDeck.ready`);

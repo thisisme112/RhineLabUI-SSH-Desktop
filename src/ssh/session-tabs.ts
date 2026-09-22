@@ -1,4 +1,4 @@
-export type SessionTab = { key: string; label: string; state: string; unread?: boolean; alert?: string; transfers?: number };
+export type SessionTab = { key: string; label: string; state: string; alert?: string; transfers?: number };
 
 /** Stable nodes preserve focus while traffic and authentication update tab state. */
 export class SessionTabs {
@@ -88,14 +88,13 @@ export class SessionTabs {
       const changed = tab.getAttribute("aria-selected") !== String(selected);
       tab.setAttribute("aria-selected", String(selected));
       tab.tabIndex = selected ? 0 : -1;
-      tab.title = [item.label, item.state, item.unread ? "有未读输出" : "", item.alert, item.transfers ? `${item.transfers} 项传输` : ""].filter(Boolean).join(" · ");
-      node.dataset.unread = String(!!item.unread);
+      tab.title = [item.label, item.state, item.alert, item.transfers ? `${item.transfers} 项传输` : ""].filter(Boolean).join(" · ");
       node.dataset.alert = String(!!item.alert);
       node.dataset.active = String(selected);
       node.dataset.pending = String(item.state.includes("认证"));
       for (const [selector, value] of [
         ["span", item.label],
-        ["small", [item.alert ? "⚠" : "", item.unread ? "●" : "", item.state, item.transfers ? `⇅ ${item.transfers}` : ""].filter(Boolean).join(" ")],
+        ["small", [item.alert ? "⚠" : "", item.state, item.transfers ? `⇅ ${item.transfers}` : ""].filter(Boolean).join(" ")],
       ]) {
         const part = tab.querySelector(selector)!;
         if (part.textContent !== value) part.textContent = value;

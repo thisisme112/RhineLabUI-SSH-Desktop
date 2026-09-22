@@ -1,0 +1,42 @@
+import { enterInspection } from './enter-inspection.mjs';
+
+export async function checkInspectionSessions({ evaluate, until, check, shot, key, send, sleep }) {
+  await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
+  await until('first authentication', `rhineSshUi.promptKind === 'password'`);
+  await evaluate(`window.first = rhineSshUi.sessions.find(s => s.target === 'review-host'); rhineSshUi.dismissPrompt(); rhineSshUi.connectHost('second-host')`);
+  await enterInspection({ evaluate, until });
+  await until('second authentication', `rhineSshUi.promptKind === 'password' && rhineSsh.target === 'second-host'`);
+  await evaluate(`window.second = rhineSshUi.sessions.find(s => s.target === 'second-host'); rhineSshUi.answerSecret('second')`);
+  await until('second terminal', 'rhineSshUi.hasFocus');
+  await check('authentication is scoped to its own session', `!__multiFixture.entries.get(first.id).answer && __multiFixture.entries.get(second.id).answer === 'second'`);
+  await evaluate('rhineSshUi.activateSession(first.key)');
+  await until('first authentication restored', `rhineSshUi.promptKind === 'password' && rhineSsh.target === 'review-host'`);
+  await evaluate(`rhineSshUi.answerSecret('first')`);
+  await until('first terminal', 'rhineSshUi.hasFocus');
+  await send('Input.insertText', {text:'retained-input'});
+  await key('Enter','Enter',13);
+  await until('first output', `rhineSsh.output.includes('review-host: retained-input')`);
+  await evaluate('rhineSshUi.activateSession(second.key)');
+  await until('second selected', 'rhineSshUi.hasFocus && rhineSshUi.activeSessionKey === second.key');
+  await check('open sessions switch directly without model replay', `document.querySelector('.model-viewer').hidden && !rhineSsh.output.includes('retained-input')`);
+  await evaluate('rhineSshUi.activateSession(first.key)');
+  await until('first selected', 'rhineSshUi.hasFocus && rhineSshUi.activeSessionKey === first.key');
+  await check('session switch preserves output and separate transports', `rhineSsh.output.includes('retained-input') && rhineSshUi.sessions.filter(s=>s.active).length === 2`);
+  await evaluate('rhineSshUi.closeTerminal()');
+  await until('return model', `!document.querySelector('.model-viewer').hidden && JSON.parse(document.querySelector('.model-viewer').dataset.stats).ready`);
+  await evaluate(`window.inputCount = __multiFixture.entries.get(first.id).writes.length`);
+  await key('ArrowLeft','ArrowLeft',37);
+  await sleep(250);
+  await check('inspection navigation is isolated from terminal input', `__multiFixture.entries.get(first.id).writes.length === inputCount`);
+  await enterInspection({ evaluate, until });
+  await until('retained terminal', 'rhineSshUi.hasFocus');
+  await check('return from inspection retains the session and output', `rhineSshUi.activeSessionKey === first.key && rhineSsh.output.includes('retained-input')`);
+  await shot('two-sessions');
+  await evaluate(`(async () => { __multiFixture.auto = true; for (const target of ['host-3','host-4','host-5','host-6','host-7','host-8']) await rhineSshUi.startSession({target}); })()`);
+  await until('eight connected sessions', 'rhineSshUi.sessions.filter(s=>s.active).length === 8');
+  await evaluate('rhineSshUi.activateSession(first.key)');
+  await until('original terminal restored', 'rhineSshUi.hasFocus && rhineSshUi.activeSessionKey === first.key');
+  await check('eight sessions retain independent buffers with one visible terminal', `rhineSshUi.sessions.filter(s=>s.active).length === 8 && document.querySelectorAll('.ssh-terminal .xterm').length === 1 && rhineSsh.output.includes('retained-input') && document.querySelector('.model-viewer').hidden`);
+  await shot('eight-sessions');
+}

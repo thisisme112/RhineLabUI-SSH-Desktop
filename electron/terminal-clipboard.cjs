@@ -8,22 +8,25 @@ function validateText(text) {
   return null;
 }
 
+// Electron 44 moved the native clipboard API onto promises (readText():
+// Promise<string>, writeText(): Promise<void>); awaiting also accepts the
+// synchronous stand-ins used by smoke runs and tests.
 function createTextClipboard(clipboard) {
   return {
-    readText() {
+    async readText() {
       try {
-        const text = clipboard.readText();
+        const text = await clipboard.readText();
         const error = validateText(text);
         return error ? { ok: false, error } : { ok: true, text };
       } catch {
         return { ok: false, error: "无法读取剪贴板，请重试" };
       }
     },
-    writeText(text) {
+    async writeText(text) {
       const error = validateText(text);
       if (error) return { ok: false, error };
       try {
-        clipboard.writeText(text);
+        await clipboard.writeText(text);
         return { ok: true };
       } catch {
         return { ok: false, error: "无法写入剪贴板，请重试" };

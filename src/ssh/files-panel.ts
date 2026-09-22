@@ -1,4 +1,5 @@
 import { SshPageMotion } from "./page-motion";
+import type { WorkspaceStore } from "./workspace-store";
 import {
   bytes,
   remoteJoin,
@@ -9,6 +10,37 @@ import {
   SshServicesClient,
 } from "./services";
 
+/**
+ * Hairline glyphs for the toolbar.
+ *
+ * The buttons are drawings only — the Chinese label each one stands for lives in
+ * its `title` and `aria-label`, so it is still spoken and still available on
+ * hover, but it no longer sets the width of a 320 px column. Same technique as
+ * the trend line in monitor-panel.ts: inline SVG in `currentColor`, no icon font
+ * and no emoji.
+ */
+const FILE_ICONS = {
+  upload:
+    '<path d="M8 2.6V10M4.9 5.7 8 2.6l3.1 3.1M3.1 10.4v1.7a1.4 1.4 0 0 0 1.4 1.4h7a1.4 1.4 0 0 0 1.4-1.4v-1.7"/>',
+  uploadFolder:
+    '<path d="M2 12.1V4.4a1.1 1.1 0 0 1 1.1-1.1h2.5l1.3 1.6h5.9a1.1 1.1 0 0 1 1.1 1.1v6.1a1.1 1.1 0 0 1-1.1 1.1H3.1A1.1 1.1 0 0 1 2 12.1Z"/><path d="M8 11.2V7.4M6.3 9.1 8 7.4l1.7 1.7"/>',
+  download:
+    '<path d="M8 2.6V10M4.9 6.9 8 10l3.1-3.1M3.1 10.4v1.7a1.4 1.4 0 0 0 1.4 1.4h7a1.4 1.4 0 0 0 1.4-1.4v-1.7"/>',
+  mkdir:
+    '<path d="M2 12.1V4.4a1.1 1.1 0 0 1 1.1-1.1h2.5l1.3 1.6h5.9a1.1 1.1 0 0 1 1.1 1.1v6.1a1.1 1.1 0 0 1-1.1 1.1H3.1A1.1 1.1 0 0 1 2 12.1Z"/><path d="M8 7.2v4M6 9.2h4"/>',
+  bookmarkAdd:
+    '<path d="M3.9 3.1A1.1 1.1 0 0 1 5 2h6a1.1 1.1 0 0 1 1.1 1.1v10.6L8 11.1l-4.1 2.6Z"/><path d="M8 5.4v3.2M6.4 7h3.2"/>',
+  bookmarkList:
+    '<path d="M3.9 3.1A1.1 1.1 0 0 1 5 2h6a1.1 1.1 0 0 1 1.1 1.1v10.6L8 11.1l-4.1 2.6Z"/>',
+  refresh: '<path d="M13.1 8a5.1 5.1 0 1 1-1.5-3.6"/><path d="M13.3 2.5v3h-3"/>',
+  eye: '<path d="M1.7 8S4.1 3.9 8 3.9 14.3 8 14.3 8 11.9 12.1 8 12.1 1.7 8 1.7 8Z"/><circle cx="8" cy="8" r="2.1"/>',
+  eyeOff:
+    '<path d="M6.5 4a6.9 6.9 0 0 1 1.5-.1c3.9 0 6.3 4.1 6.3 4.1a12.6 12.6 0 0 1-1.9 2.5M4 5.2A12.7 12.7 0 0 0 1.7 8S4.1 12.1 8 12.1a6.6 6.6 0 0 0 1.8-.2"/><path d="M2.6 2.6 13.4 13.4"/>',
+};
+function icon(name: keyof typeof FILE_ICONS) {
+  return `<svg class="ssh-file-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">${FILE_ICONS[name]}</svg>`;
+}
+
 const markup = `
   <div class="ssh-side-kicker" data-ssh-reveal><span>FILE INDEX</span><span class="ssh-files-count">00</span></div>
   <form class="ssh-files-path-form" data-ssh-reveal>
@@ -17,24 +49,27 @@ const markup = `
     <button type="submit" title="读取目录">↵</button>
   </form>
   <nav class="ssh-files-breadcrumbs" aria-label="目录层级" data-ssh-reveal></nav>
-  <div class="ssh-file-actions" data-ssh-reveal>
-    <button type="button" data-file-action="upload">上传</button>
-    <button type="button" data-file-action="upload-folder">上传目录</button>
-    <button type="button" data-file-action="download">下载</button>
-    <button type="button" data-file-action="mkdir">新建目录</button>
-    <button type="button" data-file-action="bookmark" title="将当前远端目录存入文件列">收藏目录</button>
-    <button type="button" data-file-action="refresh" class="ssh-file-refresh" title="刷新目录">↻</button>
+  <div class="ssh-file-actions ssh-file-toolbar" data-ssh-reveal>
+    <button type="button" data-file-action="upload" title="上传文件" aria-label="上传文件">${icon("upload")}</button>
+    <button type="button" data-file-action="upload-folder" title="上传目录" aria-label="上传目录">${icon("uploadFolder")}</button>
+    <button type="button" data-file-action="download" title="下载所选" aria-label="下载所选">${icon("download")}</button>
+    <button type="button" data-file-action="mkdir" title="新建目录" aria-label="新建目录">${icon("mkdir")}</button>
+    <button type="button" data-file-action="bookmark" title="将当前目录存入收藏" aria-label="将当前目录存入收藏">${icon("bookmarkAdd")}</button>
+    <button type="button" data-file-action="bookmarks" aria-expanded="false" aria-controls="ssh-files-bookmarks" title="收藏的目录" aria-label="收藏的目录">${icon("bookmarkList")}</button>
+    <button type="button" data-file-action="refresh" class="ssh-file-refresh" title="刷新目录" aria-label="刷新目录">${icon("refresh")}</button>
+    <div class="ssh-files-bookmarks" id="ssh-files-bookmarks" role="group" aria-label="收藏的目录" hidden></div>
   </div>
   <div class="ssh-files-filter" data-ssh-reveal>
     <input type="search" aria-label="筛选当前目录" placeholder="筛选当前目录" spellcheck="false">
     <select aria-label="文件排序"><option value="name">名称</option><option value="modified">修改时间</option><option value="size">大小</option><option value="kind">类型</option></select>
-    <button type="button" data-file-action="hidden" aria-pressed="false" title="显示隐藏文件">·</button>
+    <button type="button" data-file-action="hidden" aria-pressed="false" title="显示隐藏文件和文件夹" aria-label="显示隐藏文件和文件夹"><span class="ssh-file-icon-eye">${icon("eye")}</span><span class="ssh-file-icon-eye-off">${icon("eyeOff")}</span></button>
   </div>
   <div class="ssh-files-state" role="status"></div>
   <div class="ssh-files-list" role="listbox" aria-label="远端文件" aria-multiselectable="true" tabindex="0">
     <div class="ssh-files-space"><div class="ssh-file-rows"></div></div>
     <div class="ssh-files-empty"></div>
   </div>
+  <div class="ssh-files-menu" id="ssh-files-menu" role="group" aria-label="文件操作" hidden></div>
   <div class="ssh-file-selection">
     <span class="ssh-file-info"></span>
     <button type="button" data-file-action="open">打开</button>
@@ -60,6 +95,29 @@ type Edit = {
   entries: RemoteEntry[];
 };
 const rowHeight = 40;
+const HIDDEN_KEY = "rhine-ssh-files-hidden";
+
+/** Showing dotfiles is a preference, not a per-visit toggle: it survives a
+ *  reload, the same way the stowed overview does. */
+function readHiddenPref() {
+  try {
+    return localStorage.getItem(HIDDEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+/** POSIX single-quote quoting, so a path with spaces or quotes still reaches the
+ *  shell as one argument. */
+function shellQuote(value: string) {
+  return "'" + value.replace(/'/g, "'\\''") + "'";
+}
+function writeHiddenPref(value: boolean) {
+  try {
+    localStorage.setItem(HIDDEN_KEY, value ? "1" : "0");
+  } catch {
+    /* Memory remains usable. */
+  }
+}
 
 export function fileTone(entry: RemoteEntry) {
   if (entry.kind === "directory") return "directory";
@@ -83,6 +141,15 @@ export class SftpPanel {
   private path = "";
   private requestedPath = "";
   onBookmark: ((path: string) => void) | undefined;
+  /** Writes one shell command to this session's terminal. Returns false when
+   *  there is no interactive shell to receive it, so the menu can hide the
+   *  entry rather than offer something that would do nothing. */
+  onTerminalCommand: ((command: string) => boolean) | undefined;
+  private bookmarkStore?: WorkspaceStore;
+  private bookmarkAlias = "";
+  private offBookmarks?: () => void;
+  private bookmarkSignature = "";
+  private bookmarkList: HTMLElement;
   private home = "";
   private sessionId = "";
   private ready = false;
@@ -93,7 +160,7 @@ export class SftpPanel {
   private cursor = 0;
   private rowNodes = new Map<string, HTMLElement>();
   private loading = false;
-  private showHidden = false;
+  private showHidden = readHiddenPref();
   private loadRevision = 0;
   private edit: Edit | null = null;
   private editRevision = 0;
@@ -111,6 +178,7 @@ export class SftpPanel {
   private sort: HTMLSelectElement;
   private editor: HTMLFormElement;
   private editorName: HTMLInputElement;
+  private fileMenu: HTMLElement;
 
   constructor(
     private root: HTMLElement,
@@ -124,8 +192,14 @@ export class SftpPanel {
     this.pathField = root.querySelector(".ssh-files-path")!;
     this.query = root.querySelector(".ssh-files-filter input")!;
     this.sort = root.querySelector(".ssh-files-filter select")!;
+    this.bookmarkList = root.querySelector(".ssh-files-bookmarks")!;
+    this.fileMenu = root.querySelector(".ssh-files-menu")!;
     this.editor = root.querySelector(".ssh-file-editor")!;
     this.editorName = root.querySelector(".ssh-file-editor-name")!;
+    // The stored preference decides the toggle's state, not the markup default.
+    root
+      .querySelector('[data-file-action="hidden"]')!
+      .setAttribute("aria-pressed", String(this.showHidden));
     const options = { signal: this.abort.signal };
     root.querySelector("form")!.addEventListener(
       "submit",
@@ -155,11 +229,9 @@ export class SftpPanel {
           void this.load(breadcrumb.dataset.remoteDirectory!);
           return;
         }
-        const action =
-          target?.closest<HTMLButtonElement>("[data-file-action]")?.dataset
-            .fileAction;
-        if (action) {
-          void this.action(action);
+        const button = target?.closest<HTMLButtonElement>("[data-file-action]");
+        if (button) {
+          void this.action(button.dataset.fileAction!, button);
           return;
         }
         const row = target?.closest<HTMLElement>("[data-file-index]");
@@ -192,6 +264,91 @@ export class SftpPanel {
       options,
     );
     this.sort.addEventListener("change", () => this.filter(), options);
+    // The bookmark menu is a popover, so a click anywhere else dismisses it. The
+    // root listener above has already run by the time this fires, which is why
+    // the toggle's own click is excluded rather than the menu being reopened.
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (this.bookmarkList.hidden) return;
+        const target = event.target instanceof Element ? event.target : null;
+        if (
+          target?.closest(
+            '[data-file-action="bookmarks"], .ssh-files-bookmarks',
+          )
+        )
+          return;
+        this.closeBookmarks(false);
+      },
+      options,
+    );
+    this.bookmarkList.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        this.closeBookmarks(true);
+      },
+      options,
+    );
+    root.addEventListener(
+      "contextmenu",
+      (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        // Only the file list answers; the path field and the toolbar keep the
+        // browser's own menu so text editing still works there.
+        if (!target?.closest(".ssh-files-list")) return;
+        event.preventDefault();
+        const row = target.closest<HTMLElement>("[data-file-index]");
+        const index = row ? Number(row.dataset.fileIndex) : -1;
+        // Right-clicking outside the current selection retargets it, the way
+        // every desktop file manager behaves.
+        if (index >= 0) {
+          const entry = this.filtered[index];
+          if (entry && !this.selection.has(entry.path)) this.select(index);
+        }
+        this.openFileMenu(index, (event as MouseEvent).clientX, (event as MouseEvent).clientY);
+      },
+      options,
+    );
+    this.fileMenu.addEventListener(
+      "click",
+      (event) => {
+        const button = (event.target as Element).closest<HTMLElement>(
+          "[data-menu-action]",
+        );
+        if (!button) return;
+        const action = button.dataset.menuAction!;
+        this.closeFileMenu(false);
+        if (action === "copy-path" || action === "copy-name") {
+          void this.copyToClipboard(action);
+          return;
+        }
+        void this.action(action, button as HTMLButtonElement);
+      },
+      options,
+    );
+    this.fileMenu.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        this.closeFileMenu(true);
+      },
+      options,
+    );
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (this.fileMenu.hidden) return;
+        const target = event.target instanceof Element ? event.target : null;
+        if (target?.closest(".ssh-files-menu")) return;
+        this.closeFileMenu(false);
+      },
+      options,
+    );
     this.viewport.addEventListener("scroll", () => this.renderRows(), {
       ...options,
       passive: true,
@@ -282,7 +439,203 @@ export class SftpPanel {
       this.motion.cancel();
       this.dragDepth = 0;
       delete this.root.dataset.drop;
+      // Both popovers point at rows that are about to be hidden.
+      this.closeFileMenu(false);
+      this.closeBookmarks(false);
     }
+  }
+  setBookmarkStore(store: WorkspaceStore | undefined, alias: string) {
+    this.offBookmarks?.();
+    this.offBookmarks = undefined;
+    if (this.disposed) return;
+    this.bookmarkStore = store;
+    this.bookmarkAlias = alias;
+    this.bookmarkSignature = "";
+    this.offBookmarks = store?.onChange(() => this.renderBookmarks());
+    this.renderBookmarks();
+  }
+  private hostBookmarks() {
+    return this.bookmarkStore?.bookmarks.filter(row => row.alias === this.bookmarkAlias) ?? [];
+  }
+  private renderBookmarks() {
+    const bookmarks = this.hostBookmarks();
+    const signature = JSON.stringify(bookmarks);
+    if (signature !== this.bookmarkSignature) {
+      this.bookmarkSignature = signature;
+      this.bookmarkList.replaceChildren();
+      if (bookmarks.length) {
+        for (const row of bookmarks) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.fileAction = "open-bookmark";
+          button.dataset.bookmarkId = row.id;
+          // The full path is the point of the menu — it is what the old
+          // select only showed once an option was opened.
+          button.title = row.path;
+          const name = document.createElement("strong");
+          name.textContent = row.name;
+          const path = document.createElement("span");
+          path.textContent = row.path;
+          button.append(name, path);
+          this.bookmarkList.append(button);
+        }
+      } else {
+        const empty = document.createElement("p");
+        empty.className = "ssh-files-bookmarks-empty";
+        empty.textContent = "当前主机暂无收藏";
+        this.bookmarkList.append(empty);
+        this.closeBookmarks(false);
+      }
+    }
+    this.syncActions();
+  }
+  private toggleBookmarks() {
+    if (this.bookmarkList.hidden) {
+      this.bookmarkList.hidden = false;
+      this.root
+        .querySelector('[data-file-action="bookmarks"]')!
+        .setAttribute("aria-expanded", "true");
+      this.bookmarkList
+        .querySelector<HTMLButtonElement>("[data-file-action]")
+        ?.focus();
+    } else this.closeBookmarks(false);
+  }
+  private closeBookmarks(restoreFocus: boolean) {
+    if (this.bookmarkList.hidden) return;
+    this.bookmarkList.hidden = true;
+    const toggle = this.root.querySelector<HTMLButtonElement>(
+      '[data-file-action="bookmarks"]',
+    )!;
+    toggle.setAttribute("aria-expanded", "false");
+    if (restoreFocus) toggle.focus();
+  }
+  /**
+   * What the right-click menu offers, decided once from the state it opened in.
+   *
+   * Items carry `data-menu-action`, not `data-file-action`: the toolbar's
+   * disabled-state pass walks every `[data-file-action]` in the panel, and a
+   * menu that changed under the pointer as the selection changed would fight it.
+   */
+  private fileMenuItems(index: number) {
+    const entry = index >= 0 ? this.filtered[index] : undefined;
+    const selection = this.selected();
+    const items: { action: string; label: string; disabled?: boolean }[] = [];
+    if (entry) {
+      items.push({
+        action: "open",
+        label: entry.kind === "directory" ? "打开目录" : "打开",
+      });
+      // Only offered when a shell is actually there to receive it.
+      if (entry.kind === "directory" && this.onTerminalCommand)
+        items.push({ action: "cd-here", label: "在终端中进入" });
+      items.push({
+        action: "download",
+        label: "下载",
+        disabled: !selection.length || selection.length > 256,
+      });
+      items.push({
+        action: "rename",
+        label: "重命名",
+        disabled: selection.length !== 1,
+      });
+      items.push({
+        action: "properties",
+        label: "详情",
+        disabled: selection.length !== 1,
+      });
+      items.push({
+        action: "remove",
+        label: "删除",
+        disabled: !selection.length || selection.length > 256,
+      });
+      if (window.rhineDesktop?.clipboard) {
+        items.push({
+          action: "copy-path",
+          label: "复制路径",
+          disabled: !selection.length,
+        });
+        items.push({
+          action: "copy-name",
+          label: "复制文件名",
+          disabled: selection.length !== 1,
+        });
+      }
+    } else {
+      items.push({ action: "mkdir", label: "新建目录" });
+      items.push({ action: "upload", label: "上传文件" });
+      items.push({ action: "upload-folder", label: "上传目录" });
+      items.push({
+        action: "hidden",
+        label: this.showHidden ? "隐藏点文件" : "显示隐藏文件",
+      });
+    }
+    items.push({ action: "refresh", label: "刷新" });
+    return items;
+  }
+  private openFileMenu(index: number, clientX: number, clientY: number) {
+    this.closeBookmarks(false);
+    this.fileMenu.replaceChildren(
+      ...this.fileMenuItems(index).map((item) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.menuAction = item.action;
+        button.textContent = item.label;
+        button.disabled = Boolean(item.disabled);
+        return button;
+      }),
+    );
+    this.fileMenu.hidden = false;
+    // The SSH surface sits inside a scaled stage, so a pointer position has to be
+    // converted back into the panel's own pixels before it can place anything;
+    // offsetWidth/offsetHeight are already in that space.
+    const rect = this.root.getBoundingClientRect();
+    const scale = rect.width / this.root.clientWidth || 1;
+    const x = Math.max(
+      0,
+      Math.min(
+        this.root.clientWidth - this.fileMenu.offsetWidth,
+        (clientX - rect.left) / scale,
+      ),
+    );
+    const y = Math.max(
+      0,
+      Math.min(
+        this.root.clientHeight - this.fileMenu.offsetHeight,
+        (clientY - rect.top) / scale,
+      ),
+    );
+    this.fileMenu.style.left = `${x}px`;
+    this.fileMenu.style.top = `${y}px`;
+    this.fileMenu.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+  }
+  private closeFileMenu(restoreFocus: boolean) {
+    if (this.fileMenu.hidden) return;
+    this.fileMenu.hidden = true;
+    if (restoreFocus) this.viewport.focus();
+  }
+  private async copyToClipboard(kind: "copy-path" | "copy-name") {
+    const selection = this.selected();
+    if (!selection.length) return;
+    const bridge = window.rhineDesktop?.clipboard;
+    if (!bridge) {
+      this.feedback("当前环境不支持复制远端路径");
+      return;
+    }
+    const text =
+      kind === "copy-path"
+        ? selection.map((entry) => entry.path).join("\n")
+        : selection[0].name;
+    try {
+      const result = await bridge.writeText(text);
+      this.feedback(result.ok ? "已复制到剪贴板" : result.error || "复制失败");
+    } catch (error) {
+      this.feedback(String(error));
+    }
+  }
+  private runInTerminal(path: string) {
+    if (this.onTerminalCommand?.(`cd ${shellQuote(path)}`))
+      this.feedback("已在终端中切换目录");
+    else this.feedback("终端当前无法接收命令");
   }
   get directory() { return this.path; }
   openDirectory(path: string) {
@@ -364,6 +717,8 @@ export class SftpPanel {
     };
     this.loading = true;
     if (!preserve || requested !== this.path) this.closeEditor();
+    // The rows the menu points at are about to be replaced.
+    this.closeFileMenu(false);
     this.feedback("");
     this.syncActions();
     const status = this.root.querySelector<HTMLElement>(".ssh-files-state")!;
@@ -634,11 +989,20 @@ export class SftpPanel {
   }
   private syncActions() {
     const selected = this.selected();
+    const bookmarks = this.hostBookmarks();
+    const menu = this.root.querySelector<HTMLButtonElement>(
+      '[data-file-action="bookmarks"]',
+    )!;
+    menu.disabled = !this.ready || this.loading || !bookmarks.length;
+    menu.title = bookmarks.length
+      ? `收藏的目录 · ${bookmarks.length}`
+      : "当前主机暂无收藏";
     for (const button of this.root.querySelectorAll<HTMLButtonElement>(
       "[data-file-action]",
     )) {
       const action = button.dataset.fileAction!;
-      if (["hidden", "cancel-edit", "retry"].includes(action)) continue;
+      if (["hidden", "bookmarks", "cancel-edit", "retry"].includes(action))
+        continue;
       button.disabled =
         !this.ready ||
         this.loading ||
@@ -683,14 +1047,19 @@ export class SftpPanel {
       await this.textEditor.open(entry.path);
     } else this.editEntry("properties", [entry]);
   }
-  private async action(action: string) {
+  private async action(action: string, button?: HTMLButtonElement) {
     if (action === "hidden") {
       this.showHidden = !this.showHidden;
+      writeHiddenPref(this.showHidden);
       this.root
         .querySelector('[data-file-action="hidden"]')!
         .setAttribute("aria-pressed", String(this.showHidden));
       this.selection.clear();
       this.filter();
+      return;
+    }
+    if (action === "bookmarks") {
+      this.toggleBookmarks();
       return;
     }
     if (action === "cancel-edit") {
@@ -709,6 +1078,16 @@ export class SftpPanel {
     const sessionId = this.sessionId;
     try {
       if (action === "bookmark") this.onBookmark?.(this.path);
+      else if (action === "cd-here") {
+        const entry = this.selected()[0];
+        if (entry?.kind === "directory") this.runInTerminal(entry.path);
+      } else if (action === "open-bookmark") {
+        const bookmark = this.hostBookmarks().find(
+          row => row.id === button?.dataset.bookmarkId,
+        );
+        this.closeBookmarks(false);
+        if (bookmark) await this.openDirectory(bookmark.path);
+      }
       else if (action === "open") { const entry = this.selected()[0]; if (entry) await this.openEntry(entry); }
       else if (action === "refresh") await this.load(this.path, true);
       else if (action === "parent") await this.load(remoteParent(this.path));
@@ -878,6 +1257,10 @@ export class SftpPanel {
   }
   dispose() {
     this.disposed = true;
+    this.offBookmarks?.();
+    this.offBookmarks = undefined;
+    this.bookmarkStore = undefined;
+    this.onBookmark = undefined;
     this.textEditor?.dispose();
     this.loadRevision++;
     this.abort.abort();

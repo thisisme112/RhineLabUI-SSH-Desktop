@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import ts from "typescript";
 import { SshClient } from "../src/ssh/client.ts";
 import { WorkspaceStore } from "../src/ssh/workspace-store.ts";
 import { SshEventAudio } from "../src/ssh/event-audio.ts";
-import { SshHostCards, HOST_LANES } from "../src/ssh/host-cards.ts";
+import { SshHostCards } from "../src/ssh/host-cards.ts";
+import { UNGROUPED } from "../src/ssh/host-groups.ts";
 import { archiveColumns, records, columnFiles, fileLocation, rebaseArchiveRows, resetArchiveRows } from "../src/data.ts";
 import { fileAtCell, selectionCell } from "../src/archive-loop.ts";
 const require = createRequire(import.meta.url);
@@ -179,7 +183,113 @@ test("versioned workspace keeps identities and drafts safe without restoring con
   assert.equal(map.get("rhine.ssh.workspace"), '{"version":99,"future":"keep"}');
 });
 
-test("five host lanes preserve physical cards while resources remain logical records", async () => {
+test("file favorites stay live, host scoped and release subscriptions", async () => {
+  const output = ts.transpileModule(readFileSync(new URL("../src/ssh/files-panel.ts", import.meta.url), "utf8"), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  // The bookmarks are menu rows now, built with `document.createElement`, so the
+  // panel needs the smallest DOM that can answer for one.
+  const element = tag => ({
+    tagName: tag, children: [], dataset: {}, attributes: {}, textContent: "",
+    className: "", title: "", type: "", hidden: false, disabled: false,
+    setAttribute(name, value) { this.attributes[name] = String(value); },
+    getAttribute(name) { return this.attributes[name] ?? null; },
+    append(...kids) { this.children.push(...kids); },
+    replaceChildren(...kids) { this.children = kids; },
+    querySelector: () => null,
+    focus() { this.focused = true; },
+  });
+  const exports = {};
+  runInNewContext(output, {
+    exports, require: () => ({}), clearTimeout,
+    document: { createElement: element },
+  });
+  const store = new WorkspaceStore({ getItem: () => null, setItem() {} });
+  const panels = [];
+  const makePanel = alias => {
+    const panel = Object.create(exports.SftpPanel.prototype);
+    const list = element("div");
+    list.hidden = true;
+    const menu = element("button");
+    const row = element("button");
+    row.dataset.fileAction = "open-bookmark";
+    const root = element("div");
+    root.querySelectorAll = () => [row];
+    root.querySelector = selector => (selector.includes("bookmarks") ? menu : null);
+    Object.assign(panel, { bookmarkList: list, ready: true, loading: false, entries: [], selection: new Set(),
+      services: { files: {} }, root, pathField: {},
+      abort: { abort() {} }, resize: { disconnect() {} }, motion: { cancel() {} }, loadRevision: 0,
+    });
+    panel.setBookmarkStore(store, alias);
+    panels.push(panel);
+    return { panel, list, menu, row };
+  };
+  const rows = list => list.children.filter(node => node.dataset.bookmarkId);
+  const rowText = row => `${row.children[0].textContent} · ${row.children[1].textContent}`;
+  const a = makePanel("a"), peer = makePanel("a"), b = makePanel("b");
+  try {
+    assert.equal(rows(a.list).length, 0);
+    assert.match(a.list.children[0].textContent, /暂无收藏/);
+    assert.equal(a.menu.disabled, true);
+    assert.ok(store.saveBookmark({ id: "a1", alias: "a", name: "<Project>", path: "/project" }));
+    assert.ok(store.saveBookmark({ id: "b1", alias: "b", name: "Other", path: "/other" }));
+    assert.deepEqual(rows(a.list).map(row => row.dataset.bookmarkId), ["a1"]);
+    assert.deepEqual(rows(peer.list).map(row => row.dataset.bookmarkId), ["a1"]);
+    assert.deepEqual(rows(b.list).map(row => row.dataset.bookmarkId), ["b1"]);
+    assert.equal(rowText(rows(a.list)[0]), "<Project> · /project");
+    assert.equal(rows(a.list)[0].title, "/project");
+    a.panel.syncActions();
+    assert.equal(a.row.disabled, false);
+    assert.equal(a.menu.disabled, false);
+    const rendered = a.list.children;
+    store.saveCommand({ name: "Unrelated", command: "pwd", note: "" });
+    assert.equal(a.list.children, rendered);
+    store.saveBookmark({ id: "a1", alias: "a", name: "Edited", path: "/new path" });
+    assert.equal(rowText(rows(a.list)[0]), "Edited · /new path");
+    assert.equal(rowText(rows(peer.list)[0]), "Edited · /new path");
+    const opened = [];
+    a.panel.openDirectory = async path => opened.push(path);
+    await a.panel.action("open-bookmark", rows(a.list)[0]);
+    assert.deepEqual(opened, ["/new path"]);
+    // Another host's row must not resolve against this panel's bookmarks.
+    await a.panel.action("open-bookmark", rows(b.list)[0]);
+    assert.deepEqual(opened, ["/new path"]);
+    a.panel.loading = true;
+    a.panel.syncActions();
+    assert.equal(a.row.disabled, true);
+    await a.panel.action("open-bookmark", rows(a.list)[0]);
+    assert.deepEqual(opened, ["/new path"]);
+    a.panel.loading = false;
+    a.panel.ready = false;
+    a.panel.syncActions();
+    assert.equal(a.menu.disabled, true);
+    await a.panel.action("open-bookmark", rows(a.list)[0]);
+    assert.deepEqual(opened, ["/new path"]);
+    a.panel.ready = true;
+    store.remove("bookmark", "a1");
+    assert.equal(rows(a.list).length, 0);
+    assert.equal(a.menu.disabled, true);
+    a.panel.setBookmarkStore(store, "b");
+    assert.equal(store.listeners.size, 3);
+    assert.deepEqual(rows(a.list).map(row => row.dataset.bookmarkId), ["b1"]);
+    const replacement = new WorkspaceStore({ getItem: () => null, setItem() {} });
+    a.panel.setBookmarkStore(replacement, "b");
+    assert.equal(store.listeners.size, 2);
+    assert.equal(replacement.listeners.size, 1);
+    a.panel.dispose();
+    assert.equal(replacement.listeners.size, 0);
+    const disposed = a.list.children;
+    replacement.saveBookmark({ alias: "b", name: "After disposal", path: "/after" });
+    assert.equal(a.list.children, disposed);
+    a.panel.setBookmarkStore(store, "a");
+    assert.equal(store.listeners.size, 2);
+  } finally {
+    for (const panel of panels) panel.dispose();
+  }
+  assert.equal(store.listeners.size, 0);
+});
+
+test("host groups become lanes while resources remain logical records", async () => {
   const storage = new Map(), previous = globalThis.localStorage;
   globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
   try {
@@ -187,9 +297,36 @@ test("five host lanes preserve physical cards while resources remain logical rec
     await cards.refresh(async () => ({ ok:true, hosts:Array.from({length:8}, (_, i) => ({alias:'host-' + i, hostname:'localhost', user:'fixture', port:'22'})) }));
     for (const [kind, count] of [['session',2],['files',4],['monitor',6],['command',10],['history',12]])
       cards.publishResources(kind, Array.from({length:count}, (_, i) => ({kind,key:kind+i,title:kind+i,subtitle:'fixture'})));
-    assert.deepEqual(archiveColumns, [...HOST_LANES]);
+    // Nothing is grouped yet, so every host sits in the one ungrouped lane.
+    assert.deepEqual(archiveColumns, [UNGROUPED]);
     assert.ok(records.every(record => !record.id.startsWith('X-')));
     assert.ok(archiveColumns.flatMap((_, lane) => columnFiles(lane)).every(index => records[index].id.startsWith('H-')));
+    // A group with hosts in it becomes a column of its own. The directory card
+    // stays in the first lane, so that lane is the directory plus its members.
+    assert.ok(cards.groups.create("训练集群"));
+    const group = cards.groups.groups[0].id;
+    cards.groups.setMembership("host-1", group, true);
+    cards.groups.setMembership("host-3", group, true);
+    assert.deepEqual(archiveColumns, ["训练集群", UNGROUPED]);
+    assert.deepEqual(columnFiles(0).map(index => records[index].id), ["H-000", "H-002", "H-004"]);
+    assert.deepEqual(columnFiles(1).map(index => records[index].id), ["H-001", "H-003", "H-005", "H-006", "H-007", "H-008"]);
+    // One host in two groups is two records sharing one card number.
+    assert.ok(cards.groups.create("预发环境"));
+    cards.groups.setMembership("host-1", cards.groups.groups[1].id, true);
+    assert.deepEqual(archiveColumns, ["训练集群", "预发环境", UNGROUPED]);
+    const shared = columnFiles(1)[0], first = columnFiles(0)[1];
+    assert.equal(records[shared].label, "H-002");
+    assert.equal(records[first].label, "H-002");
+    assert.notEqual(shared, first);
+    assert.match(records[shared].id, /^H-002@/);
+    // Emptying a group takes its column away rather than leaving a blank one.
+    cards.groups.setMembership("host-3", group, false);
+    cards.groups.setMembership("host-1", group, false);
+    assert.deepEqual(archiveColumns, ["预发环境", UNGROUPED]);
+    // Removing a host drops it from its groups, so no lane outlives its hosts.
+    await cards.refresh(async () => ({ ok:true, hosts:[{alias:'host-5', hostname:'localhost', user:'fixture', port:'22'}] }));
+    assert.deepEqual(archiveColumns, [UNGROUPED]);
+    assert.equal(cards.groups.groups[1].aliases.length, 0);
     for (const kind of ['session','files','monitor','command','history']) {
       const resource = cards.resourceCard(kind, kind + '0');
       assert.notEqual(resource, undefined);

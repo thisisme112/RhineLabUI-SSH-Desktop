@@ -1,17 +1,10 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DECK_PARTS } from "./deck-motion";
 import terminalAsset from "./assets/ssh-terminal.glb?url";
 
-/** Projection and camera anchors match art/build_terminal.py. */
-export const SCREEN = { width: 4.36, height: 2.42, y: 1.565, z: 0.139 } as const;
-export const DECK_PARTS = [
-  { id: "bezel", label: "光导与定位角", en: "LIGHT GUIDES", depth: 1.3, slide: [-1.39, 0.98], z: 0.096 },
-  { id: "screen", label: "无边框显示层", en: "EDGE DISPLAY", depth: 0.5, slide: [-0.7, 0.49], z: SCREEN.z },
-  { id: "vents", label: "散热层", en: "THERMAL LAYER", depth: 0.05, slide: [0, 0], z: -0.001 },
-  { id: "board", label: "主板与接口", en: "BOARD & PORTS", depth: -0.45, slide: [0.7, -0.49], z: -0.045 },
-  { id: "backplate", label: "背板", en: "BACKPLATE", depth: -1, slide: [1.39, -0.98], z: -0.108 },
-] as const;
-export type DeckPartId = (typeof DECK_PARTS)[number]["id"];
+export { DECK_PARTS, DECK_REST_Y, deckBacklight, deckOpenStep, deckPose, SCREEN } from "./deck-motion";
+export type { DeckPartId, DeckPose, ShellPartId } from "./deck-motion";
 export type DeckInsert = {
   group: THREE.Group; parts: Map<string, THREE.Group>; screen: THREE.Mesh;
   setTheme(amount: number): void; setBacklight(level: number, failed: boolean): void;

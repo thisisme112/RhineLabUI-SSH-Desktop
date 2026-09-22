@@ -2,6 +2,9 @@ import content from "../content/archives.json" with { type: "json" };
 
 export interface ArchiveRecord {
   id: string;
+  /** Shown on the card when present. A record's `id` identifies it; a host that
+   *  sits in several groups is several records and keeps one card number. */
+  label?: string;
   title: string;
   en: string;
   department: string;

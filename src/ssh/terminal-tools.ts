@@ -23,8 +23,8 @@ export const TERMINAL_TOOLS_MARKUP = `
       <button type="button" data-terminal-tool="return" title="收起操作区并返回终端输入 · Esc">返回输入 ↵</button>
     </div>
     <div class="ssh-terminal-tool-actions" data-ssh-reveal>
-      <button type="button" data-terminal-tool="copy" title="复制选中输出 · Ctrl+Shift+C" disabled>复制选中</button>
-      <button type="button" data-terminal-tool="paste" title="粘贴到终端 · Ctrl+Shift+V" disabled>粘贴</button>
+      <button type="button" data-terminal-tool="copy" title="复制选中输出 · Ctrl+C / Ctrl+Shift+C" disabled>复制选中</button>
+      <button type="button" data-terminal-tool="paste" title="粘贴到终端 · Ctrl+V / Ctrl+Shift+V / Shift+Insert / ⌘V" disabled>粘贴</button>
       <div class="ssh-terminal-font" role="group" aria-label="终端字号">
         <span>字号</span>
         <button type="button" data-terminal-tool="smaller" aria-label="减小终端字号">A−</button>
@@ -43,12 +43,13 @@ export const TERMINAL_TOOLS_MARKUP = `
   </div>`;
 
 export function isTerminalToolShortcut(event: KeyboardEvent) {
+  const key = event.key.toLowerCase();
+  if (event.altKey) return false;
   return (
-    event.ctrlKey &&
-    event.shiftKey &&
-    !event.altKey &&
-    !event.metaKey &&
-    ["f", "p", "c", "v"].includes(event.key.toLowerCase())
+    (event.ctrlKey && !event.metaKey &&
+      (key === "v" || (event.shiftKey && ["f", "p", "c"].includes(key)))) ||
+    (event.metaKey && !event.ctrlKey && !event.shiftKey && key === "v") ||
+    (event.shiftKey && !event.ctrlKey && !event.metaKey && key === "insert")
   );
 }
 
@@ -188,6 +189,22 @@ export class TerminalTools {
       ...options,
       capture: true,
     });
+    // Only a mouse selection copies automatically; search and programmatic
+    // selections must not overwrite the system clipboard.
+    const screen = root.querySelector<HTMLElement>(".ssh-terminal-screen")!;
+    let selecting = false;
+    screen.addEventListener("mousedown", event => {
+      selecting = event.button === 0 && this.available;
+    }, options);
+    document.addEventListener("mouseup", event => {
+      if (!selecting || event.button !== 0) return;
+      selecting = false;
+      // xterm finalizes its selection in its own document mouseup listener.
+      window.setTimeout(() => {
+        if (this.available && this.term?.hasSelection()) void this.copy();
+      }, 0);
+    }, options);
+    window.addEventListener("blur", () => { selecting = false; }, options);
     root.querySelector(".ssh-terminal-screen")!.addEventListener(
       "contextmenu",
       (event) => {
@@ -348,10 +365,17 @@ export class TerminalTools {
       return;
     const inTools =
       event.target instanceof Node && this.panel.contains(event.target);
-    if (isTerminalToolShortcut(event)) {
+    const copySelection = event.key.toLowerCase() === "c" &&
+      !event.altKey && !event.shiftKey && (event.ctrlKey !== event.metaKey) &&
+      this.term?.hasSelection();
+    if (isTerminalToolShortcut(event) || copySelection) {
       const key = event.key.toLowerCase();
-      // Copy/paste inside the search field belongs to that field, not the shell.
-      if ((key === "c" || key === "v") && event.target === this.query) return;
+      if (
+        ["c", "v", "insert"].includes(key) &&
+        event.target instanceof Element &&
+        !event.target.closest(".xterm") &&
+        event.target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')
+      ) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       if (key === "f") {
@@ -360,7 +384,7 @@ export class TerminalTools {
       }
       if (key === "p") this.expanded ? this.close() : this.show();
       if (key === "c") void this.copy();
-      if (key === "v") void this.paste();
+      if (key === "v" || key === "insert") void this.paste();
     } else if (inTools && event.key === "Escape") {
       event.preventDefault();
       event.stopImmediatePropagation();

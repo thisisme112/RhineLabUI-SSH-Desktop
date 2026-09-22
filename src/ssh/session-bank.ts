@@ -4,6 +4,8 @@ import { SshTerminalPanel } from "./terminal";
 import type { ArchiveShortcut } from "./workspace-store";
 
 export type SessionViewState = {
+  presentation: "inspection" | "waiting" | "entering" | "terminal" | "returning";
+  entryGeneration: number | null;
   interactiveGeneration: number; revealed: boolean; failureShown: boolean;
   lastPhase: string; seenGeneration: number; sessionCard: number;
 };
@@ -13,7 +15,7 @@ export type WorkspaceSession = {
   recordSaved: boolean; recordGeneration: number; manualStop: boolean;
   lastActivated: number; retiring: boolean;
   project?: ArchiveShortcut; startupGeneration: number;
-  unread: boolean; alert: string; recovery: string;
+  alert: string; recovery: string;
   splitKey?: string; splitRatio?: number;
   off: (() => void)[];
 };
@@ -42,8 +44,8 @@ export class SshSessionBank {
     const session: WorkspaceSession = { key: crypto.randomUUID(), client, services, panel, descriptor: null,
       recordSaved: false, recordGeneration: -1, manualStop: false, off: [],
       lastActivated: ++this.activation, retiring: false,
-      startupGeneration: -1, unread: false, alert: "", recovery: "",
-      view: { interactiveGeneration: -1, revealed: false, failureShown: false,
+      startupGeneration: -1, alert: "", recovery: "",
+      view: { presentation: "inspection", entryGeneration: null, interactiveGeneration: -1, revealed: false, failureShown: false,
         lastPhase: "", seenGeneration: 0, sessionCard: 0 },
     };
     session.off.push(client.onChange(() => {
@@ -60,9 +62,6 @@ export class SshSessionBank {
       this.emit(session);
     }));
     session.off.push(services.onChange((_state, event) => this.emit(session, event)));
-    session.off.push(client.onOutput(() => {
-      if ((!panel.isUsable || document.hidden) && !session.unread) { session.unread = true; this.emit(session); }
-    }));
     this.sessions.push(session);
     return session;
   }
@@ -88,7 +87,6 @@ export class SshSessionBank {
     if (this.active !== session) this.active.panel.park();
     this.active = session;
     session.lastActivated = ++this.activation;
-    session.unread = false;
   }
   remove(session: WorkspaceSession) {
     if (session.client.active || !this.sessions.includes(session)) return false;

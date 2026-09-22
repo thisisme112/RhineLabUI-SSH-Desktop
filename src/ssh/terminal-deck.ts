@@ -1,11 +1,18 @@
 import * as THREE from "three";
 import { disposeThreeTree } from "../three-resources";
-import { damp } from "../motion";
 import type { SshClient } from "./client";
 import type { SshTerminalPanel } from "./terminal";
 import { paintTerminalBuffer, TERMINAL_FONT } from "./terminal-screen";
-import { buildDeckInsert, DECK_PARTS, SCREEN, type DeckInsert } from "./terminal-deck-parts";
-import "./deck-tools.css";
+import { buildDeckInsert, DECK_PARTS, SCREEN, deckBacklight, deckPose, type DeckInsert } from "./terminal-deck-parts";
+import type { ModelSource, InspectionPart } from "../model-viewer";
+
+export const TERMINAL_INSPECTION_PARTS: readonly InspectionPart[] = [
+  { id: "fasteners", label: "紧固件", en: "FASTENERS" },
+  { id: "cover", label: "透明盖板", en: "COVER" },
+  ...DECK_PARTS.map(({ id, label, en }) => ({ id, label, en })),
+  { id: "substrate", label: "承载基板", en: "SUBSTRATE" },
+  { id: "carrier", label: "外壳框架", en: "CARRIER" },
+];
 
 type Shell = {
   model: THREE.Group;
@@ -17,7 +24,7 @@ type Shell = {
  * same xterm that takes over when the camera reaches operating size.
  *
  * The insert is five named plates (see `terminal-deck-parts.ts`), so the whole
- * stack can be separated in place — the terminal's version of the archive's
+ * stack can be inspected through an independently owned ModelViewer — the terminal's version of the archive's
  * "拆解档案", driven by the same damped spring `model-viewer.ts` uses.
  */
 export class TerminalDeck {
@@ -36,9 +43,6 @@ export class TerminalDeck {
   private parts = new Map<string, THREE.Group>();
   private insert: THREE.Group;
   private finishes: DeckInsert;
-  /** Normalized 0..1 separation of the insert's plates, on a spring. */
-  private separation = { value: 0, velocity: 0 };
-  private targetSpread = 0;
   private host = "";
   private hostLabel = "";
   private cardId = "";
@@ -59,6 +63,27 @@ export class TerminalDeck {
       shell.dispose();
       throw error;
     }
+  }
+
+  static async inspection(client: SshClient, terminal: SshTerminalPanel, makeShell: () => Promise<Shell>): Promise<ModelSource> {
+    const deck = await TerminalDeck.load(client, terminal, makeShell);
+    deck.pose(deck.parts, 0);
+    deck.group.visible = true;
+    // The inspection owns a separate shell, insert and canvas texture.
+    // No live scene objects or renderer-owned textures cross WebGL contexts.
+    deck.ctx.fillStyle = terminal.screenTheme.background!;
+    deck.ctx.fillRect(0, 0, deck.canvas.width, deck.canvas.height);
+    deck.texture.needsUpdate = true;
+    return { model: deck.group, parts: deck.parts, dispose: () => deck.dispose(),
+      setClarity: value => deck.shell.setClarity?.(value),
+      setTheme: value => {
+        deck.finishes.setTheme(value);
+        const background = terminal.screenTheme.background!;
+        if (deck.painted !== background) {
+          deck.painted = background; deck.ctx.fillStyle = background;
+          deck.ctx.fillRect(0, 0, deck.canvas.width, deck.canvas.height); deck.texture.needsUpdate = true;
+        }
+      } };
   }
 
   private constructor(
@@ -182,45 +207,18 @@ export class TerminalDeck {
     } };
   }
 
-  /** Separated for inspection; the same spring `model-viewer.ts` uses. */
-  setExploded(value: boolean, immediate = false) {
-    this.targetSpread = value ? 1 : 0;
-    if (immediate) this.separation = { value: this.targetSpread, velocity: 0 };
-  }
-  get exploded() {
-    return this.targetSpread === 1;
-  }
-  get spread() {
-    return this.separation.value;
-  }
-
   private pose(
     parts: Map<string, THREE.Group>,
     opening: number,
-    spread = 0,
   ) {
-    const lid = opening, screws = 1 - (1 - opening) ** 2, rear = opening * (0.85 + 0.15 * opening);
-    for (const name of ["cover", "fasteners"]) {
-      const part = parts.get(name);
-      if (!part) continue;
-      part.position.set(-3.1 * lid, 1.85 + 2.5 * lid, 0.8 * lid + (name === "fasteners" ? .22 * screws : 0));
-      part.rotation.set(-.16 * lid, -.45 * lid, .1 * lid);
-    }
-    const carrier = parts.get("carrier"), substrate = parts.get("substrate");
-    if (carrier) { carrier.position.set(.45 * rear, 1.85 - .32 * rear, -.75 * rear); carrier.rotation.y = .12 * rear; }
-    if (substrate) { substrate.position.set(-.22 * rear, 1.85 - .45 * rear, -.38 * rear); substrate.rotation.y = -.06 * rear; }
-    // The insert's own plates. Names never overlap the package's, so opening
-    // the box and separating the stack are two independent movements. They fan
-    // on a diagonal as well as along z, because the only camera this is ever
-    // seen from is nearly front-on (see DECK_PARTS).
-    for (const spec of DECK_PARTS) {
-      const part = parts.get(spec.id);
-      if (!part) continue;
-      part.position.set(
-        spec.slide[0] * spread,
-        SCREEN.y + spec.slide[1] * spread,
-        spec.z + spec.depth * spread,
-      );
+    // The choreography lives in terminal-deck-parts.ts so the Unreal port can be
+    // diffed against it value by value; this only places the groups it returns.
+    const pose = deckPose(opening);
+    for (const [id, spec] of Object.entries(pose.parts)) {
+      const group = parts.get(id);
+      if (!group) continue;
+      group.position.set(spec.position.x, spec.position.y, spec.position.z);
+      group.rotation.set(spec.rotation.x, spec.rotation.y, spec.rotation.z);
     }
   }
 
@@ -230,43 +228,23 @@ export class TerminalDeck {
     // authentication. Opening the physical package still requires a real session.
     this.shell.setClarity?.(0.96 + 0.04 * opening);
     this.finishes.setTheme(theme);
-    // The separation runs on its own clock rather than the paint gate below:
-    // the stack has to keep moving even while the screen content is unchanged.
-    damp(this.separation, this.targetSpread, reduced ? 45 : 5.5, dt);
-    if (
-      Math.abs(this.separation.value - this.targetSpread) < 0.0001 &&
-      Math.abs(this.separation.velocity) < 0.001
-    )
-      this.separation = { value: this.targetSpread, velocity: 0 };
     // The insert stays at its real coordinates; all enlargement is the camera.
     // The scene already eased this progress: the lid moves with the camera
     // from the first frame. Fasteners lead slightly and the rear follows,
     // without another delay or easing that would split the movement in two.
-    this.pose(this.parts, opening, this.separation.value);
+    this.pose(this.parts, opening);
     const own = this.client.target === this.host;
-    const phase = own ? this.client.status().phase : "idle";
+    const status = own ? this.client.status() : null;
+    const phase = status?.phase ?? "idle";
     // Backlight level comes from the phase ssh actually reported, never from a
     // loop of its own (rule R1). The breathing is a modulation of a real state,
-    // exactly like the cursor blink the screen already does.
+    // exactly like the cursor blink the screen already does. The formula lives
+    // in terminal-deck-parts.ts so the Unreal port is diffed against it.
     const failed = own && phase === "failed";
-    const settling =
-      own &&
-      ["resolving", "connecting", "handshake", "hostkey", "authenticating", "opening"].includes(
-        phase,
-      );
-    this.finishes.setBacklight(
-      failed
-        ? 0.5
-        : settling
-          ? reduced
-            ? 0.4
-            : 0.28 + 0.08 * (1 + Math.sin(time * 3.4))
-          : phase === "interactive"
-            ? 0.4
-            : 0.22,
-      failed,
-    );
-    const key = `${this.host}:${this.preview?.key}:${this.client.generation}:${phase}:${own ? this.client.rawLog.length : 0}:${own ? (this.client.pendingPrompt?.id ?? "") : ""}:${own ? this.terminal.screenRevision : 0}:${this.terminal.dark}:${own && phase === "interactive" && !reduced ? Math.floor(time * 1.6) : 0}`;
+    this.finishes.setBacklight(deckBacklight(own ? phase : "idle", reduced, time), failed);
+    // What the card shows before the shell arrives is the list of milestones it
+    // has reached, so a new milestone — not a new log line — is what repaints.
+    const key = `${this.host}:${this.preview?.key}:${this.client.generation}:${phase}:${status?.timeline.length ?? 0}:${own ? (this.client.pendingPrompt?.id ?? "") : ""}:${own ? this.terminal.screenRevision : 0}:${this.terminal.screenTheme.background}:${Math.round(opening * 100)}:${own && phase === "interactive" && !reduced ? Math.floor(time * 1.6) : 0}`;
     if (key === this.painted || time - this.lastPaint < 1 / 15) return;
     this.lastPaint = time;
     this.painted = key;
@@ -290,6 +268,8 @@ export class TerminalDeck {
       footer = 28;
     ctx.fillStyle = theme.background!;
     ctx.fillRect(0, 0, width, height);
+    // The physical screen keeps showing the live parser while the DOM terminal
+    // is hidden during camera travel, in both directions.
     ctx.fillStyle = theme.foreground!;
     ctx.textBaseline = "middle";
     ctx.textAlign = "left";
@@ -322,7 +302,15 @@ export class TerminalDeck {
           (reduced || Math.floor(time * 1.6) % 2 === 0),
       );
     } else {
-      const lines = this.preview ? this.preview.lines : own ? [...client.rawLog] : [];
+      // The list of milestones this session has reached, not the `debug1:` lines
+      // behind them: the raw stream is OpenSSH's own diagnostics, and it belongs
+      // in 会话记录 where it can be read on purpose. The prompt is the session
+      // actually asking something, so it stays.
+      const lines = this.preview
+        ? [...this.preview.lines]
+        : own
+          ? (status?.timeline ?? []).map((entry) => entry.label)
+          : [];
       if (own && client.pendingPrompt) lines.push(client.pendingPrompt.prompt);
       const text = lines.length
         ? lines.join("\n")

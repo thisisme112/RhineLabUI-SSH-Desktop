@@ -90,6 +90,8 @@ contextBridge.exposeInMainWorld("rhineDesktop", {
     readText: () => ipcRenderer.invoke("terminal:clipboard-read"),
     writeText: (text) => ipcRenderer.invoke("terminal:clipboard-write", text),
   },
+  /** Renderer-side crash/error reporting; metadata only, sanitized in main. */
+  captureError: (entry) => ipcRenderer.invoke("diagnostic:event", entry),
   hostProfiles: {
     save: (profile, revision) =>
       ipcRenderer.invoke("hosts:save", { profile, revision }),

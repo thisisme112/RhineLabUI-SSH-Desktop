@@ -43,9 +43,9 @@
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 12px;
   line-height: 1.7;
-  color: #5a584e;
-  background: rgba(8, 10, 8, 0.035);
-  border: 1px solid rgba(8, 10, 8, 0.08);
+  color: var(--theme-muted);
+  background: color-mix(in srgb, var(--theme-ink) 3.5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-ink) 8%, transparent);
   white-space: pre-wrap;
   word-break: break-all;
   max-height: 300px;
@@ -58,12 +58,12 @@
 
 .host-loading {
   font-size: 13px;
-  color: #888074;
+  color: var(--theme-muted);
   margin: 14px 0 0;
 }
 
 .host-default {
-  color: #a89e8c;
+  color: var(--theme-muted);
   font-style: normal;
 }
 
@@ -81,26 +81,26 @@
   width: 100%;
   padding: 8px 2px;
   border: none;
-  border-bottom: 1px solid rgba(8, 10, 8, 0.07);
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-ink) 7%, transparent);
   background: none;
   font: inherit;
   font-size: 12px;
-  color: #5a584e;
+  color: var(--theme-muted);
   text-align: left;
   cursor: pointer;
 }
 
 .host-session-row:hover,
 .host-session-row:focus-visible {
-  color: #080a08;
-  background: rgba(163, 142, 114, 0.08);
+  color: var(--theme-ink);
+  background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
   outline: none;
 }
 
 .host-session-row b {
   font-size: 12px;
   font-weight: 400;
-  color: #7a8163;
+  color: var(--theme-accent);
   white-space: nowrap;
 }
 
@@ -112,5 +112,5 @@
   right: 2px;
   width: 4px;
   height: 4px;
-  background: #a38e72;
+  background: var(--theme-accent);
 }

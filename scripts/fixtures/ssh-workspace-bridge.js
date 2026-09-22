@@ -69,6 +69,30 @@
       ],
     ],
   ]);
+  // Text documents the editor can read and write back. `revision` only has to
+  // be stable per content: the editor compares it to decide whether the server
+  // moved under the draft, and never asks what it is made of.
+  const documents = new Map([
+    ["/home/operator/train.py", "import torch\n\nprint('training')\n"],
+  ]);
+  const revisionOf = (text) => {
+    let value = 7;
+    for (const char of text) value = (value * 31 + char.codePointAt(0)) >>> 0;
+    return value.toString(16).padStart(8, "0").repeat(8);
+  };
+  const textDocument = (path) => {
+    const item = [...directories.values()]
+      .flat()
+      .find((row) => row.path === path);
+    const text = documents.get(path) ?? "";
+    return {
+      path,
+      text,
+      revision: revisionOf(text),
+      modified: item?.modified ?? Date.now(),
+      permissions: item?.permissions ?? "-rw-r--r--",
+    };
+  };
   const sample = () => {
     const timestamp = Date.now();
     sequence++;
@@ -238,6 +262,30 @@
   const valid = (request) =>
     request.sessionId === state?.sessionId && state.active;
   desktop.sftp = {
+    async readText(request) {
+      fixture.calls.push({ method: "readText", ...request });
+      if (!valid(request)) return { ok: false, error: "session changed" };
+      if (!documents.has(request.path))
+        return { ok: false, error: "无法读取文本文件" };
+      await new Promise((resolve) => setTimeout(resolve, 65));
+      return { ok: true, result: clone(textDocument(request.path)) };
+    },
+    async writeText(request) {
+      fixture.calls.push({ method: "writeText", ...request });
+      if (!valid(request)) return { ok: false, error: "session changed" };
+      const current = textDocument(request.path);
+      await new Promise((resolve) => setTimeout(resolve, 65));
+      if (current.revision !== request.revision)
+        return {
+          ok: true,
+          result: { saved: false, conflict: true, document: current },
+        };
+      documents.set(request.path, request.text);
+      return {
+        ok: true,
+        result: { saved: true, document: clone(textDocument(request.path)) },
+      };
+    },
     async list(request) {
       fixture.calls.push({ method: "list", ...request });
       await new Promise((resolve) => setTimeout(resolve, 65));

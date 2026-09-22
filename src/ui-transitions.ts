@@ -77,7 +77,10 @@ export class SurfaceTransition {
         ),
       );
     }
-    void fade.finished.then(complete).catch(() => {});
+    // A cancelled animation never resolves, and `complete` is the only thing
+    // that gives the screen back: treat cancellation as completion, or the
+    // surface stays on top of the stack with nothing left to dismiss it.
+    void fade.finished.then(complete, complete);
   }
 }
 
@@ -92,7 +95,7 @@ export class ContentTransition {
     this.cancel();
     if (!reduced)
       this.animation = element.animate([{ opacity }, { opacity: 1 }], {
-        duration: 150,
+        duration: 200,
         easing: enterEase,
       });
   }

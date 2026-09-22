@@ -1,3 +1,4 @@
+import { enterInspection } from './enter-inspection.mjs';
 /** Runtime/visual checks against the actual desktop bundle, with a labelled
  * transport fixture. Actual SSH transport is covered separately by its checks.
  */
@@ -35,7 +36,7 @@ const server = http.createServer(async (req, res) => {
   );
   if (pathname === "/fixture.js") {
     res.writeHead(200, { "content-type": "text/javascript" });
-    if (process.argv.includes("--multi") || process.argv.includes("--navigation")) {
+    if (process.argv.includes("--multi") || process.argv.includes("--sessions") || process.argv.includes("--navigation")) {
       createReadStream(path.join(root, "scripts/fixtures/ssh-multi-bridge.js")).pipe(res);
       return;
     }
@@ -111,6 +112,8 @@ const checks = {},
   evidence = {};
 let expectModelFailure = false;
 let ws;
+let recording = false;
+let recordingFrames = [];
 try {
   let target;
   for (let i = 0; i < 60 && !target; i++) {
@@ -131,6 +134,10 @@ try {
   const pending = new Map();
   ws.onmessage = (event) => {
     const message = JSON.parse(event.data);
+    if (message.method === 'Page.screencastFrame') {
+      if (recording) recordingFrames.push({ data:message.params.data, time:message.params.metadata.timestamp });
+      void send('Page.screencastFrameAck', {sessionId:message.params.sessionId});
+    }
     if (message.id) {
       pending.get(message.id)?.(message);
       pending.delete(message.id);
@@ -147,7 +154,7 @@ try {
       const detail = message.params.args
         .map((arg) => arg.value ?? arg.description)
         .join(" ");
-      if (expectModelFailure && detail.includes("终端模型载入失败"))
+      if (expectModelFailure && (detail.includes("终端模型载入失败") || detail.includes("Model viewer failed to load")))
         evidence.expectedModelFailure = detail;
       else errors.push(detail);
     }
@@ -178,6 +185,24 @@ try {
           result.exceptionDetails.text,
       );
     return result.result.value;
+  };
+  const record = async (start) => {
+    if (start) { recordingFrames=[]; recording=true; await send('Page.startScreencast',{format:'jpeg',quality:80,maxWidth:1280,maxHeight:720,everyNthFrame:2}); return; }
+    await send('Page.stopScreencast'); recording=false;
+    const directory=path.join(out,'recording'); await mkdir(directory,{recursive:true});
+    const manifest=[];
+    for(let i=0;i<recordingFrames.length;i++){
+      const frame=recordingFrames[i], name=String(i).padStart(5,'0')+'.jpg';
+      await writeFile(path.join(directory,name),Buffer.from(frame.data,'base64'));
+      manifest.push(`file '${name}'`, `duration ${Math.max(.016, (recordingFrames[i+1]?.time ?? frame.time+.2)-frame.time)}`);
+    }
+    if (!recordingFrames.length) throw Error('No recording frames received');
+    await writeFile(path.join(directory,'frames.txt'),manifest.join('\n'));
+    await new Promise((resolve,reject)=>{
+      const encoder=spawn('ffmpeg',['-y','-loglevel','error','-f','concat','-safe','0','-i',path.join(directory,'frames.txt'),'-vf','pad=ceil(iw/2)*2:ceil(ih/2)*2','-c:v','libx264','-pix_fmt','yuv420p',path.join(out,'inspection.mp4')],{windowsHide:true,stdio:['ignore','ignore','pipe']});
+      let error=''; encoder.stderr.on('data',chunk=>error+=chunk); encoder.on('error',reject); encoder.on('exit',code=>code===0?resolve():reject(Error(error)));
+    });
+    evidence.recording={frames:recordingFrames.length,file:'inspection.mp4'}; recordingFrames=[];
   };
   const until = async (name, expression, timeout = 45000) => {
     await send("Page.bringToFront");
@@ -235,6 +260,16 @@ try {
       "scene and hosts",
       `window.rhine?.stats().ready && window.rhineSshUi?.cardOf('review-host') !== null && !!window.rhineSshUi`,
     );
+    if (process.argv.includes("--flow-fix")) {
+      const { checkFlowFix } = await import("./flow-fix-checks.mjs");
+      await checkFlowFix({ evaluate, until, check, shot, key, send, sleep });
+      return;
+    }
+    if (process.argv.includes("--sessions")) {
+      const { checkInspectionSessions } = await import("./inspection-sessions-checks.mjs");
+      await checkInspectionSessions({ evaluate, until, check, shot, key, send, sleep });
+      return;
+    }
     if (process.argv.includes("--navigation")) {
       const { checkSshNavigation } = await import("./ssh-navigation-checks.mjs");
       await checkSshNavigation({ evaluate, until, check, shot, key, send, sleep, evidence });
@@ -250,7 +285,13 @@ try {
       await checkSshMultisession({ evaluate, until, check, shot, key, send, sleep, evidence });
       return;
     }
+    if (process.argv.includes("--inspection")) {
+      const { checkInspection } = await import("./inspection-checks.mjs");
+      await checkInspection({ evaluate, until, check, shot, key, send, sleep, evidence, record, failModels: value => { missingTerminal = value; expectModelFailure = value; } });
+      return;
+    }
     await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
     await until(
       "password prompt and model",
       `rhineSshUi.promptKind === 'password' && rhine.stats().sessionDeck.available && rhine.stats().cameraDetail > .99`,
@@ -275,11 +316,16 @@ try {
     const started = performance.now();
     const sample = () => {
       const stats = rhine.stats();
+      const terminal = document.querySelector('.ssh-terminal');
+      const terminalStyle = terminal ? getComputedStyle(terminal) : null;
       const elapsedMs = performance.now() - started;
       window.__deckOpeningFrames.push({ elapsedMs, progress: stats.sessionDeck.progress,
         focus: stats.sessionDeck.focus, camera: stats.cameraPosition,
-        fieldOfView: stats.fieldOfView, screen: stats.sessionDeck.screen });
-      if (!stats.sessionDeck.ready && elapsedMs < 10000) requestAnimationFrame(sample);
+        fieldOfView: stats.fieldOfView, screen: stats.sessionDeck.screen,
+        terminalVisible: !!terminal && !terminal.hidden,
+        terminalTransform: terminalStyle?.transform,
+        fontSize: document.querySelector('.xterm-rows') ? getComputedStyle(document.querySelector('.xterm-rows')).fontSize : null });
+      if (elapsedMs < 4500) requestAnimationFrame(sample);
     };
     sample();
     __deckFixture.interactive();
@@ -299,6 +345,10 @@ try {
     );
     await sleep(700);
     evidence.openingFrames = await evaluate(`window.__deckOpeningFrames`);
+    await check("terminal glyphs appear only after the camera settles and are never scaled", `(() => {
+      const frames = window.__deckOpeningFrames.filter(frame => frame.terminalVisible);
+      return frames.length > 0 && frames.every(frame => frame.focus === 1 && frame.terminalTransform === 'none') && new Set(frames.map(frame => frame.fontSize).filter(Boolean)).size === 1;
+    })()`);
     await shot("03-operating");
     if (process.argv.includes("--geometry")) {
       const { checkTerminalGeometry } =
@@ -485,6 +535,7 @@ try {
     await evaluate(`rhineSshUi.closeTerminal()`);
     await until("before reconnect", `rhine.stats().sessionDeck.progress === 0`);
     await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
     await until("new authentication", `rhineSshUi.promptKind === 'password'`);
     await check(
       "new session clears old terminal content",
@@ -506,12 +557,15 @@ try {
     );
     await check(
       "failed output remains readable without unpacking",
-      `rhine.stats().sessionDeck.progress === 0 && !rhineSsh.active && !document.querySelector('.ssh-terminal-auth').hidden && document.querySelector('.ssh-terminal-auth').textContent.includes('Permission denied')`,
+      // The panel states the outcome rather than quoting the `debug1:` line that
+      // carried it, so the denial and the methods offered are both named.
+      `rhine.stats().sessionDeck.progress === 0 && !rhineSsh.active && !document.querySelector('.ssh-terminal-auth').hidden && document.querySelector('.ssh-terminal-auth').textContent.includes('认证被拒绝') && !document.querySelector('.ssh-terminal-auth').textContent.includes('debug1:')`,
     );
     await shot("08-failed-output");
     await evaluate(`rhineSshUi.closeTerminal()`);
     await until("failed output closed", `!rhineSshUi.isOpen`);
     await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
     await until("retry authentication", `rhineSshUi.promptKind === 'password'`);
     await evaluate(
       `rhineSshUi.answerSecret('retry-secret'); __deckFixture.interactive()`,
@@ -547,6 +601,7 @@ try {
       `window.rhine?.stats().ready && !!window.rhineSshUi`,
     );
     await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
     await until(
       "reduced dark auth",
       `rhineSshUi.promptKind === 'password' && rhine.stats().sessionDeck.available`,
@@ -558,13 +613,14 @@ try {
       "reduced dark operation",
       `rhineSshUi.hasFocus && rhine.stats().sessionDeck.ready`,
     );
-    // #15232b, not terminal.css's own #232521: the host overview landed
-    // (482a471) with the desktop palette and re-declares the terminal's
-    // variables so the terminal matches its cyan ground. This expectation still
-    // named the pre-overview value.
+    // #131e26 is the dark endpoint of the theme's paper. The terminal no longer
+    // re-declares its own palette — it derives from `--theme-paper`, so the panel
+    // and the window caption above it are the same surface. This expectation has
+    // named three different values as that ground moved; it now names the theme
+    // token rather than one of the copies.
     await check(
       "dark theme reaches both terminal presentations",
-      `document.querySelector('.ssh-terminal').dataset.dark === 'true' && getComputedStyle(document.querySelector('.ssh-terminal')).backgroundColor === 'rgb(21, 35, 43)'`,
+      `document.querySelector('.ssh-terminal').dataset.dark === 'true' && getComputedStyle(document.querySelector('.ssh-terminal')).backgroundColor === getComputedStyle(document.documentElement).getPropertyValue('--theme-paper').trim() && getComputedStyle(document.querySelector('.ssh-terminal')).backgroundColor === 'rgb(19, 30, 38)'`,
     );
     await shot("09-dark-reduced-motion");
     await evaluate(`rhineSshUi.closeTerminal()`);
@@ -583,6 +639,7 @@ try {
       `window.rhine?.stats().ready && !!window.rhineSshUi`,
     );
     await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
     await until(
       "fallback authentication",
       `rhineSshUi.promptKind === 'password'`,

@@ -1,6 +1,6 @@
 {
   "name": "rhine-lab-analysis-os",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "《明日方舟》特别映像「莱茵生命：访问」终端界面的非官方复刻，含桌面 SSH 工作区。",
   "author": "LBEILC",
   "license": "MIT",
@@ -25,6 +25,7 @@
     "check:ssh-profiles": "node scripts/check-ssh-profiles.mjs",
     "check:ssh-column": "node --experimental-strip-types scripts/check-ssh-host-column.mjs",
     "check:ssh-clipboard": "node --test scripts/check-terminal-clipboard.mjs",
+    "check:ssh-diagnostic": "node --test scripts/check-diagnostic-log.cjs && node node_modules/electron/cli.js scripts/check-diagnostic-native.cjs",
     "check:ssh-terminal-tools": "node scripts/check-terminal-deck.mjs --tools --out verification/ssh-terminal-tools/browser",
     "check:ssh-deck-teardown": "node scripts/check-deck-teardown.mjs",
     "check:ssh-overview-collapse": "node scripts/check-overview-collapse.mjs",
@@ -41,6 +42,7 @@
     "check:ssh-multisession": "node scripts/check-terminal-deck.mjs --multi --out verification/ssh-workspace-upgrade/multi",
     "check:ssh-multisession-native": "node scripts/check-ssh-services.mjs --multi-only --out verification/ssh-workspace-upgrade/native",
     "check:ssh-workspace": "node scripts/check-terminal-deck.mjs --workspace --out verification/ssh-workspace/browser",
+    "check:ssh-editor-close": "node scripts/check-ssh-editor-close.mjs && node scripts/check-ssh-editor-close.mjs --hang-save",
     "check:ssh-terminal-geometry": "node scripts/check-terminal-deck.mjs --workspace --geometry --out verification/ssh-workspace/geometry",
     "check:viewport": "node --experimental-strip-types scripts/check-viewport.mjs",
     "check:android": "node scripts/check-android.mjs",
@@ -70,8 +72,12 @@
     "smoke:desktop:terminal": "electron . --session-smoke --terminal-deck-only",
     "smoke:desktop:hosts": "electron . --session-smoke --host-management-only",
     "smoke:desktop:multisession": "electron . --session-smoke --multisession-only",
+    "smoke:desktop:editor": "electron . --session-smoke --editor-only",
     "format": "prettier --write src scripts index.html package.json tsconfig.json",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "check:ssh-inspection": "node scripts/check-terminal-deck.mjs --inspection --out verification/redesign",
+    "check:ssh-inspection-sessions": "node scripts/check-terminal-deck.mjs --sessions --out verification/redesign-sessions",
+    "check:ssh-inspection-performance": "node scripts/check-inspection-performance.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^6.0.3",

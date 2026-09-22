@@ -196,6 +196,13 @@ declare global {
         readText(): Promise<{ ok: boolean; text?: string; error?: string }>;
         writeText(text: string): Promise<{ ok: boolean; error?: string }>;
       };
+      /** Renderer-side crash/error reporting into the desktop diagnostic log. */
+      captureError?: (entry: {
+        category: string;
+        level: string;
+        reason?: string;
+        message?: string;
+      }) => Promise<{ ok: boolean }>;
       /** Saved profiles and hosts from the user's own SSH config. */
       hosts?: () => Promise<SshHostsResult>;
       hostProfiles?: SshHostProfilesBridge;

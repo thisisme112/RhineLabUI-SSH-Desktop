@@ -97,16 +97,14 @@
 }
 .has-workspace .ssh-terminal-audit,
 .has-workspace .ssh-terminal-close,
-.has-workspace .ssh-terminal-reconnect,
-.has-workspace .ssh-terminal-teardown {
+.has-workspace .ssh-terminal-reconnect {
   border: 0;
   border-bottom: 1px solid transparent;
   padding: 6px 0;
 }
 .has-workspace .ssh-terminal-audit:hover,
 .has-workspace .ssh-terminal-close:hover,
-.has-workspace .ssh-terminal-reconnect:hover,
-.has-workspace .ssh-terminal-teardown:hover {
+.has-workspace .ssh-terminal-reconnect:hover {
   border-bottom-color: var(--terminal-accent);
 }
 .ssh-workspace-side {
@@ -199,6 +197,14 @@
   border-bottom-color: var(--terminal-accent);
   outline: none;
 }
+/* Focus is independent of the selected tab's accent underline. */
+.ssh-workspace-side button:focus-visible:not(:disabled),
+.ssh-workspace-tabs button:focus-visible,
+.ssh-transfer-drawer button:focus-visible:not(:disabled),
+.ssh-transfer-toggle:focus-visible {
+  outline: 2px solid var(--terminal-accent);
+  outline-offset: -2px;
+}
 .ssh-workspace-side button:disabled,
 .ssh-transfer-drawer button:disabled {
   opacity: 0.4;
@@ -218,7 +224,7 @@
 .ssh-files {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 5px;
 }
 .ssh-files > :not(.ssh-files-list) {
   flex-shrink: 0;
@@ -256,13 +262,129 @@
   align-items: center;
   gap: 10px;
 }
+/* The files toolbar is one row of drawings instead of six words and a select,
+   so it fits the 320 px column without the refresh button being pushed to a
+   second line. Scoped to the toolbar: the editor form shares .ssh-file-actions
+   and needs its worded buttons at their natural width. */
+.ssh-file-toolbar {
+  position: relative;
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+.ssh-file-toolbar button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  min-height: 26px;
+  padding: 0;
+}
 .ssh-file-refresh {
   margin-left: auto;
 }
+.ssh-file-icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The hidden-files button shows the state it would switch to, so only one of
+   the two drawings is ever painted. */
+.ssh-file-icon-eye-off {
+  display: none;
+}
+[data-file-action="hidden"][aria-pressed="true"] .ssh-file-icon-eye {
+  display: none;
+}
+[data-file-action="hidden"][aria-pressed="true"] .ssh-file-icon-eye-off {
+  display: grid;
+}
+/* Anchored under the toolbar it belongs to and overlaying the list, so opening
+   it costs no vertical space. */
+.ssh-files-bookmarks {
+  position: absolute;
+  z-index: 4;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 208px;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--terminal-bg);
+  border: 1px solid var(--terminal-line);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 18%);
+  scrollbar-width: thin;
+  scrollbar-color: var(--terminal-line) transparent;
+}
+.ssh-files-bookmarks button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  min-height: 0;
+  padding: 5px 6px;
+  text-align: left;
+}
+.ssh-files-bookmarks button strong {
+  font-weight: 600;
+}
+.ssh-files-bookmarks button span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--terminal-muted);
+  font-size: 12px;
+}
+.ssh-files-bookmarks-empty {
+  margin: 0;
+  padding: 6px;
+  color: var(--terminal-muted);
+  font-size: 12px;
+}
+/* Right-click menu. Anchored in the panel rather than the list viewport so it
+   does not scroll away from the pointer that opened it; the panel itself is only
+   260–480 px wide, so the labels stay short and the item rows tight. */
+.ssh-files-menu {
+  position: absolute;
+  z-index: 6;
+  min-width: 132px;
+  max-width: calc(100% - 16px);
+  padding: 4px;
+  background: var(--terminal-bg);
+  border: 1px solid var(--terminal-line);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 22%);
+}
+.ssh-files-menu button {
+  display: block;
+  width: 100%;
+  min-height: 26px;
+  padding: 4px 8px;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--terminal-fg);
+  border: 0;
+  background: transparent;
+}
+.ssh-files-menu button:hover:not(:disabled),
+.ssh-files-menu button:focus-visible:not(:disabled) {
+  background: var(--terminal-accent);
+  color: var(--terminal-bg);
+  outline: none;
+}
 .ssh-files-filter {
   display: grid;
-  grid-template-columns: minmax(60px, 1fr) 74px 22px;
-  gap: 8px;
+  grid-template-columns: minmax(60px, 1fr) 74px 26px;
+  gap: 6px;
+}
+.ssh-files-filter button {
+  display: grid;
+  place-items: center;
+  min-height: 26px;
+  padding: 0;
 }
 .ssh-files-filter [aria-pressed="true"] {
   color: var(--terminal-accent);

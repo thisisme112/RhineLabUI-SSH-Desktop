@@ -68,7 +68,9 @@ export class RemoteTextEditor {
       const action = (event.target as Element).closest<HTMLElement>(
         "[data-editor]",
       )?.dataset.editor;
-      if (action === "close" && !this.busy) this.close();
+      // Never gated on `busy`: a write that never settles would otherwise trap
+      // the reader in the editor with no way out.
+      if (action === "close") this.close();
       if (action === "save") void this.save();
       if (action === "remote") void this.readRemote();
       if (action === "diff") {
@@ -103,7 +105,9 @@ export class RemoteTextEditor {
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
-        if (!this.busy) this.close();
+        // Same rule as the 返回 button: a write that never settles must not
+        // trap the reader in the editor with no way out.
+        this.close();
       }
     });
     this.offAppearance = terminalAppearance.onChange(() => this.appearance());
@@ -275,7 +279,9 @@ export class RemoteTextEditor {
       "[data-editor]",
     )) {
       const action = button.dataset.editor;
-      button.disabled = this.busy || (!this.draft && action !== "close");
+      // `close` stays enabled: a read or write that never settles must not
+      // seal the reader in with no way out.
+      button.disabled = action !== "close" && (this.busy || !this.draft);
       if (action === "reviewed" || action === "use-remote")
         button.hidden = !this.comparison;
       if (action === "save") button.disabled ||= !!this.comparison;
@@ -283,8 +289,50 @@ export class RemoteTextEditor {
         button.setAttribute("aria-pressed", String(this.comparing));
     }
   }
-  private status(text: string) {
-    this.root.querySelector(".ssh-editor-status")!.textContent = text;
+  /**
+   * Reads the file back after a failed write.
+   *
+   * The one thing the reader needs to know is whether their text is on the
+   * server, and the reply cannot answer that once it has failed: a dropped or
+   * timed-out response looks exactly like a rejected write. The file can.
+   */
+  private async settleFailedSave(
+    submitted: string,
+    draft: Draft,
+    failure: string,
+  ) {
+    const owner = this.services.state?.sessionId;
+    if (!owner || owner !== draft.owner || !this.services.files) {
+      this.status(`保存失败 · ${failure}`, "failed");
+      return;
+    }
+    try {
+      const read = await this.services.files.readText({
+        sessionId: owner,
+        path: draft.original.path,
+      });
+      if (read.ok && read.result?.text === submitted) {
+        draft.original = read.result;
+        this.keepDraft();
+        this.showDiff();
+        this.status("保存成功 · 远端内容与本次提交一致（写入已生效）", "saved");
+        return;
+      }
+      this.status(
+        read.ok
+          ? `保存失败 · 远端内容与本次提交不一致，改动仍在本地草稿`
+          : `保存失败 · ${failure}`,
+        "failed",
+      );
+    } catch {
+      this.status(`保存失败 · ${failure}`, "failed");
+    }
+  }
+  private status(text: string, state: "saved" | "failed" | "" = "") {
+    const node = this.root.querySelector<HTMLElement>(".ssh-editor-status")!;
+    node.textContent = text;
+    if (state) node.dataset.state = state;
+    else delete node.dataset.state;
     this.controls();
   }
   private keepDraft() {
@@ -334,6 +382,9 @@ export class RemoteTextEditor {
     }
     this.keepDraft();
     this.busy = true;
+    // A write over a slow channel can take a while, and a click that answers
+    // with nothing looks exactly like a click that did nothing.
+    this.status("正在写入远端…");
     this.controls();
     const submitted = draft.text;
     try {
@@ -362,20 +413,34 @@ export class RemoteTextEditor {
         this.showDiff();
         this.status(
           draft.text === submitted
-            ? "已保存到远端"
-            : "提交的版本已保存；继续输入的修改尚未保存",
+            ? "保存成功 · 已写入远端"
+            : "保存成功 · 提交的版本已写入，之后继续输入的内容尚未保存",
+          "saved",
         );
       }
     } catch (error) {
-      this.status(String(error));
+      // A write reported as failed may still have landed — the reply is what
+      // failed, not necessarily the write. The file itself is the only witness,
+      // so read it back and compare before telling the reader their work is lost.
+      await this.settleFailedSave(submitted, draft, String(error));
     } finally {
       this.busy = false;
       this.controls();
     }
   }
   close() {
-    this.keepDraft();
+    // Keeping the draft is best-effort; leaving is not. A view torn down
+    // mid-comparison must not leave the reader stuck in the surface.
+    try {
+      this.keepDraft();
+    } catch {
+      /* The draft stays as it was. */
+    }
     this.transition.hide(this.reduced(), () => this.scope.leave());
+    // Left now rather than when the fade ends, so the deck behind this surface
+    // takes input again from the first frame instead of 180 ms later. `leave`
+    // is idempotent, so the transition's own call costs nothing.
+    this.scope.leave();
   }
   dispose() {
     this.revision++;

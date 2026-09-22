@@ -24,14 +24,19 @@ const { buildSshArgs, resolveSshPath } = require("./ssh-args.cjs");
 const { createTextClipboard } = require("./terminal-clipboard.cjs");
 const { SshServices, effectiveEndpoint, serviceExecutable } = require("./ssh-services.cjs");
 const { CredentialVault, inspectPrivateKey } = require("./credential-vault.cjs");
+const { createDiagnosticLog, bindCrashRecovery, sanitize } = require("./diagnostic-log.cjs");
 
 const DEV_URL = process.env.RHINE_DEV_URL || "";
 const SMOKE =
   process.argv.includes("--smoke") || process.env.RHINE_SMOKE === "1";
+/** Developer diagnostics: --debug or RHINE_DEBUG=1 mirrors renderer consoles. */
+const DEBUG =
+  process.argv.includes("--debug") || process.env.RHINE_DEBUG === "1";
 const SESSION_SMOKE = process.argv.includes("--session-smoke");
 const TERMINAL_SMOKE = SESSION_SMOKE && process.argv.includes("--terminal-deck-only");
 const HOST_SMOKE = SESSION_SMOKE && process.argv.includes("--host-management-only");
 const MULTI_SMOKE = SESSION_SMOKE && process.argv.includes("--multisession-only");
+const EDITOR_SMOKE = SESSION_SMOKE && process.argv.includes("--editor-only");
 const CREDENTIAL_SMOKE = SESSION_SMOKE && process.argv.includes("--credentials-only");
 const root = path.join(__dirname, "..");
 // The desktop bundle has its own output directory: `npm run build` (web) and
@@ -54,14 +59,43 @@ if (SMOKE || SESSION_SMOKE) {
   app.setPath("userData", profile);
   app.setPath("sessionData", profile);
   smokeProfile = requested ? null : profile;
+} else {
+  /**
+   * Chromium puts HTTP and GPU caches under `sessionData`. Its default is the
+   * roaming `userData` directory on Windows, which is also the directory most
+   * likely to be redirected, synchronised or left with a locked `Cache.old`.
+   * Keep durable settings in userData, but put disposable Chromium state in a
+   * local, explicitly-created directory. This must run before `ready` and
+   * before the first BrowserWindow, otherwise Chromium has already selected
+   * the failing cache path.
+   */
+  const localRoot = process.env.LOCALAPPDATA || os.tmpdir();
+  const profileName = path.basename(app.getPath("userData"));
+  const sessionData = path.join(localRoot, profileName, "ChromiumSession-v2");
+  try {
+    fs.mkdirSync(sessionData, { recursive: true });
+    app.setPath("sessionData", sessionData);
+  } catch (error) {
+    // A cache is optional. Preserve startup if an unusually locked-down host
+    // rejects the preferred local directory; Chromium can use its fallback.
+    console.warn("Chromium 缓存目录不可用:", String(error?.message || error));
+  }
 }
+
+// Two Chromium processes writing the same profile race while renaming Cache
+// and GPUCache on Windows (ERROR_ACCESS_DENIED / 0x5). This app exposes one
+// desktop window, so a second launch should activate it rather than open a
+// second writer against the same profile.
+const hasSingleInstanceLock =
+  SMOKE || SESSION_SMOKE || app.requestSingleInstanceLock();
+if (!hasSingleInstanceLock) app.quit();
 // Electron is a GUI-subsystem binary on Windows, so stdout is not reliably
 // attached to the parent console. Always land the report on disk as well.
 const reportPath =
   process.env.RHINE_SMOKE_REPORT ||
   path.join(
     outputDir,
-    MULTI_SMOKE ? "desktop-multisession-smoke.json" : HOST_SMOKE ? "desktop-hosts-smoke.json" : TERMINAL_SMOKE ? "desktop-terminal-smoke.json" : SESSION_SMOKE ? "desktop-session-smoke.json" : "desktop-smoke.json",
+    EDITOR_SMOKE ? "desktop-editor-smoke.json" : MULTI_SMOKE ? "desktop-multisession-smoke.json" : HOST_SMOKE ? "desktop-hosts-smoke.json" : TERMINAL_SMOKE ? "desktop-terminal-smoke.json" : SESSION_SMOKE ? "desktop-session-smoke.json" : "desktop-smoke.json",
   );
 
 function report(payload) {
@@ -77,6 +111,29 @@ function report(payload) {
 /** Renderer problems we want to surface instead of silently showing white. */
 const problems = [];
 const trustedWindows = new Set();
+/**
+ * Persistent diagnostics under userData/logs. Created lazily because
+ * app.getPath("userData") is only meaningful after app is ready — smoke runs
+ * have already repointed it by then, so create on first window instead.
+ */
+let diagnostics = null;
+function diagnosticLog() {
+  if (!diagnostics && !SMOKE && !SESSION_SMOKE)
+    diagnostics = createDiagnosticLog({
+      dir: path.join(app.getPath("userData"), "logs"),
+    });
+  return diagnostics;
+}
+function logDiagnostic(category, entry = {}) {
+  try {
+    const clean = sanitize(entry);
+    diagnosticLog()?.write(category, clean);
+    if (DEBUG && !SMOKE && !SESSION_SMOKE)
+      console.log(`DIAG[${category}] ${JSON.stringify(clean)}`);
+  } catch {
+    /* diagnostics must never break the caller */
+  }
+}
 
 function appUrl(url) {
   try {
@@ -124,18 +181,30 @@ function describeConsoleEvent(args) {
 function watchRenderer(contents) {
   contents.on("console-message", (...args) => {
     const entry = describeConsoleEvent(args);
-    if (process.env.RHINE_SMOKE_VERBOSE === "1")
+    if (process.env.RHINE_SMOKE_VERBOSE === "1" && (SMOKE || SESSION_SMOKE))
       console.log(
         `RENDERER[${entry.severity}] ${entry.source ?? ""}:${entry.line ?? ""} ${entry.message}`,
       );
-    if (entry.severity === "error" || entry.severity === "warning")
+    if ((SMOKE || SESSION_SMOKE) && (entry.severity === "error" || entry.severity === "warning"))
       problems.push({ kind: "console", ...entry });
+    if (DEBUG || entry.severity === "error" || entry.severity === "warning")
+      logDiagnostic(entry.severity === "error" ? "console-error" : entry.severity === "warning" ? "console-warning" : "console-info", {
+        level: entry.severity,
+        line: entry.line,
+        source: !entry.source ? "unknown" : appUrl(entry.source) || entry.source.startsWith("file:") ? "app" : "external",
+      });
   });
   contents.on("did-fail-load", (_event, code, description, url) => {
-    problems.push({ kind: "did-fail-load", code, description, url });
+    if (SMOKE || SESSION_SMOKE) problems.push({ kind: "did-fail-load", code, description, url });
+    logDiagnostic("did-fail-load", { level: "error", code });
   });
   contents.on("render-process-gone", (_event, details) => {
-    problems.push({ kind: "render-process-gone", reason: details.reason });
+    if (SMOKE || SESSION_SMOKE) problems.push({ kind: "render-process-gone", reason: details.reason });
+    logDiagnostic("renderer-crash", {
+      level: "error",
+      reason: details.reason,
+      code: details.exitCode,
+    });
   });
   contents.on("preload-error", (_event, preloadPath, error) => {
     problems.push({
@@ -143,8 +212,26 @@ function watchRenderer(contents) {
       preloadPath,
       message: String(error),
     });
+    logDiagnostic("preload-error", {
+      level: "error",
+      reason: path.basename(preloadPath),
+      message: String(error),
+    });
+  });
+  contents.on("did-finish-load", () => logDiagnostic("app", { level: "info", reason: "load-finished" }));
+  contents.on("responsive", () => logDiagnostic("app", { level: "info", reason: "responsive" }));
+  contents.on("unresponsive", () => {
+    problems.push({ kind: "unresponsive" });
+    logDiagnostic("renderer-hang", { level: "warning" });
   });
 }
+
+app.on("child-process-gone", (_event, details) => {
+  if (SMOKE || SESSION_SMOKE) problems.push({ kind: "child-process-gone", reason: details.reason, type: details.type });
+  logDiagnostic(details.type === "GPU" ? "gpu" : "child-process", {
+    level: "error", reason: details.reason, code: details.exitCode,
+  });
+});
 
 // ── session ─────────────────────────────────────────────────────────────────
 let sessions = null;
@@ -217,6 +304,12 @@ function registerSessionIpc() {
         try { existing = JSON.parse(fs.readFileSync(file, "utf8")); } catch { /* first checkpoint */ }
         const record = lifecycleRecord(entry, info, existing);
         if (record) fs.writeFileSync(file, JSON.stringify(record, null, 2), "utf8");
+        logDiagnostic("session-lifecycle", {
+          sessionId: entry.id,
+          alias: entry.target,
+          reason: record?.outcome,
+          code: info?.exitCode ?? null,
+        });
       } catch (error) {
         console.error("SSH 会话记录未能保存:", String(error?.message || error));
       }
@@ -237,6 +330,19 @@ function registerSessionIpc() {
   } : clipboard);
   handle("terminal:clipboard-read", () => textClipboard.readText());
   handle("terminal:clipboard-write", (_event, text) => textClipboard.writeText(text));
+  /**
+   * Renderer crash/error reports. The renderer sends whitelisted metadata
+   * only; everything is funneled through the same sanitizer as main-side
+   * events, so unexpected fields are dropped, not logged.
+   */
+  handle("diagnostic:event", (_event, entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return { ok: false };
+    logDiagnostic("renderer-error", {
+      level: "error",
+      reason: entry.reason === "rejection" ? "rejection" : "error",
+    });
+    return { ok: true };
+  });
   const prune = () => {
     try {
       return pruneRecords(recordsDir(), {
@@ -633,20 +739,27 @@ function resolveNodeForTest() {
 }
 
 /**
- * The window's own chrome, in the application's palette.
+ * The window's own chrome.
  *
- * Windows draws the caption itself, so the only way to stop it being the
- * default white is to take the title bar away and colour the overlay Electron
- * puts back in its place. These are the stage's own values — its background and
- * `--theme-ink` — so the caption reads as part of the page instead of a frame
- * bolted around it. The renderer reports theme changes over `shell:theme`.
+ * Windows draws the caption itself, so the only way to stop it being the default
+ * white is to take the title bar away and colour the overlay Electron puts back
+ * in its place. The overlay accepts `#RRGGBBAA`, and a fully transparent one
+ * lets the page show through — which is the only value that can be right for
+ * every surface at once, since the strip sits above a three-dimensional array,
+ * an SSH terminal and a settings sheet that all paint their own background.
+ *
+ * Only the symbols still need a colour: they are drawn on top of whatever is
+ * behind, so they have to contrast with the page rather than with the overlay.
+ * The renderer reports which of the two it needs over `shell:theme`.
  */
 const CHROME = {
-  light: { color: "#e8e5e1", symbolColor: "#202d32" },
-  dark: { color: "#131e26", symbolColor: "#e2e9e7" },
+  light: { color: "#00000000", symbolColor: "#202d32" },
+  dark: { color: "#00000000", symbolColor: "#e2e9e7" },
 };
 /** Matches `.titlebar-drag` in src/style.css, which is what makes the window
- *  movable once it has no native caption. */
+ *  movable once it has no native caption. The width the overlay keeps for its
+ *  buttons is mirrored in src/desktop.ts, which is where a full-window surface
+ *  is told how much room to leave for them. */
 const CHROME_HEIGHT = 40;
 const FRAMELESS = process.platform === "win32";
 
@@ -729,7 +842,15 @@ function createWindow() {
     if (mainFrame && !inPlace) sessions?.stopOwner(contentsId);
   });
   win.webContents.on("will-attach-webview", (event) => event.preventDefault());
-  win.webContents.on("render-process-gone", () => sessions?.stopOwner(contentsId));
+  // Crash recovery: rebuild the window after a renderer crash. The registry
+  // already stopped this window's native sessions, so nothing replays; the
+  // fresh page never reconnects on its own — the user reopens sessions.
+  bindCrashRecovery({
+    contents: win.webContents,
+    stopOwner: id => sessions?.stopOwner(id),
+    log: logDiagnostic,
+    enabled: !SMOKE && !SESSION_SMOKE,
+  });
   if (SMOKE || SESSION_SMOKE) {
     // A window created with `show: false` reports document.hidden === true,
     // which parks the entry gate in its "sound not ready" error branch. Stay
@@ -826,6 +947,7 @@ async function runSessionSmoke(win) {
   if (MULTI_SMOKE) return runMultisessionSmoke(win);
   if (HOST_SMOKE) return runHostManagementSmoke(win);
   if (TERMINAL_SMOKE) return runTerminalDeckSmoke(win);
+  if (EDITOR_SMOKE) return runEditorSmoke(win);
   // Where the probe should write its export, so automation never opens a dialog.
   const exportPath = path.join(outputDir, "session-record-export.txt");
   try {
@@ -1178,6 +1300,67 @@ async function runTerminalDeckSmoke(win) {
   return failed.length === 0;
 }
 
+/**
+ * The reported bug: after editing a remote file, the editor's 返回·保留草稿
+ * button "does nothing". This drives the whole thing in the real desktop
+ * window — frameless caption overlay, scaled stage — with REAL mouse input
+ * events, and records what every click actually hit.
+ */
+async function runEditorSmoke(win) {
+  const step = (expression) =>
+    win.webContents.executeJavaScript(
+      `(async () => { try { ${expression} } catch (error) { return { error: String(error?.stack || error) }; } })()`,
+    );
+  await win.webContents.executeJavaScript(
+    readProbe("editor-close-probe.js") + "\nwindow.__editorProbeReady = true;",
+  );
+  // The fixture SFTP bridge has no text endpoints; the editor needs exactly two.
+  await step(`
+    rhineDesktop.sftp.readText = async request => ({ ok: true, result: { path: request.path, text: '# fixture\\nkey: value\\n', revision: 'rev-1', modified: Date.now(), permissions: '-rw-r--r--' } });
+    rhineDesktop.sftp.writeText = async request => ({ ok: true, result: { conflict: false, document: { path: request.path, text: request.text, revision: 'rev-2', modified: Date.now(), permissions: '-rw-r--r--' } } });
+    return true;
+  `);
+  const opened = await step(`return await window.__editorProbe.openEditor();`);
+  const shotOpen = await capture(win, "editor-open");
+  const edited = await step(`return await window.__editorProbe.edit();`);
+  // Real mouse click, at the button's own coordinates, the way a user does it.
+  const clickClose = async () => {
+    const rect = await step(`return window.__editorProbe.state().buttonRect;`);
+    if (!rect) return null;
+    const point = { x: Math.round(rect.x + rect.width / 2), y: Math.round(rect.y + rect.height / 2) };
+    win.webContents.sendInputEvent({ type: "mousePressed", ...point, button: "left", clickCount: 1 });
+    win.webContents.sendInputEvent({ type: "mouseReleased", ...point, button: "left", clickCount: 1 });
+    return point;
+  };
+  const clickedAt = await clickClose();
+  await wait(800);
+  const afterRealClick = await step(`return window.__editorProbe.state();`);
+  const shotAfterClick = await capture(win, "editor-after-click");
+  // Synthetic fallback, in case the real event never reached the element.
+  await step(`document.querySelector('[data-editor="close"]')?.click(); return true;`);
+  await wait(800);
+  const afterSynthetic = await step(`return window.__editorProbe.state();`);
+  const checks = {
+    "editor probe ran": !opened?.error,
+    "editor opened with content": opened && opened.hidden === false && opened.transition === "open",
+    "return button is enabled before click": edited && edited.closeDisabled === false,
+    "return button is below the native title bar":
+      edited && edited.buttonRect?.y >= CHROME_HEIGHT + 1,
+    "return button explicitly opts out of window dragging":
+      edited && edited.buttonRegion === "no-drag",
+    "button is not covered by another element": edited && edited.hit === "close",
+    "real click reached the return button":
+      (afterRealClick?.events ?? []).some((event) => event.type === "click" && event.target === "close") ||
+      (afterRealClick?.events ?? []).length === 0,
+    "real click closed the editor": afterRealClick && afterRealClick.hidden === true,
+    "synthetic click closed the editor": afterSynthetic && afterSynthetic.hidden === true,
+    "no native renderer errors": problems.filter((item) => item.severity !== "warning").length === 0,
+  };
+  const failed = Object.entries(checks).filter(([, ok]) => !ok).map(([name]) => name);
+  report({ checks, failed, evidence: { opened, edited, clickedAt, afterRealClick, afterSynthetic }, shots: [shotOpen, shotAfterClick], problems });
+  return failed.length === 0;
+}
+
 /** Real host editor, IPC persistence and ConPTY; only the SSH peer is a fixture. */
 async function runHostManagementSmoke(win) {
   const shots = [];
@@ -1412,6 +1595,9 @@ async function runSmoke(win) {
   let hostEntry = false;
   if (rhineType === "object") {
     await win.webContents.executeJavaScript("window.rhine.archive(); true");
+    await wait(300);
+    await win.webContents.executeJavaScript("document.querySelector('[data-overview-action=collapse]')?.click(); true");
+    await wait(300);
     win.webContents.sendInputEvent({
       type: "keyDown",
       keyCode: "S",
@@ -1429,6 +1615,10 @@ async function runSmoke(win) {
     hostEntry = await win.webContents.executeJavaScript(
       `(async () => {
         for (let i = 0; i < 50; i++) {
+          const overview = document.querySelector('.ssh-overview');
+          if (overview && !overview.hidden && !overview.inert && overview.dataset.collapsed !== 'true' &&
+              overview.dataset.transition === 'open' && overview.querySelector('[data-overview-page="hosts"]')?.getAttribute('aria-current') === 'page')
+            return overview.getBoundingClientRect().height > 0;
           const panel = document.querySelector('.ssh-hosts');
           if (panel && document.querySelector('#detail-ui')?.dataset.transition === 'open' && !document.querySelector('#detail-content')?.inert)
             return Boolean(window.rhineSshUi?.hostsOpen) &&
@@ -1551,7 +1741,16 @@ async function runSmoke(win) {
  */
 if (process.platform === "win32") app.setAppUserModelId("com.rhinelab.analysis-os");
 
+app.on("second-instance", () => {
+  const win = BrowserWindow.getAllWindows()[0];
+  if (!win) return;
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+});
+
 app.whenReady().then(async () => {
+  if (!hasSingleInstanceLock) return;
   if (CREDENTIAL_SMOKE && (!process.env.RHINE_CREDENTIAL_FIXTURE || !process.env.RHINE_SSH_CONFIG)) throw new Error("Isolated SSH credential fixture is required");
   if ((SMOKE || SESSION_SMOKE) && !CREDENTIAL_SMOKE) {
     // Drive a stand-in through the real code path: same argv builder, same pty,

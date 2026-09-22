@@ -44,3 +44,15 @@
 :is([data-layout="compact"], [data-layout="portrait"]) .ssh-hosts .ssh-hosts-row { grid-template-columns: minmax(0, 1fr) 16px; gap: 8px; }
 :is([data-layout="compact"], [data-layout="portrait"]) .ssh-hosts .ssh-hosts-source { display: none; }
 :is([data-layout="compact"], [data-layout="portrait"]) .ssh-host-editor-actions { flex-wrap: wrap; gap: 12px; }
+
+/* Host grouping: a chip per group, renamed in place and removed with its ×. */
+.ssh-host-groups { flex-wrap: wrap; align-items: center; gap: 6px; }
+.ssh-host-group-chip { display: inline-flex; align-items: center; }
+.ssh-host-group-chip > button[data-group-filter] { padding-right: 2px; }
+.ssh-host-group-remove { min-height: 20px; padding: 0 4px; color: var(--theme-muted); font-size: 12px; }
+.ssh-host-group-remove:hover { color: var(--ssh-high, #a8412f); }
+.ssh-host-group-edit input { min-height: 26px; width: 9em; font-size: 12px; }
+.ssh-host-membership { display: grid; gap: 6px; }
+.ssh-host-membership-state { margin: 0; font-size: 12px; color: var(--theme-muted); }
+.ssh-host-group-choices { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.ssh-host-group-choices label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }

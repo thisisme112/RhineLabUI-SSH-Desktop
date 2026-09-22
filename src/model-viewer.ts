@@ -26,9 +26,27 @@ const PARTS = [
   { id: "carrier", label: "背板与框架", en: "CARRIER", depth: -2.05 },
 ] as const;
 
-type ModelSource = { model: THREE.Group; dispose: () => void; setClarity?: (value: number) => void };
+export type InspectionPart = { id: string; label: string; en: string; depth?: number };
+export type ModelSource = { model: THREE.Group; dispose: () => void; setClarity?: (value: number) => void; setTheme?: (value: number) => void; parts?: Map<string, THREE.Group> };
+export type InspectionOptions = {
+  parts?: readonly InspectionPart[];
+  exploded?: boolean;
+  kind?: "archive" | "terminal";
+  primary?: { label: string; run(): void };
+};
 export class ModelViewer {
+  private options: InspectionOptions = {};
+  private partSpecs: readonly InspectionPart[] = PARTS;
+  private rest = new Map<string, number>();
+  private offsets = new Map<string, number>();
+  private restXY = new Map<string, [number, number]>();
+  private clearance = 0;
+  private entering = false;
+  private afterClose?: () => void;
   private themeAmount = 0;
+  private appliedTheme = Number.NaN;
+  private themedNodes: THREE.Object3D[] = [];
+  private statsFrame = 0;
   setTheme(value: number) { this.themeAmount = value; }
   readonly root: HTMLElement;
   private canvasHost: HTMLElement;
@@ -109,11 +127,14 @@ export class ModelViewer {
         <div class="viewer-actions"><button data-viewer="explode" aria-pressed="false"><span>＋</span> 拆解档案</button><button data-viewer="assemble" aria-pressed="true"><span>−</span> 一键重组</button></div>
         <button class="viewer-reset" data-viewer="reset">复位视角 <span>↗</span></button>
       </footer>
+      <button class="viewer-primary" data-viewer="primary" hidden></button>
       <div class="viewer-state" aria-live="polite">已组装</div>`;
     parent.appendChild(this.root);
     this.canvasHost = this.root.querySelector(".viewer-canvas")!;
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      // The viewer is interactive and often rendered above a 2x display. Keep
+      // MSAA off here; the optional SMAA pass is cheaper and resolution-aware.
+      antialias: false,
       powerPreference: "high-performance",
     });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -161,8 +182,9 @@ export class ModelViewer {
         "[data-viewer]",
       )?.dataset.viewer;
       if (action === "close") this.close();
+      if (action === "primary") { this.enterPrimary(); return; }
       if (action === "retry") void this.load();
-      if (this.loading || !this.source) return;
+      if (this.loading || !this.source || this.entering) return;
       if (action === "clear" || action === "frosted") {
         this.setSurface(action === "clear");
         this.onSound("tick");
@@ -188,11 +210,33 @@ export class ModelViewer {
     title: string,
     provider: () => Promise<ModelSource>,
     reduced: boolean,
+    options: InspectionOptions = {},
   ) {
     if (this.isOpen) return;
     this.isOpen = true;
     this.closing = false;
     this.reduced = reduced;
+    this.options = options;
+    this.partSpecs = options.parts ?? PARTS;
+    this.entering = false;
+    this.afterClose = undefined;
+    this.root.dataset.kind = options.kind ?? "archive";
+    this.root.classList.toggle("reduce-motion", reduced);
+    const primary = this.root.querySelector<HTMLButtonElement>('[data-viewer="primary"]')!;
+    primary.hidden = !options.primary;
+    primary.disabled = false;
+    primary.textContent = options.primary?.label ?? "";
+    this.root.querySelector('[data-viewer="explode"]')!.innerHTML = `<span>＋</span> ${options.kind === "terminal" ? "拆解终端" : "拆解档案"}`;
+    const parts = this.root.querySelector('.viewer-parts')!;
+    parts.replaceChildren();
+    const heading = document.createElement('div'); heading.textContent = '装配结构 / ASSEMBLY'; parts.append(heading);
+    this.partSpecs.forEach((part, index) => {
+      const row = document.createElement('p');
+      for (const [tag, value] of [['span', String(index + 1).padStart(2, '0')], ['strong', part.label], ['small', part.en]]) {
+        const element = document.createElement(tag); element.textContent = value; row.append(element);
+      }
+      parts.append(row);
+    });
     this.provider = provider;
     this.opener = document.activeElement as HTMLElement | null;
     this.siblings = [...this.root.parentElement!.children]
@@ -204,6 +248,7 @@ export class ModelViewer {
     this.siblings.forEach(({ node }) => (node.inert = true));
     this.root.hidden = false;
     this.root.dataset.transition = "opening";
+    this.root.dataset.stats = JSON.stringify({ ready: false });
     this.root.querySelector("#viewer-title")!.textContent = title;
     this.root.querySelector("#viewer-file")!.textContent =
       "FILE " + id + " / INTERNAL DATABASE";
@@ -237,33 +282,38 @@ export class ModelViewer {
         return;
       }
       this.source = source;
-      for (const part of PARTS) {
+      this.themedNodes = [];
+      for (const part of this.partSpecs) {
+        if (source.parts) { const group = source.parts.get(part.id); if (group) this.groups.set(part.id, group); continue; }
         const group = new THREE.Group();
         group.name = part.id;
         this.groups.set(part.id, group);
       }
-      for (const child of [...source.model.children]) {
+      for (const child of source.parts ? [] : [...source.model.children]) {
         const group = this.groups.get(child.userData.assemblyPart ?? "cover");
         group?.add(child);
       }
-      for (const group of this.groups.values()) source.model.add(group);
+      if (!source.parts) for (const group of this.groups.values()) source.model.add(group);
       source.model.position.set(0, -1.85, 0);
       this.scene.add(source.model);
+      this.measureParts(Boolean(source.parts));
+      this.resetView(false);
       applyTextureQuality(source.model, this.renderer, this.quality);
+      source.model.traverse(child => { if (child.userData.themeAmount) this.themedNodes.push(child); });
       this.loading = false;
       loading.hidden = true;
       this.controls.enabled = true;
       this.setButtonsDisabled(false);
-      this.setExploded(false);
-      this.setStatus("已组装");
+      this.setExploded(Boolean(this.options.exploded));
+      if (!this.options.exploded) this.setStatus("已组装");
       // Render before revealing the canvas so a new model never flashes in.
       this.update(this.lastTime);
       if (!this.reduced)
         this.transitions.push(
           this.canvasHost.animate(
             [
-              { opacity: 0, transform: "scale(0.97)" },
-              { opacity: 1, transform: "scale(1)" },
+              { opacity: 0 },
+              { opacity: 1 },
             ],
             { duration: 380, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
           ),
@@ -318,8 +368,10 @@ export class ModelViewer {
       .catch(() => {});
   }
 
-  close() {
+  close(afterClose?: () => void) {
     if (!this.isOpen || this.closing) return;
+    this.entering = false;
+    this.afterClose = afterClose;
     this.closing = true;
     this.request++;
     this.loading = false;
@@ -377,10 +429,50 @@ export class ModelViewer {
       this.source = undefined;
     }
     this.groups.clear();
+    this.rest.clear(); this.offsets.clear(); this.restXY.clear();
     this.siblings.forEach(({ node, inert }) => (node.inert = inert));
     this.siblings = [];
     this.opener?.focus({ preventScroll: true });
     this.onClose();
+    const complete = this.afterClose; this.afterClose = undefined; complete?.();
+  }
+
+  private measureParts(measured: boolean) {
+    this.source!.model.updateMatrixWorld(true);
+    this.initialCamera.set(7.2, 3.8, 12);
+    const bounds = [...this.groups].map(([id, group]) => {
+      this.rest.set(id, group.position.z);
+      this.restXY.set(id, [group.position.x, group.position.y]);
+      return { id, box: new THREE.Box3().setFromObject(group) };
+    }).filter(part => !part.box.isEmpty());
+    if (!measured) { for (const part of this.partSpecs) this.offsets.set(part.id, part.depth ?? 0); return; }
+    const width = Math.max(...bounds.map(part => part.box.max.x - part.box.min.x));
+    this.clearance = 0;
+    bounds.sort((a, b) => (a.box.min.z + a.box.max.z) - (b.box.min.z + b.box.max.z));
+    let edge = bounds[0]?.box.min.z ?? 0;
+    const expanded = new THREE.Box3();
+    for (const part of bounds) {
+      const offset = edge - part.box.min.z;
+      this.offsets.set(part.id, offset);
+      const box = part.box.clone().translate(new THREE.Vector3(0, 0, offset));
+      expanded.union(box); edge = box.max.z + width * .06;
+    }
+    const center = expanded.getCenter(new THREE.Vector3()).z;
+    for (const [id, offset] of this.offsets) this.offsets.set(id, offset - center);
+    const radius = expanded.getBoundingSphere(new THREE.Sphere()).radius;
+    this.initialCamera.setLength(Math.max(this.initialCamera.length(), radius / Math.sin(THREE.MathUtils.degToRad(17)) * 1.15));
+    this.controls.maxDistance = Math.max(28, this.initialCamera.length() * 1.8);
+  }
+
+  enterPrimary() {
+    if (!this.options.primary || this.entering || this.closing || this.loading) return;
+    if (!this.source) { this.close(this.options.primary.run); return; }
+    this.entering = true;
+    this.setExploded(false);
+    this.resetView();
+    this.controls.enabled = false;
+    this.root.querySelector<HTMLButtonElement>('[data-viewer="primary"]')!.disabled = true;
+    this.setStatus("正在归位");
   }
 
   private setButtonsDisabled(disabled: boolean) {
@@ -398,6 +490,7 @@ export class ModelViewer {
     if (this.reduced) this.clarity = { value: this.targetClarity, velocity: 0 };
   }
   private setExploded(value: boolean) {
+    this.clearance = 0;
     this.targetSpread = value ? 1 : 0;
     this.root.dataset.exploded = String(value);
     this.root
@@ -464,7 +557,7 @@ export class ModelViewer {
       }
       return;
     }
-    if (!this.source || this.loading) return;
+    if (!this.source || this.loading || this.entering) return;
     if (event.key === "Home") {
       event.preventDefault();
       this.resetView();
@@ -552,8 +645,12 @@ export class ModelViewer {
 
   update(time: number) {
     if (!this.isOpen) return;
-    themeEnvironment(this.scene, this.renderer, this.themeAmount);
-    this.source?.model.traverse(child => { if (child.userData.themeAmount) child.userData.themeAmount.value = this.themeAmount; });
+    if (this.appliedTheme !== this.themeAmount) {
+      themeEnvironment(this.scene, this.renderer, this.themeAmount);
+      for (const child of this.themedNodes) child.userData.themeAmount.value = this.themeAmount;
+      this.source?.setTheme?.(this.themeAmount);
+      this.appliedTheme = this.themeAmount;
+    }
     const dt = Math.min(this.lastTime ? time - this.lastTime : 1 / 60, 0.05);
     this.lastTime = time;
     if (this.source) {
@@ -569,8 +666,15 @@ export class ModelViewer {
         this.spread = { value: this.targetSpread, velocity: 0 };
         this.setStatus(this.targetSpread ? "已拆解" : "已组装");
       }
-      for (const part of PARTS) {
-        this.groups.get(part.id)!.position.z = part.depth * this.spread.value;
+      for (const part of this.partSpecs) {
+        const group = this.groups.get(part.id);
+        if (group) group.position.z = (this.rest.get(part.id) ?? 0) + (this.offsets.get(part.id) ?? 0) * this.spread.value;
+      }
+      if (this.spread.value === 1 && this.source.parts && this.clearance === 0) {
+        this.source.model.updateMatrixWorld(true);
+        const boxes = [...this.groups.values()].map(group => new THREE.Box3().setFromObject(group)).filter(box => !box.isEmpty()).sort((a, b) => a.min.z - b.min.z);
+        const width = Math.max(...boxes.map(box => box.max.x - box.min.x));
+        this.clearance = Math.min(...boxes.slice(1).map((box, index) => (box.min.z - boxes[index].max.z) / width));
       }
     }
     this.controls.update();
@@ -580,6 +684,9 @@ export class ModelViewer {
       dt,
       this.reduced,
     );
+    if (this.entering && this.spread.value === 0 && !this.cameraMotion.resetting) {
+      this.close(this.options.primary?.run);
+    }
     const portrait = this.root.closest<HTMLElement>("[data-layout]")?.dataset.layout === "portrait";
     const zoom = portrait ? Math.min(1.15, this.camera.aspect / 0.85) / (1 + 0.08 * this.spread.value) : 1;
     if (this.camera.zoom !== zoom) {
@@ -596,6 +703,10 @@ export class ModelViewer {
     fog.far = objectDistance + 12;
     if (this.quality.antialias === "smaa") this.pipeline.composer.render();
     else this.renderer.render(this.scene, this.camera);
+    // Stats are a test/debug surface; serializing large vectors every frame
+    // steals time from the first interactive frames. Keep the same live data
+    // shape while publishing at 10 Hz.
+    if (++this.statsFrame % 6 !== 0) return;
     this.root.dataset.stats = JSON.stringify({
       ready: Boolean(this.source),
       clarity: this.clarity.value,
@@ -610,11 +721,14 @@ export class ModelViewer {
       ),
       cameraPosition: this.camera.position.toArray(),
       resetting: this.cameraMotion.resetting,
+      clearance: this.clearance,
       azimuth: this.controls.getAzimuthalAngle(),
       polar: this.controls.getPolarAngle(),
       parts: [...this.groups].map(([id, group]) => ({
         id,
         z: group.position.z,
+        x: group.position.x, y: group.position.y,
+        restX: this.restXY.get(id)?.[0], restY: this.restXY.get(id)?.[1],
         meshes: group.children.length,
       })),
     });

@@ -1,7 +1,7 @@
 .theme-settings { padding: 16px 0; border-bottom: 1px solid #bdb8ad; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
 .theme-settings strong { display: block; font-size: 14px; }
 .theme-settings span { display: block; margin-top: 6px; font-size: 12px; color: #77756d; }
-.theme-choices { display: flex; gap: 6px; }
+.theme-choices { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .theme-choices button { min-width: 76px; min-height: 42px; border: 1px solid #a6a49c; font-size: 13px; }
 .theme-choices button[aria-pressed="true"] { background: #171713; color: #ece9e4; }
 
@@ -32,6 +32,8 @@
 [data-dark-surface="true"] .system-footer button:hover { color: var(--theme-accent); }
 [data-dark-surface="true"] :is(.theme-choices button[aria-pressed="true"], .wb-settings button[aria-pressed="true"], .wb-task[aria-pressed="true"] .wb-check, .wb-timer-buttons button:first-child, .category-filters button.active, .viewer-surface button[aria-pressed="true"], .viewer-actions button[aria-pressed="true"]) { background: var(--theme-ink); color: var(--theme-paper); border-color: var(--theme-ink); }
 [data-dark-surface="true"] :is(input, select) { color: var(--theme-ink); accent-color: var(--theme-accent); }
+[data-dark-surface="true"] :is(select, option, optgroup) { color: var(--theme-ink); background-color: var(--theme-panel); }
+[data-dark-surface="true"] :is(textarea, [role="menu"], [role="listbox"], .ssh-files-menu, .ssh-files-bookmarks) { color: var(--theme-ink); background-color: var(--theme-panel); border-color: var(--theme-line); }
 [data-dark-surface="true"] input::placeholder { color: var(--theme-muted); }
 [data-dark-surface="true"] :is(.search-field, .toggle, .settings-shortcuts kbd) { background: var(--theme-field); border-color: var(--theme-line); }
 [data-dark-surface="true"] .settings-list input:checked + .toggle { background: var(--theme-accent); }

@@ -225,6 +225,11 @@ try {
     `document.querySelector('.ssh-overview').dataset.collapsed === 'false' && document.querySelector('.ssh-overview-restore').getBoundingClientRect().width > 0 && getComputedStyle(document.querySelector('.ssh-overview-restore')).opacity === '0'`,
   );
   await shot("01-expanded");
+  const dragStart = await evaluate(`(() => { const r = document.querySelector('.ssh-overview-heading h1').getBoundingClientRect(); const p = document.querySelector('.ssh-overview-glass').getBoundingClientRect(); return { x:r.x+30, y:r.y+15, left:p.left, top:p.top }; })()`);
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x: dragStart.x, y: dragStart.y, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: dragStart.x + 80, y: dragStart.y + 35, button: "left", buttons: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: dragStart.x + 80, y: dragStart.y + 35, button: "left", clickCount: 1 });
+  await check("dragging the title moves and remembers the overview", `(() => { const r = document.querySelector('.ssh-overview-glass').getBoundingClientRect(); const saved = JSON.parse(localStorage.getItem('rhine-ssh-overview-position')); return Math.abs(r.left - ${dragStart.left} - 80) < 2 && Math.abs(r.top - ${dragStart.top} - 35) < 2 && saved.x === 80 && saved.y === 35; })()`);
 
   await clickCentre('[data-overview-action="collapse"]');
   // Wait for the transition to settle rather than sleeping a fixed time: a
@@ -247,6 +252,11 @@ try {
     `document.elementFromPoint(innerWidth / 2, innerHeight / 2) !== null && !document.elementFromPoint(innerWidth / 2, innerHeight / 2).closest('.ssh-overview')`,
   );
   await shot("02-stowed");
+  await send("Emulation.setDeviceMetricsOverride", { width: 1600, height: 900, deviceScaleFactor: 1, mobile: false });
+  await sleep(400);
+  await check("resizing a stowed overview does not corrupt its position", `document.querySelector('.ssh-overview-glass').style.getPropertyValue('--overview-y') === '35px'`);
+  await send("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
+  await sleep(400);
 
   await check(
     "the stowed tab carries the live counts",

@@ -8,7 +8,7 @@ import { SurfaceTransition } from "../ui-transitions";
 import { SurfaceScope } from "./surface.ts";
 import type { SshClient } from "./client";
 import type { SshServicesClient } from "./services";
-import type { WorkspaceLayout } from "./workspace-store";
+import type { WorkspaceLayout, WorkspaceStore } from "./workspace-store";
 import { SshWorkspace, WORKSPACE_NAV, WORKSPACE_SIDE } from "./workspace";
 import { SessionTabs } from "./session-tabs";
 import { terminalAppearance } from "./terminal-appearance";
@@ -29,19 +29,20 @@ const MARKUP = `
     <span class="ssh-terminal-target"></span>
     <span class="ssh-terminal-phase" role="status"></span>
     ${WORKSPACE_NAV}
-    <button type="button" class="ssh-terminal-audit">会话记录</button>
     <button type="button" class="ssh-terminal-reconnect" hidden>重新连接 ↻</button>
     <button type="button" class="ssh-terminal-recovery" hidden title="点击停止自动重连"></button>
     <button type="button" class="ssh-terminal-search-all" title="检索主机、档案、命令和会话 · Ctrl+Shift+K">检索 ⌕</button>
-    <select class="ssh-terminal-split-select" aria-label="选择第二终端" title="在右侧打开另一个终端"><option value="">分屏…</option></select>
-    <button type="button" class="ssh-terminal-teardown" title="把终端内胆拆开查看 · 就地拆解" hidden>拆解终端 ＋</button>
-    <button type="button" class="ssh-terminal-settings" title="系统设置">设置 ⚙</button>
+    <details class="ssh-terminal-more"><summary aria-label="更多终端操作">更多 ···</summary><div class="ssh-terminal-more-panel">
+      <button type="button" class="ssh-terminal-audit">会话记录</button>
+      <select class="ssh-terminal-split-select" aria-label="选择第二终端" title="在右侧打开另一个终端"><option value="">分屏…</option></select>
+    </div></details>
+    <button type="button" class="ssh-terminal-settings" title="系统设置">设置</button>
     <button type="button" class="ssh-terminal-close" title="收起终端，返回这台主机的详情 · Ctrl+Shift+E">收起 · 返回主机</button>
   </header>
   <div class="ssh-workspace-body">
     <div id="ssh-terminal-main" class="ssh-terminal-main" role="tabpanel" aria-label="终端">
       <div class="ssh-terminal-screen"></div>
-      <pre class="ssh-terminal-auth" hidden aria-label="SSH 认证原始输出"></pre>
+      <pre class="ssh-terminal-auth" hidden aria-label="SSH 认证进度"></pre>
     </div>
     ${WORKSPACE_SIDE}
   </div>
@@ -97,7 +98,6 @@ export class SshTerminalPanel {
    * model is unreachable for exactly as long as the terminal is open — which
    * is when the deck is at operating size and worth taking apart.
    */
-  onTeardown: () => void = () => {};
   private root: HTMLElement;
   private screen: HTMLElement;
   private auth: HTMLElement;
@@ -119,6 +119,7 @@ export class SshTerminalPanel {
   private open = false;
   private generation = -1;
   private reduced = false;
+  private themeSignature = "";
   private hasShell = false;
   private projectionHost: HTMLElement;
   private viewport: HTMLElement;
@@ -144,6 +145,13 @@ export class SshTerminalPanel {
     this.root.setAttribute("aria-modal", "true");
     this.root.setAttribute("aria-label", "SSH 会话终端");
     this.root.innerHTML = MARKUP;
+    const more = this.root.querySelector<HTMLDetailsElement>('.ssh-terminal-more')!;
+    more.addEventListener('click', event => { if ((event.target as Element).closest('button')) more.open = false; });
+    more.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && more.open) { event.preventDefault(); event.stopPropagation(); more.open = false; more.querySelector('summary')!.focus(); }
+    });
+    this.root.addEventListener('pointerdown', event => { if (!more.contains(event.target as Node)) more.open = false; });
+    if (isAndroid) more.replaceWith(...more.querySelector('.ssh-terminal-more-panel')!.children);
     const idPrefix = "ssh-" + crypto.randomUUID() + "-";
     const ids = new Map<string, string>();
     for (const node of this.root.querySelectorAll<HTMLElement>("[id]")) { ids.set(node.id, idPrefix + node.id); node.id = idPrefix + node.id; }
@@ -181,6 +189,9 @@ export class SshTerminalPanel {
         fontSize: () => this.tools.fontSize,
         hideTerminalTools: () => this.tools.suspend(),
       });
+    // The file panel's "open here in the terminal" entry needs a live shell;
+    // the callback reports whether one took the command so the panel can say so.
+    this.workspace?.setTerminalCommand((command) => this.runCommand(command));
     this.generation = client.generation;
     if (client.output) this.term.write(client.output);
     this.offOutput = client.onOutput((chunk) => this.term.write(chunk));
@@ -215,9 +226,6 @@ export class SshTerminalPanel {
     const splitSelect = this.root.querySelector<HTMLSelectElement>(".ssh-terminal-split-select")!;
     splitSelect.hidden = isAndroid;
     splitSelect.addEventListener("change", () => { this.onSplitSelect(splitSelect.value); splitSelect.value = ""; });
-    this.root
-      .querySelector(".ssh-terminal-teardown")!
-      .addEventListener("click", () => this.onTeardown());
     this.root
       .querySelector(".ssh-terminal-audit")!
       .addEventListener("click", onRequestAudit);
@@ -281,7 +289,20 @@ export class SshTerminalPanel {
     button.hidden = !message; button.textContent = message ? message + " · 停止" : "";
   }
   get screenTheme() {
-    return this.dark ? TERMINAL_DARK_THEME : TERMINAL_THEME;
+    const style = getComputedStyle(document.documentElement);
+    const token = (name: string, fallback: string) =>
+      style.getPropertyValue(`--theme-${name}`).trim() || fallback;
+    const base = this.dark ? TERMINAL_DARK_THEME : TERMINAL_THEME;
+    const accent = token("accent", base.cursor!);
+    return {
+      ...base,
+      background: token("paper", base.background!),
+      foreground: token("ink", base.foreground!),
+      cursor: accent,
+      cursorAccent: token("paper", base.cursorAccent!),
+      selectionBackground: `color-mix(in srgb, ${accent} 32%, transparent)`,
+      brightCyan: token("cyan", base.brightCyan!),
+    };
   }
   get isOpen() {
     return this.scope.active || this.embedded;
@@ -298,9 +319,14 @@ export class SshTerminalPanel {
   get isUsable() { return this.open && !this.root.closest("[inert],[hidden]") && (this.workspace?.terminalVisible ?? true); }
 
   setAppearance(dark: boolean, reduced: boolean) {
-    if (this.root.dataset.dark === String(dark) && reduced === this.reduced) return;
-    if (dark !== this.dark) {
+    const style = getComputedStyle(document.documentElement);
+    const signature = ["paper", "ink", "accent", "cyan"]
+      .map(name => style.getPropertyValue(`--theme-${name}`))
+      .join("/");
+    if (this.root.dataset.dark === String(dark) && reduced === this.reduced && signature === this.themeSignature) return;
+    if (dark !== this.dark || signature !== this.themeSignature) {
       this.dark = dark;
+      this.themeSignature = signature;
       this.term.options.theme = this.screenTheme;
       this.screenRevision++;
     }
@@ -450,8 +476,29 @@ export class SshTerminalPanel {
   openDirectory(path: string) { return this.workspace?.openDirectory(path); }
   get directory() { return this.workspace?.directory || ""; }
   showTransfers() { this.workspace?.showTransfers(); }
-  setBookmarkHandler(handler: (path: string) => void) { this.workspace?.setBookmarkHandler(handler); }
+  setBookmarkHandler(handler: (path: string) => void, store?: WorkspaceStore, alias = "") { this.workspace?.setBookmarkHandler(handler, store, alias); }
   setLayout(saved: WorkspaceLayout | undefined, write: (layout: WorkspaceLayout) => void) { this.workspace?.setLayout(saved, write); }
+  /** Types one command into the live shell and runs it.
+   *
+   *  Only an interactive shell accepts it: earlier the session is still
+   *  authenticating, and later a full-screen program may own the input, where
+   *  the text would land in that program instead of the shell. The callback
+   *  reports whether it was taken, so the caller can say so rather than look
+   *  like it worked. */
+  runCommand(command: string) {
+    if (
+      !this.open ||
+      this.root.inert ||
+      !this.hasShell ||
+      !this.client.active ||
+      this.client.status().phase !== "interactive"
+    )
+      return false;
+    this.selectPage("terminal");
+    this.client.write(command + "\r");
+    this.focusTerminal();
+    return true;
+  }
   pasteCommand(text: string) {
     if (this.open && !this.root.inert && this.hasShell && this.client.active) {
       text = text.replace(/[\r\n]+$/, "");
@@ -496,11 +543,6 @@ export class SshTerminalPanel {
   }
   setCloseLabel(text: string) {
     this.root.querySelector(".ssh-terminal-close")!.textContent = text;
-  }
-  /** Offered only once the model has reached operating size and there is a
-   *  stack on screen to take apart. */
-  setTeardownAvailable(value: boolean) {
-    this.root.querySelector<HTMLButtonElement>(".ssh-terminal-teardown")!.hidden = !value;
   }
   focus() {
     if (!this.open || this.root.inert) return;
@@ -567,9 +609,16 @@ export class SshTerminalPanel {
     this.auth.hidden = this.hasShell;
     if (!this.hasShell) {
       const pending = this.client.pendingPrompt?.prompt;
+      // The milestones the handshake has reached, not the `debug1:` lines that
+      // produced them. 会话记录 keeps the raw stream for when it is wanted. The
+      // failure is stated because this view outlives the prompt that announced
+      // it, and "why it stopped" is the one thing it still has to answer.
       this.auth.textContent =
-        [...this.client.rawLog, ...(pending ? [pending] : [])].join("\n") ||
-        "等待 SSH 客户端输出…";
+        [
+          ...status.timeline.map((entry) => entry.label),
+          ...(status.failure ? [status.failure] : []),
+          ...(pending ? [pending] : []),
+        ].join("\n") || "等待 SSH 客户端输出…";
       this.auth.scrollTop = this.auth.scrollHeight;
     }
     if (wasHidden && this.hasShell) {

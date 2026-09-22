@@ -49,6 +49,7 @@ import {
   INSPECTION_LIFT,
   returnStep,
 } from "./motion";
+import { DECK_OPEN_SECONDS, deckOpenStep } from "./ssh/deck-motion";
 
 const ease = (t: number) => {
   t = THREE.MathUtils.clamp(t, 0, 1);
@@ -65,7 +66,6 @@ export interface SessionDeck {
   readonly screenSize: { width: number; height: number; center: readonly [number, number, number] };
   /** Normalized 0..1 separation of the insert's plates, so the camera can make
    *  room for the exploded stack without knowing what the plates are. */
-  readonly spread: number;
   update(dt: number, time: number, reduced: boolean, opening: number, theme: number): void;
   snapshot(): { group: THREE.Group; update(opening: number): void; dispose(): void };
   dispose(): void;
@@ -301,8 +301,8 @@ export class ArchiveScene {
     if (this.labelMesh) this.model.add(this.labelMesh);
   }
 
-  private sessionOpenSeconds = 2.1;
-  setSessionOpeningDuration(seconds: number) { this.sessionOpenSeconds = Math.max(.3, Math.min(2.1, seconds)); }
+  private sessionOpenSeconds = DECK_OPEN_SECONDS;
+  setSessionOpeningDuration(seconds: number) { this.sessionOpenSeconds = Math.max(.3, Math.min(DECK_OPEN_SECONDS, seconds)); }
   setSessionDeckState(state: SessionDeckState) {
     if (state === this.deckState) return;
     this.deckState = state;
@@ -312,17 +312,17 @@ export class ArchiveScene {
   get hasSessionDeck() { return Boolean(this.deck); }
   get sessionDeckFocus() { return this.openBlend * this.openBlend; }
   get sessionDeckReady() { return this.deckState === "open" && this.openBlend >= 1; }
-  get sessionDeckSpread() { return this.deck?.spread ?? 0; }
   /** True while the terminal stack is apart: the operating surface, which is
    *  pinned to the screen's four corners, has nothing to pin to. */
-  get sessionDeckInspecting() { return (this.deck?.spread ?? 0) > 0.01; }
 
   private updateSessionDeck(dt: number, time: number) {
     if (!this.deck) return;
     try {
       const canOpen = this.targetDetail && this.lift.value > 3.6 && Math.abs(this.rotation) < .02;
       const target = this.deckState === "open" && canOpen ? 1 : 0;
-      const step = dt / (target ? this.sessionOpenSeconds : 1.2);
+      // A linear ramp, not a spring: terminal-deck-parts.ts owns the durations so
+      // the Unreal port can diff its opening progress against the same numbers.
+      const step = deckOpenStep(Boolean(target), this.sessionOpenSeconds, dt);
       this.openBlend = this.reduced ? target : target ? Math.min(1, this.openBlend + step) : Math.max(0, this.openBlend - step);
       const visible = this.deckState !== "off" || this.openBlend > 0;
       this.deck.group.visible = visible;
@@ -388,6 +388,9 @@ export class ArchiveScene {
   onSelect?: (index: number, cell?: ArchiveCell) => void;
   onOpen?: (index: number, cell: ArchiveCell) => void;
   onHover?: (index: number | null) => void;
+  onContextLost?: () => void;
+  private contextLost = false;
+  get isContextLost() { return this.contextLost; }
   onNavigate?: (axis: "row" | "lane", direction: number) => void;
   constructor(
     private container: HTMLElement,
@@ -413,6 +416,26 @@ export class ArchiveScene {
     this.renderer.domElement.setAttribute(
       "aria-label",
       "三维研究档案阵列，点击选择，左右拖动切列，上下拖动或滚轮切换列内档案",
+    );
+    // GPU resets and driver resets hand the canvas a fresh GL context. Three
+    // rebuilds its program cache on restore, but it renders nothing on its own:
+    // hold the frame loop while the context is gone (otherwise every render
+    // call errors), then repaint as soon as it returns.
+    this.renderer.domElement.addEventListener(
+      "webglcontextlost",
+      (event) => {
+        event.preventDefault();
+        this.contextLost = true;
+        this.onContextLost?.();
+      },
+      { signal: this.inputEvents.signal },
+    );
+    this.renderer.domElement.addEventListener(
+      "webglcontextrestored",
+      () => {
+        this.contextLost = false;
+      },
+      { signal: this.inputEvents.signal },
     );
     container.appendChild(this.renderer.domElement);
     this.scene.background = new THREE.Color(import.meta.env.MODE === "desktop" ? "#eeede7" : "#eae5e1");
@@ -927,7 +950,10 @@ export class ArchiveScene {
     c.fillText("INTERNAL DATABASE", 25, 174);
     c.fillStyle = "#171713";
     c.font = "bold 130px MiSans";
-    c.fillText((records[index]?.id && !records[index].id.startsWith("X-") ? records[index].id.replace("-", ".") : "NO." + String(index + 1).padStart(3, "0")), 22, 360);
+    // `label` when the record has one: a host in several groups is several
+    // records behind one card number, so the id is not what the card shows.
+    const code = records[index]?.label || records[index]?.id || "";
+    c.fillText(code && !code.startsWith("X-") ? code.replace("-", ".") : "NO." + String(index + 1).padStart(3, "0"), 22, 360);
     c.fillRect(782, 32, 221, 39);
     c.fillStyle = "#eee9de";
     c.font = "24px MiSans";
@@ -1623,7 +1649,7 @@ export class ArchiveScene {
       const baseY = p.y + field(o.cell.row, o.cell.lane);
       o.group.rotation.y = returnStep(o.group.rotation.y, dt, this.reduced);
       if (o.deck) {
-        o.openBlend = this.reduced ? 0 : Math.max(0, (o.openBlend ?? 0) - dt / 1.2);
+        o.openBlend = this.reduced ? 0 : Math.max(0, (o.openBlend ?? 0) - deckOpenStep(false, 0, dt));
         o.deck.update(o.openBlend ** 2);
       }
       if (o.returnY !== null) {
@@ -1836,12 +1862,6 @@ export class ArchiveScene {
       cameraAim.lerp(detailAim, detail);
     }
     let cameraSpan = cinematic ? openingSpan(THREE.MathUtils.lerp(span, 5.9, detail)) : framing.span;
-    // Separating the stack and framing it are one movement, the way the pack
-    // opening and the dolly-in already are: the same value drives the plates
-    // and the camera, so neither can arrive before the other. The aim stays on
-    // the screen's centre — the plates move around it, not away from it — and
-    // only the span opens up.
-    const deckSpread = this.sessionDeckSpread;
     if (!cinematic && this.deck && this.sessionDeckFocus > 0) {
       const screenSpan = this.sessionScreenSpan();
       this.model.updateMatrixWorld(true);
@@ -1850,10 +1870,7 @@ export class ArchiveScene {
       // session footer. Only the camera moves; the insert stays in its package.
       screenAim.y += screenSpan * .015;
       cameraAim.lerp(screenAim, this.sessionDeckFocus);
-      // The plates reach 1.3 units towards the camera and 1.05 away, so the
-      // operating span would show under a third of the stack.
-      const span = THREE.MathUtils.lerp(screenSpan, screenSpan * 2.9, deckSpread);
-      cameraSpan = THREE.MathUtils.lerp(cameraSpan, span, this.sessionDeckFocus);
+      cameraSpan = THREE.MathUtils.lerp(cameraSpan, screenSpan, this.sessionDeckFocus);
     }
     const cameraPosition = cameraAim
       .clone()
@@ -1967,6 +1984,7 @@ export class ArchiveScene {
         this.quality.depthOfField * (1 - this.sessionDeckFocus)) /
       100;
     this.renderer.info.reset();
+    if (this.contextLost) return;
     if (this.superPerformance) this.renderer.render(this.scene, this.camera);
     else this.composer.render();
   }
@@ -1999,7 +2017,7 @@ export class ArchiveScene {
     };
     return {
       sessionDeck: { available: Boolean(this.deck), state: this.deckState, progress: this.openBlend,
-        spread: this.sessionDeckSpread, inspecting: this.sessionDeckInspecting,
+
         focus: this.sessionDeckFocus, ready: this.sessionDeckReady, screen: this.projectSessionScreen(),
         contentKey: this.deck?.group.userData.contentKey, cardId: this.deck?.group.userData.cardId, screenCurrent: this.deck?.group.userData.screenCurrent },
       decryption: { ...this.decryption.frame, clarity: this.decryption.clarity },
@@ -2015,6 +2033,7 @@ export class ArchiveScene {
         .map((v) => Math.round(v * 10000) / 10000),
       fieldOfView: this.camera.fov,
       loaded: this.loaded,
+      contextLost: this.contextLost,
       drawCalls: this.renderer.info.render.calls,
       superPerformance: this.superPerformance,
       presentation: this.presence,

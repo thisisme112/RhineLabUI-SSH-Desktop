@@ -61,7 +61,9 @@ import { Workbench } from "./workbench";
 let workbench: Workbench | undefined;
 import { ArchivePlayground } from "./archive-playground";
 import { ARRAY_OPENING_END, openingShowsDetail } from "./wallpaper-opening";
-import { paintTheme, themeSettingsMarkup } from "./theme-ui";
+import { paintTheme, setPalette, themeSettingsMarkup, THEMES, type ThemeName } from "./theme-ui";
+import { settingsNavigation, type SettingsSection } from "./settings-navigation";
+let openSettingsSection: (section: SettingsSection) => void = () => {};
 let playground: ArchivePlayground | undefined;
 import { WallpaperEffects } from "./wallpaper-effects";
 import { WallpaperBackground } from "./wallpaper-background";
@@ -90,6 +92,7 @@ let closeSshAudit: (() => void) | undefined;
 let openSshHosts: () => void = () => {};
 /** Desktop SSH: connect to a host alias (assigned in the desktop block). */
 let connectHostAlias: (alias: string, newSession?: boolean) => void = () => {};
+let inspectSshHost: (alias: string, fresh?: boolean) => void = () => {};
 let openHostSession: (alias: string) => void = () => {};
 let stopSshSession: () => void = () => {};
 let switchSshSession: (direction: number) => void = () => {};
@@ -187,6 +190,19 @@ import { logo, brandHeading } from "./brand";
 // bridge (browsers cannot open the local ssh/PTY APIs).
 const demoSsh = !isDesktop && !isAndroid && !isWallpaper;
 const desktopShell = isDesktop || isAndroid || demoSsh;
+// Never forward exception messages: they can contain terminal or file contents.
+if (window.rhineDesktop?.captureError) {
+  const report = (kind: "error" | "rejection") => {
+    try {
+      void window.rhineDesktop?.captureError?.({
+        category: "renderer-error", level: "error", reason: kind,
+      }).catch(() => { /* reporting failure must not trigger another rejection */ });
+    } catch { /* the bridge may be gone during shutdown */ }
+  };
+  window.addEventListener("error", () => report("error"));
+  window.addEventListener("unhandledrejection", () => report("rejection"));
+}
+
 
 $("#stage").innerHTML = `
   ${isDesktop ? '<div class="titlebar-drag" aria-hidden="true"></div>' : ""}
@@ -285,7 +301,7 @@ function readLocal<T>(key: string, fallback: T): T {
   }
 }
 const saved = new Set<string>(readLocal<string[]>("rhine-saved", []));
-const storedPrefs = readLocal<Partial<{ sound: boolean; music: boolean; soundVolume: number; musicVolume: number; reduced: boolean; quality: boolean; rendering: RenderQuality; superPerformance: boolean; colorTheme: "light" | "dark" }>>("rhine-settings", {});
+const storedPrefs = readLocal<Partial<{ sound: boolean; music: boolean; soundVolume: number; musicVolume: number; reduced: boolean; quality: boolean; rendering: RenderQuality; superPerformance: boolean; colorTheme: "light" | "dark"; palette: ThemeName }>>("rhine-settings", {});
 const prefs = {
   sound: true,
   music: storedPrefs.sound ?? true,
@@ -297,7 +313,13 @@ const prefs = {
   ...storedPrefs,
   rendering: normalizeQuality(storedPrefs.rendering, storedPrefs.quality !== false),
   colorTheme: storedPrefs.colorTheme === "dark" ? "dark" : "light",
+  // Which pair of endpoints the light/dark interpolation runs between. An
+  // unknown or absent name leaves the shell's own default in place.
+  palette: (THEMES as readonly string[]).includes(storedPrefs.palette ?? "")
+    ? (storedPrefs.palette as ThemeName)
+    : undefined,
 };
+setPalette(prefs.palette);
 paintTheme(prefs.colorTheme === "dark" ? 1 : 0);
 const rollingMotion = {
   duration: 460,
@@ -416,7 +438,17 @@ function goBack(): boolean {
   return false;
 }
 const accessLog: { id: string; time: string }[] = [];
+/** One remembered card per lane. Host grouping rebuilds the lane set at runtime,
+ *  so this is resized to match rather than built once and assumed fixed. */
 const columnMemory = archiveColumns.map((_, lane) => columnFiles(lane)[0]);
+function syncColumnMemory() {
+  while (columnMemory.length < archiveColumns.length)
+    columnMemory.push(columnFiles(columnMemory.length)[0]);
+  columnMemory.length = archiveColumns.length;
+  for (let lane = 0; lane < columnMemory.length; lane++)
+    if (!columnFiles(lane).includes(columnMemory[lane]))
+      columnMemory[lane] = columnFiles(lane)[0];
+}
 function recordAccess() {
   accessLog.unshift({
     id: records[selected].id,
@@ -431,8 +463,10 @@ function saveAudioPrefs() {
 }
 function superPerformanceEnabled() { return isWallpaper ? wallpaperHost()?.properties.superperformance?.value === true : prefs.superPerformance; }
 function effectiveRenderQuality() { return superPerformanceEnabled() ? superPerformanceQuality : prefs.rendering; }
+document.documentElement.dataset.superPerformance = String(superPerformanceEnabled());
 function savePrefs() {
   saveAudioPrefs();
+  document.documentElement.dataset.superPerformance = String(superPerformanceEnabled());
   if (prefs.reduced) {
     sshDetailMotion?.finish();
     sshTabMotion?.finish();
@@ -449,6 +483,7 @@ function savePrefs() {
   if (desktopShell)
     window.rhineDesktop?.theme?.(prefs.colorTheme === "dark" ? "dark" : "light");
   document.querySelectorAll<HTMLElement>("[data-color-theme]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.colorTheme === prefs.colorTheme)));
+  document.querySelectorAll<HTMLElement>("button[data-color-palette]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.colorPalette === prefs.palette)));
   scene?.setSuperPerformance(superPerformanceEnabled());
   viewer?.setSuperPerformance(superPerformanceEnabled());
   scene?.setQuality(effectiveRenderQuality());
@@ -728,6 +763,7 @@ function renderDetail() {
   const r = records[selected];
   $("#object-id").textContent = r.id.startsWith("X-") ? "NO." + r.id.slice(2) : r.id.replace("-", ".");
   const host = hostAtCard(selected);
+  $(".viewer-open").innerHTML = isDesktop && host ? '拆解模型 <span>↗</span>' : '360° 查看文档模型 <span>↗</span>';
   const directory = hostCards?.isDirectory(selected);
   const content = $("#detail-content");
   const resource = hostCards?.resourceAt(selected);
@@ -979,7 +1015,18 @@ function renderModal() {
   backdrop.hidden = true;
   modalTransition = new SurfaceTransition(backdrop, $(".terminal-modal"));
   modalTransition.show(prefs.reduced);
-  if (modal === "settings") updateQualitySummary();
+  if (modal === "settings") {
+    updateQualitySummary();
+    if (desktopShell) {
+      const heading = document.querySelector('.settings-modal h2')!;
+      heading.textContent = '系统设置';
+      heading.insertAdjacentHTML('afterend', settingsNavigation('appearance'));
+      backdrop.querySelector('.settings-sections')!.addEventListener('click', event => {
+        const section = (event.target as Element).closest<HTMLElement>('[data-settings-section]')?.dataset.settingsSection as SettingsSection | undefined;
+        if (section && section !== 'appearance') closeModal(() => openSettingsSection(section));
+      });
+    }
+  }
   if (modal !== "settings") {
     renderResults();
     requestAnimationFrame(() => {
@@ -1034,7 +1081,7 @@ function motionSettingsMarkup() {
     : "当前使用完整动效。"}</p>${prefs.reduced ? '<button data-action="enable-motion">启用完整动效并重播 ↻</button>' : ""}</div>`;
 }
 function settingsMarkup() {
-  return `<h2>SYSTEM SETTINGS<small>终端偏好设置</small></h2><p class="settings-intro">JOYCE MOORE <span>·</span> SESSION AUTHORIZED</p>${isWallpaper ? '<p class="wallpaper-settings-note">每次启动都会读取 Wallpaper Engine 中的设置。在此修改仅对当前运行生效，无法持久保存；如需保留，请在 Wallpaper Engine 的壁纸属性中调整。</p>' : ""}<div class="settings-list">${themeSettingsMarkup(prefs.colorTheme === "dark")}${!isWallpaper ? `<label><div><strong>SUPER PERFORMANCE</strong><span>降低三维画质和渲染分辨率，保留完整动效；关闭后恢复原画质</span></div><input type="checkbox" data-pref="superPerformance" ${prefs.superPerformance ? "checked" : ""}/><i class="toggle"></i></label>` : ""}${workbench?.settingsMarkup() ?? ""}${audioSettingsMarkup(prefs)}<label><div><strong>REDUCED MOTION</strong><span>跳过开机动画，简化选档、镜头和文字动效</span></div><input type="checkbox" data-pref="reduced" ${prefs.reduced ? "checked" : ""}/><i class="toggle"></i></label></div>${motionSettingsMarkup()}${qualityMarkup(prefs.rendering)}${pwaSettingsMarkup()}<div class="settings-shortcuts">${isWallpaper ? '<span>DESKTOP CONTROLS</span><p>拖动阵列或点击界面按钮浏览档案。桌面模式下，方向键与滚轮可能无法传入壁纸。</p>' : `<span>KEYBOARD CONTROLS</span><p><kbd>←</kbd><kbd>→</kbd> 切列 <kbd>↑</kbd><kbd>↓</kbd> 选档 <kbd>ENTER</kbd> 读取${desktopShell ? "·连接" : ""} <kbd>/</kbd> 检索 <kbd>ESC</kbd> 返回${desktopShell ? ' <kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>S</kbd> 主机列表 <kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>E</kbd> 收起终端' : ""}</p>`}</div><div class="settings-bottom">${!isWallpaper && document.fullscreenEnabled ? '<button data-action="fullscreen">FULLSCREEN <span>↗</span></button>' : ''}<button data-action="restart">REINITIALIZE SYSTEM <span>↻</span></button></div><div class="modal-bottom"><span>ANALYSIS OS / 1.0 · 使用 MiSans 字体（小米） <a href="${assetUrl("fonts/MiSans-license.pdf")}" target="_blank" rel="noopener">字体许可</a></span><span>POWERED BY RHINE LAB</span></div>`;
+  return `<h2>SYSTEM SETTINGS<small>终端偏好设置</small></h2><p class="settings-intro">JOYCE MOORE <span>·</span> SESSION AUTHORIZED</p>${isWallpaper ? '<p class="wallpaper-settings-note">每次启动都会读取 Wallpaper Engine 中的设置。在此修改仅对当前运行生效，无法持久保存；如需保留，请在 Wallpaper Engine 的壁纸属性中调整。</p>' : ""}<div class="settings-list">${themeSettingsMarkup(prefs.colorTheme === "dark", prefs.palette)}${!isWallpaper ? `<label><div><strong>SUPER PERFORMANCE</strong><span>降低三维画质和渲染分辨率，保留完整动效；关闭后恢复原画质</span></div><input type="checkbox" data-pref="superPerformance" ${prefs.superPerformance ? "checked" : ""}/><i class="toggle"></i></label>` : ""}${workbench?.settingsMarkup() ?? ""}${audioSettingsMarkup(prefs)}<label><div><strong>REDUCED MOTION</strong><span>跳过开机动画，简化选档、镜头和文字动效</span></div><input type="checkbox" data-pref="reduced" ${prefs.reduced ? "checked" : ""}/><i class="toggle"></i></label></div>${motionSettingsMarkup()}${qualityMarkup(prefs.rendering)}${pwaSettingsMarkup()}<div class="settings-shortcuts">${isWallpaper ? '<span>DESKTOP CONTROLS</span><p>拖动阵列或点击界面按钮浏览档案。桌面模式下，方向键与滚轮可能无法传入壁纸。</p>' : `<span>KEYBOARD CONTROLS</span><p><kbd>←</kbd><kbd>→</kbd> 切列 <kbd>↑</kbd><kbd>↓</kbd> 选档 <kbd>ENTER</kbd> 读取${desktopShell ? "·连接" : ""} <kbd>/</kbd> 检索 <kbd>ESC</kbd> 返回${desktopShell ? ' <kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>S</kbd> 主机列表 <kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>E</kbd> 收起终端' : ""}</p>`}</div><div class="settings-bottom">${!isWallpaper && document.fullscreenEnabled ? '<button data-action="fullscreen">FULLSCREEN <span>↗</span></button>' : ''}<button data-action="restart">REINITIALIZE SYSTEM <span>↻</span></button></div><div class="modal-bottom"><span>ANALYSIS OS / 1.0 · 使用 MiSans 字体（小米） <a href="${assetUrl("fonts/MiSans-license.pdf")}" target="_blank" rel="noopener">字体许可</a></span><span>POWERED BY RHINE LAB</span></div>`;
 }
 
 document.addEventListener("input", (e) => {
@@ -1047,7 +1094,7 @@ document.addEventListener("input", (e) => {
   if (volume.dataset.volume === "musicVolume" || volume.dataset.volume === "soundVolume") {
     prefs[volume.dataset.volume] = Number(volume.value) / 100;
     volume.closest("label")?.querySelector("output")?.replaceChildren(`${volume.value}%`);
-    saveAudioPrefs();
+    configureAudio();
   }
   if ((e.target as HTMLElement).id === "archive-search") {
     searchQuery = (e.target as HTMLInputElement).value;
@@ -1056,6 +1103,11 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("change", (e) => {
   const el = e.target as HTMLInputElement;
+  if (el.dataset.volume === "musicVolume" || el.dataset.volume === "soundVolume") {
+    prefs[el.dataset.volume] = Number(el.value) / 100;
+    saveAudioPrefs();
+    if (el.dataset.volume === "soundVolume") audio.play("confirm");
+  }
   if (el.id === "quality-preset" && Object.hasOwn(qualityPresets, el.value)) {
     prefs.rendering = { ...qualityPresets[el.value as QualityPreset] };
     savePrefs();
@@ -1075,6 +1127,12 @@ document.addEventListener("change", (e) => {
 document.addEventListener("click", (e) => {
   const themeButton = (e.target as Element).closest<HTMLElement>("[data-color-theme]");
   if (themeButton) { prefs.colorTheme = themeButton.dataset.colorTheme === "dark" ? "dark" : "light"; savePrefs(); return; }
+  const paletteButton = (e.target as Element).closest<HTMLElement>("button[data-color-palette]");
+  if (paletteButton) {
+    const name = paletteButton.dataset.colorPalette as ThemeName;
+    if ((THEMES as readonly string[]).includes(name)) { prefs.palette = name; setPalette(name, prefs.reduced); savePrefs(); }
+    return;
+  }
   if (!started) return;
   if (modalClosing) return;
   const el = (e.target as Element).closest<HTMLElement>("button");
@@ -1143,12 +1201,13 @@ document.addEventListener("click", (e) => {
   if (action === "column-prev") stepColumn(-1);
   if (action === "column-next") stepColumn(1);
   if (action === "open") openFile();
+  if (action === "model-viewer" && isDesktop && hostAtCard(selected)) { inspectSshHost(hostAtCard(selected)!.alias); return; }
   if (action === "model-viewer" && mode === "detail" && scene) {
     const activeScene = scene;
     // Safari does not always focus a button when it is tapped. Capture the
     // actual opener so closing the modal reliably restores the right control.
     el.focus({ preventScroll: true });
-    viewer ??= new ModelViewer($("#stage"), () => { historyNav.leave("viewer"); audio.setScene(mode); audio.play("page-close"); }, (sound) => audio.play(sound === "tick" ? "ui-tick" : sound));
+    viewer ??= new ModelViewer($(isDesktop ? "#viewport" : "#stage"), () => { historyNav.leave("viewer"); audio.setScene(mode); audio.play("page-close"); }, (sound) => audio.play(sound === "tick" ? "ui-tick" : sound));
     historyNav.enter("viewer");
     audio.setScene("viewer");
     viewer.setSuperPerformance(superPerformanceEnabled());
@@ -1602,7 +1661,10 @@ async function start() {
       document.fonts.load("600 20px MiSans", "SYNTHESIZE INFORMATION ANALYSIS OS"),
       document.fonts.load("700 20px MiSans", "RHINE LAB WELCOME TO INTERNAL DATABASE"),
     ]);
-    if (scene) bindScene(scene);
+    if (scene) {
+      bindScene(scene);
+      scene.onContextLost = () => window.rhineDesktop?.captureError?.({ category: "renderer-error", level: "warning", reason: "error" }).catch(() => {});
+    }
     savePrefs();
     ready = true;
     select(0);
@@ -1749,6 +1811,10 @@ Object.assign(window, {
     archive: () => setMode("archive"),
     detail: () => openFile(),
     select: (i: number) => select(i),
+    // Opens the preferences sheet. Automation needs this because an SSH surface
+    // guards the document against events from outside itself, so a check cannot
+    // reach the settings button in the shell behind it.
+    settings: () => openModal("settings"),
     stats: () => ({
       ...scene?.getStats(),
       threeState,
@@ -1805,14 +1871,8 @@ if (desktopShell) {
     /** Closing the enlarged terminal returns to its host, retaining the session. */
     const close = (feedback = true, destination: "host" | "overview" | "inspect" | "stay" = "host") => {
       if (feedback && (terminalRequested || panel.isOpen)) audio.play("ssh-collapse");
-      // A navigation away from an inspection must also cancel a pending
-      // reassembly, or its completion would reopen the terminal over that page.
-      if (destination !== "inspect" && (deckInspecting || deckReassembling)) {
-        deckInspecting = false;
-        deckReassembling = false;
-        deck?.setExploded(false, true);
-        syncDeckTools();
-      }
+      current.view.entryGeneration = null;
+      current.view.presentation = "returning";
       terminalRequested = false;
       sshTerminalPending = false;
       terminalClosing = panel.isOpen || panel.isClosing;
@@ -1838,12 +1898,14 @@ if (desktopShell) {
           if (mode === "detail") patchHostState(selected);
           // Wait for the camera and cover to return before focusing the
           // original controls; their DOM and scroll position stay intact.
+          restoreTerminalFocus = false;
           restoreTerminalFocus = true;
         }
       });
     };
     closeSshTerminal = close;
     openSshTerminal = () => {
+      if (viewer?.isOpen && viewer.root.dataset.kind === "terminal") { viewer.enterPrimary(); return; }
       if (!client.target) {
         notify("还没有进行中的会话，先在主机详情里连接");
         return;
@@ -1857,6 +1919,8 @@ if (desktopShell) {
       if (card !== undefined && mode !== "detail") setMode("detail");
       sessionCard = card ?? selected;
       current.view.sessionCard = sessionCard;
+      current.view.entryGeneration = client.generation;
+      current.view.presentation = "entering";
       terminalRequested = true;
       pendingDetailFocus = false;
       restoreTerminalFocus = false;
@@ -1900,16 +1964,14 @@ if (desktopShell) {
     };
     cards.onChange(() => {
       sshOverview?.update();
-      for (let lane = 0; lane < columnMemory.length; lane++) {
-        if (!columnFiles(lane).includes(columnMemory[lane])) columnMemory[lane] = columnFiles(lane)[0];
-      }
+      syncColumnMemory();
       if (!isActiveArchive(selected)) {
         const wasDetail = mode === "detail";
         select(columnFiles(fileLocation(selected).lane)[0] ?? cards.directoryCard);
         if (wasDetail) setMode("detail");
         return;
       }
-      if (fileLocation(selected).lane === cards.lane) scene?.select(selected);
+      if (cards.ownsLane(fileLocation(selected).lane)) scene?.select(selected);
       updateSelection();
       if (mode === "detail" && cards.isDirectory(selected)) {
         const total = $("#host-directory-total"), sources = $("#host-directory-sources");
@@ -1938,6 +2000,7 @@ if (desktopShell) {
         reduced: () => prefs.reduced,
         openHost: alias => { const card = cards.cardOf(alias); if (card !== undefined) openHostCard(card); },
         cardId: alias => { const card = cards.cardOf(alias); return card === undefined ? "" : records[card].id; },
+        groups: () => cards.groups,
         saved: (alias, connect) => {
           if (sshOverview?.editing) {
             sshOverview.showPage("hosts"); notify("主机及所选凭据已保存");
@@ -1967,6 +2030,7 @@ if (desktopShell) {
       else if (hosts.isEditing) setTab("overview");
     }
     openSshHosts = () => {
+      if (viewer?.isOpen) { viewer.close(() => openSshHosts()); return; }
       if (sshSurfaceActive() || !ready) return;
       // A stowed sheet cannot be routed to: bring it back before choosing a page.
       if (sshOverview) { sshOverview.setCollapsed(false); closeModal(() => { setMode("archive"); sshOverview!.showPage("hosts"); }); return; }
@@ -2027,6 +2091,7 @@ if (desktopShell) {
       answerSecret,
       cancel: () => {
         if (promptOwner !== current) return;
+        current.view.entryGeneration = null;
         if (auxiliaryRequest) {
           void services.answer("", true, auxiliaryRequest).then(result => { if (!result.ok) notify(result.error || "认证请求已结束"); });
         } else { current.manualStop = true; client.stop(); }
@@ -2060,10 +2125,11 @@ if (desktopShell) {
       prompt.hide(prefs.reduced);
     }
     cancelSshPrompt = () => {
+      current.view.entryGeneration = null;
       if (promptOwner === current && client.pendingPrompt) { current.manualStop = true; client.stop(); }
       hidePrompt();
     };
-    const startSession = async (input: string | SshLaunchDescriptor, reuse?: WorkspaceSession, background = false, project?: import("./ssh/workspace-store").ArchiveShortcut) => {
+    const startSession = async (input: string | SshLaunchDescriptor, reuse?: WorkspaceSession, background = false, project?: import("./ssh/workspace-store").ArchiveShortcut, enter = false) => {
       if (reuse?.client.active) return { ok: false as const, error: "这次会话仍在运行" };
       const descriptor = typeof input === "string" ? { target: input } : { ...input, ...(input.extraArgs ? { extraArgs: [...input.extraArgs] } : {}) };
       const context = reuse ?? (current.descriptor || client.target ? bank.create() : current);
@@ -2086,7 +2152,9 @@ if (desktopShell) {
       context.panel.setBookmarkHandler(path => {
         const saved = cards.store?.saveBookmark({ alias: descriptor.target, path, name: path.split("/").filter(Boolean).at(-1) || "/" });
         notify(saved ? "目录已加入收藏" : cards.store?.error || "目录未能保存");
-      });
+      }, cards.store, descriptor.target);
+      context.view.entryGeneration = enter || project ? context.client.generation + 1 : null;
+      context.view.presentation = enter || project ? "waiting" : "inspection";
       const result = await context.client.start({ cols: 100, rows: 30, ...descriptor });
       if (!result.ok && context === current && !background) {
         failureShown = true;
@@ -2100,7 +2168,7 @@ if (desktopShell) {
       const descriptor = context.descriptor ?? lastConnection;
       if (!descriptor) return { ok: false as const, error: "没有可重新连接的主机" };
       hidePrompt();
-      return startSession(descriptor, context);
+      return startSession(descriptor, context, false, undefined, true);
     };
     /**
      * Connect from a card's context: the alias's card becomes the selection
@@ -2119,7 +2187,7 @@ if (desktopShell) {
       if (card !== undefined && card !== selected) select(card);
       if (card !== undefined && mode !== "detail") setMode("detail");
       audio.play("open");
-      void startSession(descriptor);
+      void startSession(descriptor, undefined, false, undefined, true);
     };
     connectHostAlias = (alias: string, newSession = false) => {
       const host = [...cards.bound, ...cards.overflow].find(entry => entry.alias === alias);
@@ -2131,6 +2199,7 @@ if (desktopShell) {
         return;
       }
       connectLaunch({ target: alias, displayName: host ? hostLabel(host) : alias }, newSession);
+
     };
     openHostSession = alias => {
       const context = bank.forAlias(alias);
@@ -2204,11 +2273,10 @@ if (desktopShell) {
         ...bank.visibleSessions.filter(session => session !== current).map(session => ({ value: "session:" + session.key, label: session.project?.name || session.client.displayTarget || session.descriptor?.target || "SSH" })),
         ...cards.bound.map(host => ({ value: "host:" + host.alias, label: "新连接 / " + hostLabel(host) })),
       ]);
-      panel.onTeardown = () => setDeckInspecting(true);
       const items = bank.visibleSessions.map(session => ({ key: session.key,
         label: `${records[cards.resourceCard("session", session.key) ?? -1]?.id || "SSH"} / ${session.client.displayTarget || session.descriptor?.displayName || session.descriptor?.target || "SSH"}`,
         state: session.client.pendingPrompt || session.services.state?.prompt ? "等待认证" : session.recovery || session.client.status().label,
-        unread: session.unread, alert: session.alert,
+        alert: session.alert,
         transfers: session.services.state?.jobs.filter(job => ["queued", "scanning", "transferring", "committing", "conflict"].includes(job.state)).length || 0 }));
       panel.setSessionNavigation(items, current.key, key => {
         const next = bank.byKey(key);
@@ -2273,7 +2341,7 @@ if (desktopShell) {
      * leaves the user with nothing to do if it does not.
      */
     function revealTerminal(status: ReturnType<SshClient["status"]> = client.status()) {
-      if (revealed || panel.isOpen || auditOpen || !client.target) return;
+      if (revealed || panel.isOpen || auditOpen || viewer?.isOpen || !client.target || current.view.entryGeneration !== client.generation) return;
       if (status.phase !== "interactive") return;
       openSshTerminal?.();
       revealed = true;
@@ -2287,10 +2355,6 @@ if (desktopShell) {
         interactiveGeneration = -1;
         // A reconnect closes the package on its own schedule, so the stack is
         // put back in one step rather than springing shut inside it.
-        deckInspecting = false;
-        deckReassembling = false;
-        deck?.setExploded(false, true);
-        syncDeckTools();
         panel.hide(true);
         scene?.setSessionDeckState("packed");
         sessionCard = cards.resourceAt(selected)?.alias === client.target ? selected : cards.cardOf(client.target ?? "") ?? selected;
@@ -2387,71 +2451,36 @@ if (desktopShell) {
      * deck comes forward at operating size. Created lazily and re-created if
      * the scene was reloaded (a disposed scene takes its deck with it).
      */
-    const { TerminalDeck } = await import("./ssh/terminal-deck");
+    const { TerminalDeck, TERMINAL_INSPECTION_PARTS } = await import("./ssh/terminal-deck");
     let deck: Awaited<ReturnType<typeof TerminalDeck.load>> | null = null;
     let deckOwner: ArchiveScene | null = null;
     let deckLoading: ArchiveScene | null = null;
     let deckBroken: ArchiveScene | null = null;
-    /**
-     * The terminal's own "拆解档案", in place.
-     *
-     * The package stays open while the stack is apart — that is what the extra
-     * term in `setSessionDeckState` below is for — and the real xterm steps off
-     * the screen, because an exploded panel is no longer where the projection
-     * says it is. Reassembly puts it back, which is the whole loop: separate to
-     * look at the machine, close it up to use it.
-     *
-     * The two ends of that loop are in different places, and deliberately so.
-     * Opening it is offered from the terminal bar, because `SurfaceScope` makes
-     * the terminal modal — everything beside it is inert and its events are
-     * swallowed — so a control drawn in the scene cannot be reached while the
-     * terminal is open, which is exactly when the deck is at operating size.
-     * Closing it is offered in the scene, which is interactive again the moment
-     * the terminal steps off the screen.
-     */
-    let deckInspecting = false;
-    let deckReassembling = false;
-    const deckTools = document.createElement("div");
-    deckTools.className = "deck-tools";
-    deckTools.hidden = true;
-    deckTools.innerHTML = `<span class="deck-tools-label">TERMINAL / 终端内胆已拆解</span><button type="button" data-deck-action="assemble" aria-pressed="false"><span>−</span> 一键重组</button>`;
-    $("#viewport").append(deckTools);
-    deckTools.addEventListener("click", event => {
-      const button = (event.target as Element).closest<HTMLButtonElement>("[data-deck-action]");
-      if (!button || button.disabled || !deck) return;
-      event.stopPropagation();
-      setDeckInspecting(false);
-    });
-    panel.onTeardown = () => setDeckInspecting(true);
-    function setDeckInspecting(value: boolean) {
-      if (value === deckInspecting || !deck) return;
-      deckInspecting = value;
-      deck.setExploded(value);
-      audio.play(value ? "explode" : "assemble");
-      if (value) {
-        // The xterm is pinned to four corners of a screen that is about to move
-        // away from them, so it leaves first. Inspection keeps the card
-        // underneath, which is what is being inspected.
-        if (terminalRequested || panel.isOpen) close(true, "inspect");
-        deckReassembling = false;
-      } else {
-        // Reopen only once the plates are home, so the terminal does not land
-        // on a stack that is still closing.
-        deckReassembling = true;
-      }
-      syncDeckTools();
-    }
-    /** The bar's entry point: only offered once there is a stack at full size. */
-    function syncDeckTools() {
-      const ready = scene?.sessionDeckReady ?? false;
-      panel.setTeardownAvailable(ready && !deckInspecting);
-      deckTools.hidden = !deckInspecting || mode !== "detail" || selected !== sessionCard;
-      for (const button of deckTools.querySelectorAll<HTMLButtonElement>("[data-deck-action]")) {
-        const assemble = button.dataset.deckAction === "assemble";
-        button.disabled = deckReassembling && assemble;
-        button.setAttribute("aria-pressed", String(assemble));
-      }
-    }
+    let inspectionTicket = 0;
+    inspectSshHost = (alias, fresh = false) => {
+      if (viewer?.isOpen) return;
+      const host = [...cards.bound, ...cards.overflow].find(entry => entry.alias === alias);
+      const existing = fresh ? undefined : bank.forAlias(alias);
+      const card = cards.cardOf(alias);
+      if (card !== undefined) openHostCard(card);
+      if (existing) { activateContext(existing, false); existing.view.presentation = "inspection"; existing.view.entryGeneration = null; }
+      const owner = scene;
+      const ticket = ++inspectionTicket;
+      const session = existing ?? current;
+      const generation = session.client.generation;
+      viewer ??= new ModelViewer($("#viewport"), () => { historyNav.leave("viewer"); audio.setScene(mode); }, sound => audio.play(sound === "tick" ? "ui-tick" : sound));
+      historyNav.enter("viewer"); audio.setScene("viewer");
+      viewer.setSuperPerformance(superPerformanceEnabled()); viewer.setQuality(effectiveRenderQuality());
+      viewer.open(card === undefined ? "SSH" : records[card].id, host ? hostLabel(host) : alias,
+        () => owner ? TerminalDeck.inspection(session.client, session.panel, () => owner.createAssemblyModel()) : Promise.reject(new Error("模型场景不可用")),
+        prefs.reduced, { kind: "terminal", parts: TERMINAL_INSPECTION_PARTS, exploded: true,
+          primary: { label: "进入终端 ↗", run: () => {
+            if (ticket !== inspectionTicket || session.client.generation !== generation || (card !== undefined && selected !== card)) return;
+            if (existing?.client.active) { activateContext(existing, false); openSshTerminal?.(); }
+            else connectLaunch({ target: alias, displayName: host ? hostLabel(host) : alias }, fresh);
+          } },
+        });
+    };
     const ensureDeck = () => {
       const owner = scene;
       if (!owner || deckBroken === owner || deckLoading === owner || (deckOwner === owner && owner.hasSessionDeck)) return;
@@ -2508,7 +2537,7 @@ if (desktopShell) {
       openCard: openHostCard,
       openSession: openWorkspace,
       connect: (alias, path) => {
-        connectHostAlias(alias);
+        connectLaunch({ target: alias });
         pendingWorkspacePage = { key: current.key, page: "files", path };
       },
       openHosts: openSshHosts,
@@ -2592,7 +2621,7 @@ if (desktopShell) {
       // archive, the prompt and the DOM terminal all outrank the 3D mirror.
       const resource = mode !== "boot" ? cards.resourceAt(selected) : undefined;
       const host = hostAtCard(selected);
-      if ((terminalRequested || deckInspecting || deckReassembling) && (mode !== "detail" || selected !== sessionCard)) close(false, "stay");
+      if (terminalRequested && (mode !== "detail" || selected !== sessionCard)) close(false, "stay");
       if (deckOwner === scene && scene && !scene.hasSessionDeck) {
         deckBroken = scene; deckOwner = null; deck = null;
         notify("三维终端已停用，会话继续保留在常规终端中");
@@ -2613,7 +2642,7 @@ if (desktopShell) {
       // that term the lid would swing shut the moment the terminal stepped off
       // the screen, with the stack already separated inside it.
       scene?.setSessionOpeningDuration(sshPreferences.value.animation === "first" && openedArchives.has(records[selected]?.id || "") ? .6 : 2.1);
-      scene?.setSessionDeckState(resource ? ((terminalRequested || terminalClosing || deckInspecting) && operating ? "open" : "packed") : "off");
+      scene?.setSessionDeckState(resource ? ((terminalRequested || terminalClosing) && operating ? "open" : "packed") : "off");
       $("#stage").dataset.sshDeck = String(Boolean(resource && scene?.hasSessionDeck));
       const covered = panel.isOpen && !panel.isClosing && !sshPromptOpen && !auditOpen && !modal && !viewer?.isOpen;
       scene?.setSessionSurfaceCovered(covered && panel.isProjected);
@@ -2632,15 +2661,6 @@ if (desktopShell) {
         const retired = retiringLastSession; retiringLastSession = null;
         removeClosedSession(retired);
       }
-      // The plates are home: hand the screen back to the terminal. Waiting for
-      // the spring rather than a timer keeps this tied to what is on screen.
-      if (deckReassembling && (scene?.sessionDeckSpread ?? 0) < 0.01) {
-        deckReassembling = false;
-        deckInspecting = false;
-        syncDeckTools();
-        openSshTerminal?.();
-      }
-      syncDeckTools();
       $("#stage").style.setProperty("--ssh-focus", String(scene?.sessionDeckFocus ?? 0));
       if (restoreTerminalFocus && !sshSurfaceActive() && (scene?.sessionDeckFocus ?? 0) < .01) {
         const connect = $("#host-connect");
@@ -2655,13 +2675,12 @@ if (desktopShell) {
       const projection = scene?.projectSessionScreen();
       if ((panel.isOpen || panel.isClosing) && panel.isProjected && projection) panel.setProjection(projection);
       if (panel.isOpen && !panel.isClosing && !prompt.isOpen && !audit.isOpen) {
+        current.view.presentation = "terminal";
         openedArchives.add(records[selected]?.id || "");
-        if (!document.hidden && panel.isUsable) current.unread = false;
         const splitOwner = current, splitPeer = bank.byKey(current.splitKey || "");
         panel.setSplit(splitPeer?.panel, current.splitRatio || current.project?.layout?.splitRatio || .5,
           ratio => saveSplit(splitOwner, splitPeer?.descriptor?.target || "", ratio),
           () => chooseSplit(splitOwner, "none"));
-        if (!document.hidden && splitPeer?.panel.isUsable) splitPeer.unread = false;
         if (pendingWorkspacePage?.key === current.key) {
           const request = pendingWorkspacePage; pendingWorkspacePage = null;
           panel.selectPage(request.page);
@@ -2683,7 +2702,7 @@ if (desktopShell) {
       if (card === undefined || !scene || deckBroken === scene || endedBeforeShell) {
         panel.show(prefs.reduced);
         sshTerminalPending = false;
-      } else if (scene.sessionDeckReady && projection) {
+      } else if (scene.sessionDeckReady && projection && scene.sessionDeckFocus >= 1) {
         panel.show(prefs.reduced, projection);
         sshTerminalPending = false;
       }
@@ -2736,16 +2755,18 @@ if (desktopShell) {
     const quickSearch = new SshQuickSearch(cards, bank, {
       reduced: () => prefs.reduced, host: alias => connectHostAlias(alias), shortcut: id => openSshShortcut(id, true),
       session: key => { const context = bank.byKey(key); if (context) openWorkspace(context); },
-      bookmark: (alias, path) => { const context = bank.forAlias(alias); if (context?.client.active) openWorkspace(context, "files", path); else { connectHostAlias(alias); pendingWorkspacePage = { key: current.key, page: "files", path }; } },
+      bookmark: (alias, path) => { const context = bank.forAlias(alias); if (context?.client.active) openWorkspace(context, "files", path); else { connectLaunch({ target: alias }); pendingWorkspacePage = { key: current.key, page: "files", path }; } },
       command: id => { const card = cards.resourceCard("command", id); if (card !== undefined) { close(false, "overview"); setMode("archive"); overview.openResource(card); } },
     });
     openQuickSearch = () => quickSearch.open();
     const { SshSettingsPanel } = await import("./ssh/settings-panel");
     const workspaceSettings = new SshSettingsPanel(cards.store!, {
       reduced: () => prefs.reduced, system: () => openModal("settings"), tunnels: () => tunnelPanel.open(),
+      security: () => { close(false, "overview"); setMode("archive"); overview.showPage("keys"); },
       imported: async () => { await hosts.refresh(); library.refresh(); overview.update(); syncSessionNavigation(); }, notify,
     });
     openWorkspacePreferences = () => workspaceSettings.open();
+    openSettingsSection = section => workspaceSettings.open(section);
     void hosts.refresh().then(() => {
       overview.update();
       if (mode === "detail" && cards.isDirectory(selected) && !hosts.isOpen) setTab(activeTab, false);
@@ -2818,7 +2839,7 @@ if (desktopShell) {
     });
     Object.defineProperty(window, "rhineSsh", { configurable: true, get: () => client });
     if (import.meta.hot) import.meta.hot.dispose(() => {
-      workspaceSettings.dispose(); tunnelPanel.dispose(); quickSearch.dispose(); health.dispose(); clearTimeout(catalogTimer); offBank(); overview.dispose(); desktopModalScope?.dispose(); library.dispose(); eventAudio.dispose(); bank.dispose(); prompt.dispose(); audit.dispose(); hosts.dispose(); deckTools.remove();
+      workspaceSettings.dispose(); tunnelPanel.dispose(); quickSearch.dispose(); health.dispose(); clearTimeout(catalogTimer); offBank(); overview.dispose(); desktopModalScope?.dispose(); library.dispose(); eventAudio.dispose(); bank.dispose(); prompt.dispose(); audit.dispose(); hosts.dispose(); inspectionTicket++;
     });
   });
 }

@@ -1,3 +1,4 @@
+import { enterInspection } from './enter-inspection.mjs';
 /** Real desktop UI/xterm in the isolated browser fixture, no OS clipboard use. */
 export async function checkTerminalTools({
   evaluate,
@@ -93,6 +94,17 @@ export async function checkTerminalTools({
   );
   await search("中文匹配");
   await until("wide character matches", matches(2));
+  await check(
+    "search selection does not automatically overwrite the clipboard",
+    `__deckFixture.clipboard.writes.length === 0`,
+  );
+  await focusTerminal();
+  await key("c", "KeyC", 67, 2);
+  await until("Ctrl+C copied selection", `__deckFixture.clipboard.text === '中文匹配'`);
+  await check(
+    "Ctrl+C with a selection copies through the desktop bridge without interrupting SSH",
+    `__deckFixture.writes.length === __toolsWrites`,
+  );
   await click("copy");
   await until(
     "copied selection",
@@ -174,6 +186,19 @@ export async function checkTerminalTools({
     `['\x1b','\t','\x1b[A','\x03','\x06'].every(value => __deckFixture.writes.includes(value)) && rhineSshUi.isOpen`,
   );
 
+  await output("\x1b[?1049h\x1b[2J\x1b[HAUTO_COPY_MOUSE");
+  await until("mouse selection output", `document.querySelector('.xterm-rows').textContent.includes('AUTO_COPY_MOUSE')`);
+  const cell = await evaluate(`(() => {
+    const row = document.querySelector('.xterm-rows > div').getBoundingClientRect();
+    return { x: row.left, y: row.top + row.height / 2, width: row.width / __deckFixture.sizes.at(-1)[0] };
+  })()`);
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x: cell.x + cell.width * .2, y: cell.y, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: cell.x + cell.width * 15, y: cell.y, button: "left", buttons: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: cell.x + cell.width * 15, y: cell.y, button: "left", clickCount: 1 });
+  await until("mouse selection copied automatically", `__deckFixture.clipboard.text === 'AUTO_COPY_MOUSE'`);
+  await check("mouse selection writes the desktop clipboard", `__deckFixture.clipboard.writes.at(-1) === 'AUTO_COPY_MOUSE'`);
+  await output("\x1b[?1049l");
+
   await output("\x1b[?2004h\r\nBRACKETED_PASTE_READY\r\n");
   await until(
     "paste mode parsed",
@@ -190,6 +215,17 @@ export async function checkTerminalTools({
     "paste uses bracketed mode and adds no execution newline",
     `__deckFixture.writes.at(-1) === ${JSON.stringify("\x1b[200~echo one\rprintf 二\x1b[201~")} && document.activeElement === document.querySelector('${textarea}')`,
   );
+  for (const [label, value, code, keyCode, modifiers] of [
+    ["Ctrl+V", "v", "KeyV", 86, 2],
+    ["Shift+Insert", "Insert", "Insert", 45, 8],
+    ["Meta+V", "v", "KeyV", 86, 4],
+  ]) {
+    await evaluate(`window.__shortcutWrites = __deckFixture.writes.length; window.__shortcutReads = __deckFixture.clipboard.reads; __deckFixture.clipboard.text = ${JSON.stringify(label)}`);
+    await key(value, code, keyCode, modifiers);
+    await until(label + " paste", `__deckFixture.writes.length > __shortcutWrites`);
+    await check(label + " pastes exactly once through the clipboard bridge",
+      `__deckFixture.writes.length === __shortcutWrites + 1 && __deckFixture.clipboard.reads === __shortcutReads + 1 && __deckFixture.writes.at(-1) === ${JSON.stringify("\x1b[200~" + label + "\x1b[201~")}`);
+  }
   await evaluate(
     `window.__pasteWrites = __deckFixture.writes.length; __deckFixture.clipboard.text = ''`,
   );
@@ -279,26 +315,26 @@ export async function checkTerminalTools({
   );
   await check(
     "font controls affect terminal text and its PTY dimensions",
-    `getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '18px' && localStorage.getItem('rhine-ssh-terminal-font-size') === '18'`,
+    `getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '15px' && localStorage.getItem('rhine.ssh.terminal-appearance') !== null && JSON.parse(localStorage.getItem('rhine.ssh.terminal-appearance')).size === 15`,
   );
   await evaluate(
-    `for (let i = 0; i < 12; i++) document.querySelector('[data-terminal-tool="larger"]').click()`,
+    `for (let i = 0; i < 20; i++) document.querySelector('[data-terminal-tool="larger"]').click()`,
   );
   await check(
-    "font upper bound is 24",
-    `document.querySelector('[data-terminal-tool="font"]').textContent === '24' && document.querySelector('[data-terminal-tool="larger"]').disabled`,
+    "font upper bound is 32",
+    `document.querySelector('[data-terminal-tool="font"]').textContent === '32' && document.querySelector('[data-terminal-tool="larger"]').disabled`,
   );
   await evaluate(
-    `for (let i = 0; i < 20; i++) document.querySelector('[data-terminal-tool="smaller"]').click()`,
+    `for (let i = 0; i < 40; i++) document.querySelector('[data-terminal-tool="smaller"]').click()`,
   );
   await check(
-    "font lower bound is 12",
-    `document.querySelector('[data-terminal-tool="font"]').textContent === '12' && document.querySelector('[data-terminal-tool="smaller"]').disabled`,
+    "font lower bound is 8",
+    `document.querySelector('[data-terminal-tool="font"]').textContent === '8' && document.querySelector('[data-terminal-tool="smaller"]').disabled`,
   );
   await click("font");
   await check(
     "current size restores the default when clicked",
-    `document.querySelector('[data-terminal-tool="font"]').textContent === '16'`,
+    `document.querySelector('[data-terminal-tool="font"]').textContent === '13'`,
   );
   await click("larger");
   await click("larger");
@@ -316,12 +352,13 @@ export async function checkTerminalTools({
   await search("中文匹配");
   await until("search disconnected buffer", matches(3));
   await evaluate(`rhineSshUi.closeTerminal()`);
-  await until("before reconnect", `rhine.stats().sessionDeck.progress === 0`);
+  await until("before reconnect", `!rhineSshUi.isOpen && rhine.stats().sessionDeck.progress === 0`);
   await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
   await until("new authentication", `rhineSshUi.promptKind === 'password'`);
-  await check(
-    "reconnection clears the previous search query",
-    `document.querySelector('${query}').value === ''`,
+  await until(
+    "terminal remounts only after the new session is ready",
+    `rhineSshUi.promptKind === 'password' && document.querySelectorAll('.ssh-terminal .xterm').length === 0`,
   );
   await evaluate(
     `rhineSshUi.answerSecret('new-session'); __deckFixture.interactive()`,
@@ -329,6 +366,10 @@ export async function checkTerminalTools({
   await until(
     "new session ready",
     `rhineSshUi.hasFocus && rhine.stats().sessionDeck.ready`,
+  );
+  await check(
+    "reconnection clears the previous search query",
+    `document.querySelectorAll('.ssh-terminal .xterm').length === 1 && document.querySelector('${query}').value === ''`,
   );
   await until(
     "old clipboard read finished",
@@ -340,7 +381,7 @@ export async function checkTerminalTools({
   );
   await check(
     "reconnection preserves font preference and a single fresh terminal",
-    `document.querySelectorAll('.ssh-terminal .xterm').length === 1 && getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '18px'`,
+    `document.querySelectorAll('.ssh-terminal .xterm').length === 1 && getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '15px'`,
   );
   await evaluate(
     `__deckFixture.end(0); localStorage.setItem('rhine-settings', JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings')),colorTheme:'dark',reduced:true}))`,
@@ -351,6 +392,7 @@ export async function checkTerminalTools({
     `window.rhine?.stats().ready && !!window.rhineSshUi`,
   );
   await evaluate(`rhineSshUi.connectHost('review-host')`);
+  await enterInspection({ evaluate, until });
   await until(
     "reduced auth",
     `rhineSshUi.promptKind === 'password' && rhine.stats().sessionDeck.available`,
@@ -364,7 +406,7 @@ export async function checkTerminalTools({
   );
   await check(
     "font preference survives an application reload",
-    `getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '18px'`,
+    `getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '15px'`,
   );
   await key("F", "KeyF", 70, 10);
   await search("中文");
@@ -373,9 +415,27 @@ export async function checkTerminalTools({
     "reduced motion shows footer controls immediately without animations",
     `document.querySelector('${panel}').dataset.transition === 'open' && document.querySelector('${panel}').getAnimations({subtree:true}).length === 0`,
   );
+  evidence.darkTools = await evaluate(
+    `({dark:document.querySelector('.ssh-terminal').dataset.dark, color:getComputedStyle(document.querySelector('${query}')).color, terminalFg:getComputedStyle(document.querySelector('.ssh-terminal')).getPropertyValue('--terminal-fg').trim(), colorTheme:JSON.parse(localStorage.getItem('rhine-settings')||'{}').colorTheme})`,
+  );
+  await check(
+    "terminal surface follows the dark color theme",
+    `document.querySelector('.ssh-terminal').dataset.dark === 'true'`,
+  );
   await check(
     "tools inherit the terminal dark theme",
-    `document.querySelector('.ssh-terminal').dataset.dark === 'true' && getComputedStyle(document.querySelector('${query}')).color === 'rgb(236, 231, 221)'`,
+    `getComputedStyle(document.querySelector('${query}')).color === 'rgb(226, 233, 231)'`,
+  );
+  await check(
+    "dark terminal error text retains readable contrast",
+    `(() => {
+      const root = document.querySelector('.ssh-terminal');
+      const rgb = value => value.match(/[\\d.]+/g).slice(0,3).map(Number).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+      const luma = value => rgb(value).reduce((sum,v,i) => sum + v * [.2126,.7152,.0722][i], 0);
+      const fg = luma(getComputedStyle(root.querySelector('.ssh-terminal-exit')).color);
+      const bg = luma(getComputedStyle(root).backgroundColor);
+      return (Math.max(fg,bg)+.05)/(Math.min(fg,bg)+.05) >= 4.5;
+    })()`,
   );
   await shot("tools-dark-search");
   for (const [width, height] of [
@@ -410,4 +470,123 @@ export async function checkTerminalTools({
     `document.querySelector('${panel}').hidden && document.activeElement === document.querySelector('${textarea}')`,
   );
   await evaluate(`__deckFixture.end(0)`);
+  await check(
+    "volume input updates audio live but persists only on commit without unmuting",
+    `(() => {
+      const before = localStorage.getItem('rhine-settings');
+      const sound = rhine.stats().audio.preferences.sound;
+      const slider = document.createElement('input');
+      slider.type = 'range'; slider.dataset.volume = 'soundVolume';
+      document.body.append(slider);
+      try {
+        slider.value = '37'; slider.dispatchEvent(new Event('input', {bubbles:true}));
+        const live = rhine.stats().audio.preferences.soundVolume === .37 && localStorage.getItem('rhine-settings') === before;
+        slider.dispatchEvent(new Event('change', {bubbles:true}));
+        return live && JSON.parse(localStorage.getItem('rhine-settings')).soundVolume === .37 && rhine.stats().audio.preferences.sound === sound;
+      } finally { slider.remove(); }
+    })()`,
+  );
+  await check(
+    "performance preference preserves the unblurred overview material",
+    `(() => {
+      const toggle = document.createElement('input');
+      toggle.type = 'checkbox'; toggle.dataset.pref = 'superPerformance'; document.body.append(toggle);
+      const glass = document.querySelector('.ssh-overview-glass');
+      try {
+        toggle.checked = true; toggle.dispatchEvent(new Event('change', {bubbles:true}));
+        const reduced = getComputedStyle(glass).backdropFilter === 'none';
+        toggle.checked = false; toggle.dispatchEvent(new Event('change', {bubbles:true}));
+        return reduced && getComputedStyle(glass).backdropFilter === 'none' && !JSON.parse(localStorage.getItem('rhine-settings')).superPerformance;
+      } finally { toggle.remove(); }
+    })()`,
+  );
+  // --- palettes ---
+  // The terminal panel is a full-window surface, so it must take its colours
+  // from the same palette as the rest of the application rather than a set of
+  // its own — otherwise the window caption and the bar under it disagree.
+  const themeColours = `({paper:getComputedStyle(document.documentElement).getPropertyValue('--theme-paper').trim(), terminal:getComputedStyle(document.querySelector('.ssh-terminal')).backgroundColor})`;
+  const beforePalette = await evaluate(themeColours);
+  await check(
+    "the terminal panel takes its background from the active palette",
+    `${beforePalette.terminal === beforePalette.paper}`,
+  );
+  // The probe has to live inside the SSH surface: its scope installs a
+  // capture-phase guard that swallows any event whose target is outside the
+  // open surface, so a button on `document.body` never reaches the application.
+  const pickPalette = (name) =>
+    evaluate(`(() => {
+      const button = document.createElement('button');
+      button.dataset.colorPalette = ${JSON.stringify(name)};
+      const host = document.querySelector('.ssh-terminal');
+      host.append(button);
+      try { button.click(); } finally { button.remove(); }
+    })()`);
+  await pickPalette("cool");
+  // The preference is written synchronously but `paintTheme` runs on the next
+  // animation frame, so a single read can land before the repaint.
+  await until(
+    "the new palette repaints",
+    `getComputedStyle(document.documentElement).getPropertyValue('--theme-paper').trim() !== ${JSON.stringify(beforePalette.paper)}`,
+  );
+  const cooled = await evaluate(themeColours);
+  evidence.palette = { before: beforePalette, after: cooled };
+  await check(
+    "choosing a palette recolours the application and its terminal together",
+    `${cooled.paper !== beforePalette.paper && cooled.terminal === cooled.paper}`,
+  );
+  await check(
+    "a palette choice is remembered",
+    `JSON.parse(localStorage.getItem('rhine-settings')||'{}').palette === 'cool'`,
+  );
+  // Put it back so the run leaves the fixture profile as it found it.
+  await pickPalette("warm");
+  await evaluate(`rhine.settings()`);
+  await until("settings panel opens", `!!document.querySelector('[data-color-palette]')`);
+  await check(
+    "the settings panel offers ten preview palettes with the current one marked",
+    `(() => {
+      const buttons = [...document.querySelectorAll('button[data-color-palette]')];
+      const pressed = buttons.filter(button => button.getAttribute('aria-pressed') === 'true');
+      return buttons.length === 10 && buttons.every(button => button.querySelector('.theme-sample')) && pressed.length === 1 && pressed[0].dataset.colorPalette === 'warm';
+    })()`,
+  );
+  await shot("settings-palettes");
+  await send("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
+  for (const mode of ["dark", "light"]) {
+    await evaluate(`document.querySelector('button[data-color-theme="${mode}"]').click()`);
+    await sleep(300);
+  for (const name of ["warm", "cool", "sand", "phosphor", "hologram", "amber", "nova", "cryo", "hazard", "voidwave"]) {
+    await evaluate(`document.querySelector('button[data-color-palette="${name}"]').click()`);
+    await sleep(450);
+    await check(`${name}: ${mode} settings controls retain readable contrast`, `(() => {
+      const luma = value => value.match(/[\\d.]+/g).slice(0, 3).map(Number).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
+      return [...document.querySelectorAll('.quality-settings select, .theme-choices button')].every(node => {
+        const style = getComputedStyle(node), fg = luma(style.color), bg = luma(style.backgroundColor);
+        return (Math.max(fg, bg) + .05) / (Math.min(fg, bg) + .05) >= 4.5;
+      });
+    })()`);
+    await check(`${name}: ${mode} secondary text and control boundaries meet contrast targets`, `(() => {
+      const style=getComputedStyle(document.documentElement);
+      const rgb=name=>style.getPropertyValue(name).match(/[\\d.]+/g).slice(0,3).map(Number);
+      const luma=rgb=>rgb.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);
+      const ratio=(a,b)=>(Math.max(luma(a),luma(b))+.05)/(Math.min(luma(a),luma(b))+.05);
+      return ['paper','panel','field','glass'].every(surface=>ratio(rgb('--theme-muted'),rgb('--theme-'+surface))>=4.5 && ratio(rgb('--ui-control-line'),rgb('--theme-'+surface))>=3 && ratio(rgb('--ui-focus'),rgb('--theme-'+surface))>=3);
+    })()`);
+    if (["hologram", "hazard", "voidwave"].includes(name)) await shot(`settings-${name}-${mode}`);
+  }
+  }
+  await evaluate(`document.querySelector('[data-settings-section="terminal"]').click()`);
+  await until('shared terminal settings', `!!document.querySelector('.ssh-workspace-settings:not([hidden])')`);
+  for(const section of ['terminal','connection','security','data']) {
+    await evaluate(`document.querySelector('.ssh-workspace-settings [data-settings-section="${section}"]').click()`);
+    await check(`settings route ${section} shows only its own controls`, `[...document.querySelectorAll('.ssh-workspace-settings fieldset')].every(field=>field.hidden === (field.dataset.section !== '${section}'))`);
+  }
+  await shot('settings-data');
+  await evaluate(`document.querySelector('.ssh-workspace-settings [data-settings-section="appearance"]').click()`);
+  await until('appearance settings return', `!!document.querySelector('.settings-modal')`);
+  await evaluate(`document.querySelector('[data-color-theme="dark"]').click()`); await sleep(300);
+  await evaluate(`document.querySelector('[data-action="close-modal"]').click()`);
+  await until("settings close button still works after choosing a theme", `!document.querySelector('.settings-modal')`);
+  await check("theme selection does not swallow ordinary menu actions", `!document.querySelector('.settings-modal')`);
+  await shot("terminal-voidwave");
 }

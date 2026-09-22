@@ -16,8 +16,25 @@
   letter-spacing: 0;
   touch-action: pan-y;
 }
+/* Electron's Windows titleBarOverlay owns the first 40 DIPs of the window.
+   Keeping a utility sheet at 24px put its top-right button on that boundary;
+   DPI/stage rounding could then classify the button as window chrome, so it
+   neither received hover nor click. Keep the whole sheet below the caption
+   hit area and explicitly opt every interactive descendant out of dragging. */
+html[data-desktop="true"] .ssh-utility-surface {
+  top: max(48px, env(safe-area-inset-top));
+  -webkit-app-region: no-drag;
+}
+html[data-desktop="true"] .ssh-utility-surface :is(button, input, select, textarea, a, summary, .cm-editor) {
+  -webkit-app-region: no-drag;
+}
 .ssh-utility-surface[hidden] {
   display: none;
+}
+/* A surface above this one in the stack takes its input; leaving it fully
+   visible would leave a screen of buttons that only look alive. */
+.ssh-utility-surface[data-surface-covered="true"] {
+  visibility: hidden;
 }
 .ssh-utility-surface header {
   display: flex;
@@ -94,6 +111,17 @@
 .ssh-editor-status {
   min-height: 20px;
   margin: 0 0 6px;
+}
+/* A save is either confirmed or not, and the reader has to be able to tell at a
+   glance: the two outcomes read the same in running text. */
+.ssh-editor-status:not([data-state]) {
+  color: var(--ssh-text-accent, var(--terminal-muted));
+}
+.ssh-editor-status[data-state="saved"] {
+  color: var(--ssh-low, #4a7f5c);
+}
+.ssh-editor-status[data-state="failed"] {
+  color: var(--ssh-high, #a8412f);
 }
 .ssh-text-editor .cm-scroller {
   touch-action: pan-y;

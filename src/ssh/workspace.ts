@@ -3,7 +3,7 @@ import { MonitorPanel } from "./monitor-panel";
 import { TransferPanel } from "./transfer-panel";
 import { SshPageMotion } from "./page-motion";
 import type { SshServicesClient } from "./services";
-import type { WorkspaceLayout } from "./workspace-store";
+import type { WorkspaceLayout, WorkspaceStore } from "./workspace-store";
 import "./workspace.css";
 
 export const WORKSPACE_NAV = `<nav class="ssh-workspace-tabs" role="tablist" aria-label="SSH 工作区" hidden><button type="button" role="tab" data-workspace-page="terminal" aria-controls="ssh-terminal-main">终端</button><button type="button" role="tab" data-workspace-page="files" aria-controls="ssh-workspace-files">文件</button><button type="button" role="tab" data-workspace-page="monitor" aria-controls="ssh-workspace-monitor">监控</button></nav>`;
@@ -212,7 +212,14 @@ export class SshWorkspace {
     return this.files.openDirectory(path);
   }
   showTransfers() { this.queue.show(); }
-  setBookmarkHandler(handler: (path: string) => void) { this.files.onBookmark = handler; }
+  setBookmarkHandler(handler: (path: string) => void, store?: WorkspaceStore, alias = "") {
+    this.files.onBookmark = handler;
+    this.files.setBookmarkStore(store, alias);
+  }
+  /** Lets the file panel hand a command to this session's shell. */
+  setTerminalCommand(handler: (command: string) => boolean) {
+    this.files.onTerminalCommand = handler;
+  }
   setLayout(saved: WorkspaceLayout | undefined, write: (layout: WorkspaceLayout) => void) {
     this.saveLayout = write;
     if (saved) { this.width = saved.width; this.page = saved.page; this.savedSplit = { splitAlias: saved.splitAlias, splitRatio: saved.splitRatio }; this.initialized = true; }

@@ -33,6 +33,12 @@
     inset 0 1px #ffffff48,
     0 22px 70px #11262d1c;
   overflow: hidden;
+  transform: translate3d(var(--overview-x, 0), var(--overview-y, 0), 0);
+}
+html[data-super-performance="true"] .ssh-overview-glass,
+html[data-super-performance="true"] .ssh-overview .ssh-overview-restore {
+  backdrop-filter: none;
+  background: rgb(var(--theme-glass-rgb, 240, 242, 235));
 }
 .ssh-overview-glass::before {
   content: "";
@@ -62,7 +68,13 @@
   justify-content: space-between;
   padding: 24px 32px 12px;
   gap: 20px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
 }
+.ssh-overview-heading :is(button, input, select, textarea, a) { cursor: pointer; }
+.ssh-overview-glass[data-dragging="true"] .ssh-overview-heading { cursor: grabbing; }
+.ssh-overview-glass[data-dragging="true"] { transition: none; }
 .ssh-overview-heading > div > span,
 .ssh-catalog-heading > div > span {
   font-size: 11px;
@@ -110,7 +122,7 @@
    screen. `100%` is the sheet's own height, which already scales with the
    viewport through `min(780px, 76vh)`. */
 .ssh-overview[data-collapsed="true"] .ssh-overview-glass {
-  transform: translateY(calc(100% + 140px));
+  transform: translate3d(var(--overview-x, 0), calc(var(--overview-y, 0px) + 100% + 140px), 0);
   opacity: 0;
   pointer-events: none;
 }
@@ -246,6 +258,71 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--theme-line) transparent;
+}
+/* The group chips, above the host list: filter, create, rename in place. */
+/* Indented to the search field's own 32px and right under it, so the strip reads
+   as part of that row rather than as a band across the panel. */
+.ssh-overview-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 32px 8px;
+}
+.ssh-overview-groups button {
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-line) 70%, transparent);
+  background: transparent;
+  color: var(--theme-ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ssh-overview-groups button[aria-pressed="true"] {
+  border-color: var(--ssh-cyan);
+  color: var(--ssh-cyan);
+}
+.ssh-overview-groups button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ssh-overview-group-chip {
+  display: inline-flex;
+  align-items: center;
+}
+.ssh-overview-group-chip > button:first-child {
+  border-right: 0;
+}
+.ssh-overview-group-chip > button:last-child {
+  padding: 0 6px;
+  color: var(--theme-muted);
+}
+.ssh-overview-group-edit input {
+  min-height: 26px;
+  width: 9em;
+  font-size: 12px;
+}
+/* One heading per group. The rows below it are the same rows the flat list
+   used, so nothing about a host's own presentation changes with grouping. */
+.ssh-overview-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--ssh-cyan);
+}
+.ssh-overview-group:first-child {
+  margin-top: 0;
+}
+.ssh-overview-group small {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--theme-muted);
 }
 .ssh-overview-host {
   position: relative;
@@ -644,20 +721,9 @@
 .ssh-session-pending:empty {
   display: none;
 }
-.ssh-terminal {
-  --terminal-bg: #eeede7;
-  --terminal-fg: #202d32;
-  --terminal-line: #bac4bf;
-  --terminal-muted: #58686a;
-  --terminal-accent: #477680;
-}
-.ssh-terminal[data-dark="true"] {
-  --terminal-bg: #15232b;
-  --terminal-fg: #e2e9e7;
-  --terminal-line: #3d535d;
-  --terminal-muted: #abbabf;
-  --terminal-accent: #91bbc2;
-}
+/* The terminal's palette lives in terminal.css and derives from the theme; this
+   file used to shadow four of its five values with slightly different ones,
+   which is how the panel ended up disagreeing with the caption above it. */
 .ssh-terminal .ssh-terminal-settings {
   background: transparent;
   border: 0;

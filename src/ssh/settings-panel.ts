@@ -10,6 +10,7 @@ import {
 } from "./configuration";
 import type { WorkspaceStore } from "./workspace-store";
 import "./utility-panels.css";
+import { settingsNavigation, type SettingsSection } from "../settings-navigation";
 
 export class SshSettingsPanel {
   private root = document.createElement("section");
@@ -27,6 +28,7 @@ export class SshSettingsPanel {
     private actions: {
       reduced(): boolean;
       system(): void;
+      security(): void;
       tunnels(): void;
       imported(): Promise<unknown>;
       notify(message: string): void;
@@ -58,6 +60,21 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
       <div class="ssh-settings-import"><label>选择配置文件<input data-file type="file" accept=".json,application/json"></label><label data-import-password-row hidden>备份密码<input data-import-password type="password" maxlength="1024" autocomplete="off"></label><p data-preview>选择文件后显示导入内容。</p><button type="button" data-preview-import disabled>检查导入</button><button type="button" data-import disabled>导入以上内容</button></div>
       </fieldset></div><p class="ssh-settings-message" role="status" aria-live="polite"></p>`;
     const stage = document.querySelector<HTMLElement>("#stage")!;
+    const fields = this.root.querySelectorAll<HTMLElement>('fieldset');
+    fields.forEach((field, index) => { field.dataset.section = ['terminal', 'connection', 'connection', 'data'][index]; });
+    const security = document.createElement('fieldset');
+    security.dataset.section = 'security';
+    security.innerHTML = '<legend>密钥与凭据</legend><p>在密钥库管理连接使用的私钥。备份加密凭据请前往“数据”。</p><button type="button" data-key-management>打开密钥库 ↗</button>';
+    this.root.querySelector('.ssh-settings-scroll')!.append(security);
+    const nav = this.root.querySelector('nav')!;
+    nav.outerHTML = settingsNavigation('terminal') + '<div class="ssh-settings-context"><button type="button" data-system hidden>外观</button><button type="button" data-tunnels>端口转发管理 ↗</button></div>';
+    this.root.querySelector('[data-key-management]')!.addEventListener('click', () => this.close(this.actions.security));
+    this.root.querySelector('.settings-sections')!.addEventListener('click', event => {
+      const section = (event.target as Element).closest<HTMLElement>('[data-settings-section]')?.dataset.settingsSection as SettingsSection | undefined;
+      if (!section) return;
+      if (section === 'appearance') this.close(this.actions.system);
+      else this.selectSection(section);
+    });
     this.scope = new SurfaceScope(stage, this.root, stage.parentElement!);
     this.transition = new SurfaceTransition(this.root, undefined, 250, 180);
     const font = this.input<HTMLSelectElement>("font");
@@ -230,7 +247,14 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
       input.disabled = false;
     }
   }
-  open() {
+  private selectSection(section: SettingsSection) {
+    this.root.querySelectorAll<HTMLElement>('fieldset[data-section]').forEach(field => field.hidden = field.dataset.section !== section);
+    this.root.querySelectorAll<HTMLElement>('[data-settings-section]').forEach(button => button.setAttribute('aria-current', button.dataset.settingsSection === section ? 'page' : 'false'));
+    this.root.querySelector<HTMLElement>('.ssh-settings-context')!.hidden = section !== 'connection';
+    this.root.querySelector('.ssh-settings-scroll')!.scrollTop = 0;
+  }
+  open(section: SettingsSection = 'terminal') {
+    this.selectSection(section);
     this.scope.enter();
     this.transition.show(this.actions.reduced());
     this.syncAppearance();
