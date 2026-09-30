@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 // Real browser checks for entry audio, first-load fonts and failure recovery.
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -8,7 +9,7 @@ const base = process.env.REVIEW_URL || 'http://127.0.0.1:5190/';
 const engine = process.env.REVIEW_ENGINE || 'chromium';
 const browser = engine === 'webkit' ? await webkit.launch({headless:true}) : await chromium.launch({channel:process.env.REVIEW_CHANNEL || 'chrome',headless:true,args:['--use-angle=d3d11','--enable-gpu','--ignore-gpu-blocklist']});
 const report = {engine,version:browser.version(),checks:[],errors:[]};
-const output = resolve('.tools/issues');await mkdir(output,{recursive:true});
+const output = resolve(artifactPath("issues"));await mkdir(output,{recursive:true});
 const waitEntry = page => page.waitForFunction(()=>window.rhine?.stats().startup==='waiting',null,{timeout:60000});
 const waitStart = page => page.waitForFunction(()=>window.rhine?.stats().startup==='started'&&!document.querySelector('#loading'),null,{timeout:60000});
 async function fresh(options={},prefs) {

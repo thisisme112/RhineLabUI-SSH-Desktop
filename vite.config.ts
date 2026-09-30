@@ -29,6 +29,8 @@ export default defineConfig(({ mode, command }) => ({
   server: {
     watch: {
       ignored: [
+        "**/.artifacts/**",
+        "**/.archive/**",
         "**/*.tmpdir/**",
         "**/dist/**",
         "**/dist-desktop/**",

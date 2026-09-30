@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -196,9 +197,9 @@ try {
     await context.close();
   }
 } finally {
-  await mkdir(".tools/array-input", { recursive: true });
+  await mkdir(artifactPath("array-input"), { recursive: true });
   await writeFile(
-    resolve(".tools/array-input/momentum.json"),
+    resolve(artifactPath("array-input/momentum.json")),
     JSON.stringify(report, null, 2),
   );
   await browser.close();

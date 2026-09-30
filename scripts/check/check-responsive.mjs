@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 // Browser regression against the actual WebGL application. Run with local Vite.
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -5,7 +6,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 const { chromium, webkit } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(resolve(process.env.PLAYWRIGHT_MODULE)).href : "playwright");
 const base=process.env.REVIEW_URL || "http://127.0.0.1:5204";
-const output=resolve(".tools/responsive");await mkdir(output,{recursive:true});
+const output=resolve(artifactPath("responsive"));await mkdir(output,{recursive:true});
 const engine=process.env.REVIEW_ENGINE || "chromium";
 const browser=engine==='webkit'?await webkit.launch({headless:true}):await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-gpu','--ignore-gpu-blocklist']});
 const cases=engine==='webkit' ? [['safari-portrait',390,844,true],['safari-landscape',844,390,true]] :

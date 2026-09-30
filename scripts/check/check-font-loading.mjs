@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 // Compare the previous production build with the current one on local HTTP.
 // BASELINE_DIST defaults to .tools/issues-before; neither build is modified.
 import assert from 'node:assert/strict';
@@ -8,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(resolve(process.env.PLAYWRIGHT_MODULE)).href : 'playwright');
 const baseline = resolve(process.env.BASELINE_DIST || '.tools/issues-before');
 const current = resolve('dist');
-const out = resolve('.tools/issues');await mkdir(out,{recursive:true});
+const out = resolve(artifactPath("issues"));await mkdir(out,{recursive:true});
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.woff2':'font/woff2','.svg':'image/svg+xml','.glb':'model/gltf-binary','.ogg':'audio/ogg','.json':'application/json'};
 const serve = async(root,port)=>{
   const server=createServer(async(req,res)=>{try {

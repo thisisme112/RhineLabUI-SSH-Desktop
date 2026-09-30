@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 // Run against a built preview; optionally set REVIEW_CHANNEL=msedge.
 import assert from 'node:assert/strict';
 import {mkdir, writeFile} from 'node:fs/promises';
@@ -42,4 +43,4 @@ try {for(const reducedMotion of ['no-preference','reduce']) {
  }
  assert.deepEqual(errors,[]);report.checks.push({reducedMotion,passed:true});await context.close();
 }}finally{await browser.close()}
-await mkdir('.tools/responsive',{recursive:true});await writeFile(`.tools/responsive/startup-${channel}.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+await mkdir(artifactPath("responsive"),{recursive:true});await writeFile(artifactPath(`responsive/startup-${channel}.json`),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));

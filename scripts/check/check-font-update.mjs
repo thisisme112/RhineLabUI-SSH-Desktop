@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 // Migrate an installed pre-split-font release to this build, then test offline.
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
@@ -47,4 +48,4 @@ try {
   await page.locator('[data-viewer="explode"]').click();await page.waitForFunction(()=>JSON.parse(document.querySelector('.model-viewer').dataset.stats).spread===1);
   report.checks.push('Updated release enters offline with all three music tracks, split fonts, hashed main/viewer models and explosion');
   assert.deepEqual(report.errors,[]);console.log(JSON.stringify(report,null,2));
-} finally {await mkdir('.tools/issues',{recursive:true});await writeFile('.tools/issues/font-update.json',JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r));}
+} finally {await mkdir(artifactPath("issues"),{recursive:true});await writeFile(artifactPath("issues/font-update.json"),JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r));}
