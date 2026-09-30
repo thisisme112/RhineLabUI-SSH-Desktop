@@ -18,6 +18,6 @@
 
 主目录当前使用 `integrate/repository-cleanup`；本地 `main` 已重新指向并跟踪 `origin/main`。源码 checkpoint 位于 `checkpoint/20260930/main`。旧 Unreal / upload-clean / 已完成桌面任务分支仅保留 archive 引用；桌面与迁移临时 worktree 的本地产物先归档后移除。Android worktree 的 12 项暂存改动原样保留，可继续开发或按 checkpoint 核对后收尾。
 
-旧工程、重复工程与旧发行包保存在上述迁移目录的 `original-prototypes`、`original-verification`、`original-reference`、`old-releases` 中。当前远程未改写；Unreal 仓库尚未配置远程地址，首次发布时再添加独立远程。
+旧工程、重复工程与旧发行包保存在上述迁移目录的 `original-prototypes`、`original-verification`、`original-reference`、`old-releases` 中。整合分支已推送到主仓库，远程 `main` 未改写；Unreal 的 `main` 已推送到新建的[独立私有仓库](https://github.com/thisisme112/RhineLab-Unreal)，本地 `origin` 已关联该仓库。归档分支、checkpoint 和本地备份未推送。
 
 备份包括未提交文件；bundle 仅保存 Git 对象与引用。恢复工作区内容时同时使用相应文件清单和补丁，先在临时目录核对。归档与 checkpoint 不推送为产品分支。
