@@ -423,15 +423,16 @@ async function runEditorSmoke(win) {
     readProbe("editor-close-probe.js") + "\nwindow.__editorProbeReady = true;",
   );
   const opened = await step(`return await window.__editorProbe.openEditor();`);
+  if (opened?.error) throw new Error("Editor probe: " + JSON.stringify(opened));
   const shotOpen = await capture(win, "editor-open");
   const edited = await step(`return await window.__editorProbe.edit();`);
   // Real mouse click, at the button's own coordinates, the way a user does it.
   const clickClose = async () => {
     const rect = await step(`return window.__editorProbe.state().buttonRect;`);
-    if (!rect) return null;
+    if (!rect || rect.error) throw new Error("Editor close geometry: " + JSON.stringify(rect));
     const point = { x: Math.round(rect.x + rect.width / 2), y: Math.round(rect.y + rect.height / 2) };
-    win.webContents.sendInputEvent({ type: "mousePressed", ...point, button: "left", clickCount: 1 });
-    win.webContents.sendInputEvent({ type: "mouseReleased", ...point, button: "left", clickCount: 1 });
+    win.webContents.sendInputEvent({ type: "mouseDown", ...point, button: "left", clickCount: 1 });
+    win.webContents.sendInputEvent({ type: "mouseUp", ...point, button: "left", clickCount: 1 });
     return point;
   };
   const clickedAt = await clickClose();
