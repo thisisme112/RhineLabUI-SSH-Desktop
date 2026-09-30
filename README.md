@@ -1,6 +1,6 @@
 # RhineLab
 
-Web、Electron 桌面、Android 与 Wallpaper Engine 共用的三维档案和 SSH 工作区。Unreal 原生实现已拆为独立仓库。
+Web、Electron 桌面、Android 与 Wallpaper Engine 共用的三维档案和 SSH 工作区。Unreal 原生实现已拆为[独立私有仓库](https://github.com/thisisme112/RhineLab-Unreal)。
 
 - [项目结构与全部入口](docs/REPOSITORY.md)
 - [Git 分支与迁移记录](docs/GIT-WORKFLOW.md)
