@@ -22,6 +22,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run check:structure
+      - run: npm run check:content
+      - run: npm run check:ssh-multisession-unit
+      - run: npm run check:shared
       - run: npm run build
         env:
           VITE_BASE: /RhineLabUI-SSH-Desktop/
@@ -33,6 +37,7 @@ jobs:
 
   pages:
     name: Publish web preview
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: web
     runs-on: ubuntu-latest
     environment:
@@ -71,11 +76,18 @@ jobs:
             .tools/ssh-toolchain
           key: desktop-tools-${{ runner.os }}-${{ hashFiles('package-lock.json', 'services/ssh/toolchain.json') }}
       - run: npm ci
+      - run: npm run check:ssh-services-unit
+      - run: npm run check:ssh-credentials
       - name: Build Windows desktop
         shell: pwsh
         env:
           ELECTRON_GET_USE_PROXY: 'true'
         run: npm run dist:dir
+      - run: npm run export:shared
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rhine-lab-shared
+          path: .artifacts/shared/
       - uses: actions/upload-artifact@v4
         with:
           name: rhine-lab-windows-unpacked
