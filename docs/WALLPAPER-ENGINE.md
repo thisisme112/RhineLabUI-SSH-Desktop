@@ -20,7 +20,7 @@ Wallpaper Engine 本地库名称：**Rhine Lab · 莱茵生命档案终端（本
 
 ```sh
 npm run build:wallpaper
-node scripts/check-wallpaper.mjs
+node scripts/check/check-wallpaper.mjs
 ```
 
 构建输出 `release/wallpaper`，约 34.1 MiB，823 个文件，包括完整字体分包、模型、音频、档案 TXT 和许可。字体和模型均本地读取，无需开发服务器或在线站点。源码、Blender 工程、参考视频、诊断服务不进入壁纸包。
@@ -52,7 +52,7 @@ node scripts/check-wallpaper.mjs
 
 运行数据有一次阵列采样为 22 FPS（宿主上限 30），不能把上限写成稳定实际帧率。本次未做长时间功耗测试、4K / 多屏压力测试或真实桌面图标遮挡下的完整输入验证。
 
-![Wallpaper Engine 实际设置页，音量同步与画质切换](../reference/wallpaper-engine/settings.png)
+![Wallpaper Engine 实际设置页，音量同步与画质切换](research/reference/wallpaper-engine/settings.png)
 
 ### 本机 CEF 的下拉框崩溃
 
@@ -77,7 +77,7 @@ node scripts/check-wallpaper.mjs
 
 用户反馈桌面方向键与滚轮无效。代码检查确认两类监听仍保留，没有壁纸模式禁用分支；尚未通过桌面事件跟踪确认滚轮未传入的具体原因。设置操作说明改为拖动阵列、点击界面按钮，并注明桌面可能无法传入方向键和滚轮。Wallpaper Engine 开发者说明键盘输入存在宿主限制：https://steamcommunity.com/app/431960/discussions/2/1644304412654510366/ 。
 
-本次 `npm run build:wallpaper` 与 `node scripts/check-wallpaper.mjs` 通过。
+本次 `npm run build:wallpaper` 与 `node scripts/check/check-wallpaper.mjs` 通过。
 
 ## 工作台首版
 
@@ -87,7 +87,7 @@ Wallpaper Engine 属性新增显示模式（桌面工作台／档案展示）、
 
 专注与休息可开始、暂停、继续、重置、切换。截止时间采用 Date.now()，壁纸暂停、遮挡或重载后校正，不补响后台提醒，也不自动开始下一段。改变时长只影响下一次开始。媒体监听在经典启动脚本中提前注册，支持标题、歌手、封面、状态与可选进度；未启用、无曲目或无进度均有空状态。媒体来源取决于 Windows 媒体会话支持，模拟回调验证不代表所有播放器实测成功。
 
-验证页：reference/workbench-review.html（开发 wallpaper 模式），包含仅用于测试的宿主属性与媒体回调。运行 node scripts/check-workbench.mjs 检查日期边界、暂停/重载计时和媒体切换残留。当前仍为本地实验，不合并正式网站。
+验证页：reference/workbench-review.html（开发 wallpaper 模式），包含仅用于测试的宿主属性与媒体回调。运行 node scripts/check/check-workbench.mjs 检查日期边界、暂停/重载计时和媒体切换残留。当前仍为本地实验，不合并正式网站。
 
 2026-09-10 本次验证：壁纸与普通网页构建均通过；check-wallpaper 与 check-workbench 通过。在 Edge 实际页面验证设置切换、专注启动、事项勾选后重载保留、模拟媒体标题与进度、有效目标日期和无效日期提示，并检查桌面尺寸布局。媒体使用测试回调，未声称真实播放器联动已验证。本地安装目录已更新；本版尚待 Wallpaper Engine 桌面实际试听与存储复核。
 
@@ -229,21 +229,21 @@ WE「入场与画面」新增「启动时加载 3D（下次加载生效）」，
 
 自定义图片路径修复了宿主将盘符编码为 E%3A 后再次编码导致的读取失败；支持原始路径、编码路径与 file URL。同一路径读取失败后重新选择可重试。真实 WE 宿主验证提取的 wallpaper-2.jpg 为 3200×2000 并成功解码。
 
-验证：scripts/check-startup-2d.mjs 检查初始无 canvas/GLB 请求、2D 开场结束、手动载入、属性仅下次启动生效、默认开启与无页面异常；scripts/check-wallpaper-image.mjs 验证路径与同路径重试；scripts/check-wallpaper-image-host.mjs 验证真实宿主回调。结果位于 verification/startup-2d 和 verification/wallpaper-image。
+验证：scripts/check/check-startup-2d.mjs 检查初始无 canvas/GLB 请求、2D 开场结束、手动载入、属性仅下次启动生效、默认开启与无页面异常；scripts/check/check-wallpaper-image.mjs 验证路径与同路径重试；scripts/check/check-wallpaper-image-host.mjs 验证真实宿主回调。结果位于 verification/startup-2d 和 verification/wallpaper-image。
 
 ### 宿主属性到达时序修复
 
-启动必须等待 WE 首次 applyUserProperties 回调后再判断是否创建三维场景，不能将尚未收到的属性当作默认开启。真实 file 壁纸没有超时后强行加载的回退；普通 HTTP 预览无宿主时继续正常启动。此前测试只覆盖提前注入属性，现补充 1800ms 延迟回调；真实 WE 独立窗口验证关闭属性后进入 archive，canvas 与 GLB 请求均为 0（scripts/check-startup-2d-host.mjs，verification/startup-2d/host-results.json）。
+启动必须等待 WE 首次 applyUserProperties 回调后再判断是否创建三维场景，不能将尚未收到的属性当作默认开启。真实 file 壁纸没有超时后强行加载的回退；普通 HTTP 预览无宿主时继续正常启动。此前测试只覆盖提前注入属性，现补充 1800ms 延迟回调；真实 WE 独立窗口验证关闭属性后进入 archive，canvas 与 GLB 请求均为 0（scripts/check/check-startup-2d-host.mjs，verification/startup-2d/host-results.json）。
 
 ## 自定义图片遮罩范围
 
-WE 自定义壁纸图片下方新增「上下遮罩范围（0 为关闭）」：0–100，默认 100 保留原渐变范围；降低数值缩小上下覆盖，0 完全隐藏图片上的 atmosphere。仅图片实际显示时生效。亮暗配色 100/50/0 的样式断言及截图见 scripts/check-wallpaper-mask.mjs 与 verification/wallpaper-mask；构建通过。
+WE 自定义壁纸图片下方新增「上下遮罩范围（0 为关闭）」：0–100，默认 100 保留原渐变范围；降低数值缩小上下覆盖，0 完全隐藏图片上的 atmosphere。仅图片实际显示时生效。亮暗配色 100/50/0 的样式断言及截图见 scripts/check/check-wallpaper-mask.mjs 与 verification/wallpaper-mask；构建通过。
 
 ## 时钟与媒体滚动、图片背景按钮可读性
 
 工作台时钟、页脚秒钟、媒体已播放/总时长、切歌标题与艺人、专注计时复用现有 createRollingText，460ms、direct、同时起动与轻微模糊；格式化时间按字符滚动，冒号保持。首次显示直接初始化，相同值不重复播放，减少动态效果立即完成。媒体面板原位更新，保留滚动节点及未变化封面，避免宿主高频进度回调打断。
 
-自定义图片显示时，页脚、底部导航、待办事项与提示、媒体及其他按钮改用主题前景色，关闭 3D 状态不降低文字透明度。用户否决额外白底，已撤回该底色与外扩阴影，仅保留原有玻璃模糊。无遮罩图片背景实看与时钟、切歌、进度、专注、减少动态效果检查见 scripts/check-workbench-rolling.mjs 和 verification/workbench-rolling。
+自定义图片显示时，页脚、底部导航、待办事项与提示、媒体及其他按钮改用主题前景色，关闭 3D 状态不降低文字透明度。用户否决额外白底，已撤回该底色与外扩阴影，仅保留原有玻璃模糊。无遮罩图片背景实看与时钟、切歌、进度、专注、减少动态效果检查见 scripts/check/check-workbench-rolling.mjs 和 verification/workbench-rolling。
 
 
 - 页脚 HH:mm:ss 进一步改为三组 createRollingNumber，冒号固定、两位补零、460ms 向上滚动。验证捕获实际运行中的动画，并检查 12:59:59→13:00:00 进位；减少动态效果时直接到位。此前此处采用整段 createRollingText，现已替换。
@@ -252,7 +252,7 @@ WE 自定义壁纸图片下方新增「上下遮罩范围（0 为关闭）」：
 
 复现：启用 HUD 曲面后，秒数 7→8、8→9 的动画开始约 120ms 时已被清空，其他数字仍在运动。Rolling Number 0.4.1 用透视后的边界反推字形尺寸，与 ResizeObserver 的本地尺寸产生误差，触发 refresh 并直接结束动画。
 
-scripts/patch-rolling-number.mjs 将字形宽高改为本地 computed style 尺寸，保留原滚动算法；安装、开发及构建自动应用，依赖升级后匹配失败会明确报错。验证开启曲面后的全部 0–9、9→10、小时进位以及五组不同字宽/长度歌曲名，120ms 时均有运行中的动画。证据见 verification/workbench-rolling/results.json。
+scripts/build/patch-rolling-number.mjs 将字形宽高改为本地 computed style 尺寸，保留原滚动算法；安装、开发及构建自动应用，依赖升级后匹配失败会明确报错。验证开启曲面后的全部 0–9、9→10、小时进位以及五组不同字宽/长度歌曲名，120ms 时均有运行中的动画。证据见 verification/workbench-rolling/results.json。
 
 - 播放器长标题与艺人名单行显示，按可用宽度截断为省略号后交给滚动库；悬停与辅助标签保留完整文字，视口变化重新计算。验证包含超长标题省略号与完整提示。
 

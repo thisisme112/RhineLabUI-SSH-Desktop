@@ -1,0 +1,105 @@
+{
+  "checks": {
+    "loads from the app origin": true,
+    "desktop flag set": true,
+    "preload bridge exposed": true,
+    "stage rendered": true,
+    "host list opens from its keyboard shortcut": true,
+    "session layer loaded": true,
+    "PWA surface removed": true,
+    "no service worker": true,
+    "entry gate accepted input": true,
+    "3D scene live (WebGL)": true,
+    "startup entered boot": true,
+    "loading overlay retired": true,
+    "entry screen not blank": true,
+    "boot screen not blank": true,
+    "running screen not blank": true,
+    "window caption follows the application palette": true,
+    "the renderer reports its theme to the window": true,
+    "the frameless window has a drag region the caption's height": true
+  },
+  "failed": [],
+  "before": {
+    "base": "file:///D:/myproject/RhineLab/release/desktop/win-unpacked/resources/app/dist-desktop/index.html",
+    "protocol": "file:",
+    "desktopFlag": "true",
+    "desktopBridge": true,
+    "hasStage": true,
+    "stageMode": null,
+    "canvases": 1,
+    "loading": true,
+    "entryState": "waiting",
+    "loadingText": "RHINE·LAB INTERNAL DATABASE / READY 点击进入 → 轻触屏幕或按 Enter 开始",
+    "pwaSection": false,
+    "navButtons": 4,
+    "sessionEntry": true,
+    "rhineSshLoaded": true,
+    "serviceWorker": false,
+    "colorTheme": "light",
+    "themeReported": true,
+    "dragRegion": {
+      "height": 40,
+      "region": "drag"
+    }
+  },
+  "after": {
+    "base": "file:///D:/myproject/RhineLab/release/desktop/win-unpacked/resources/app/dist-desktop/index.html",
+    "protocol": "file:",
+    "desktopFlag": "true",
+    "desktopBridge": true,
+    "hasStage": true,
+    "stageMode": "boot",
+    "canvases": 1,
+    "loading": false,
+    "entryState": null,
+    "loadingText": "",
+    "pwaSection": false,
+    "navButtons": 4,
+    "sessionEntry": true,
+    "rhineSshLoaded": true,
+    "serviceWorker": false,
+    "colorTheme": "light",
+    "themeReported": true,
+    "dragRegion": {
+      "height": 40,
+      "region": "drag"
+    }
+  },
+  "shots": [
+    {
+      "name": "entry",
+      "file": "D:\\myproject\\RhineLab\\verification\\redesign\\desktop-smoke-entry.png",
+      "bytes": 17361,
+      "size": "1600x900",
+      "sampled": 40050,
+      "meanLuma": 228.5,
+      "lumaRange": 0.9,
+      "distinctColors": 62,
+      "dominantShare": 0.994
+    },
+    {
+      "name": "boot",
+      "file": "D:\\myproject\\RhineLab\\verification\\redesign\\desktop-smoke-boot.png",
+      "bytes": 179218,
+      "size": "1600x900",
+      "sampled": 40050,
+      "meanLuma": 224.3,
+      "lumaRange": 0.904,
+      "distinctColors": 20,
+      "dominantShare": 0.936
+    },
+    {
+      "name": "running",
+      "file": "D:\\myproject\\RhineLab\\verification\\redesign\\desktop-smoke-running.png",
+      "bytes": 205334,
+      "size": "1600x900",
+      "sampled": 40050,
+      "meanLuma": 222.9,
+      "lumaRange": 0.904,
+      "distinctColors": 29,
+      "dominantShare": 0.921
+    }
+  ],
+  "problems": []
+}

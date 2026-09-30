@@ -1,0 +1,32 @@
+{
+  "viewport": "1920x1080",
+  "quality": "same default viewer quality",
+  "results": [
+    {
+      "kind": "archive",
+      "p50": 24.899999999997817,
+      "p95": 41.5,
+      "frames": 180
+    },
+    {
+      "kind": "terminal",
+      "p50": 20.799999999995634,
+      "p95": 33.400000000001455,
+      "frames": 180
+    },
+    {
+      "kind": "archive",
+      "p50": 16.69999999999709,
+      "p95": 37.5,
+      "frames": 180
+    },
+    {
+      "kind": "terminal",
+      "p50": 20.80000000000291,
+      "p95": 33.39999999999418,
+      "frames": 180
+    }
+  ],
+  "ratio": 0.8455696202531093,
+  "passed": true
+}

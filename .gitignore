@@ -37,3 +37,16 @@ AGENTS.md
 .workbuddy/
 2026-*.txt
 NVIDIA Corporation/
+
+# Generated checks, local migration history and conversation files.
+.artifacts/
+.archive/
+*.log
+*.err
+codex-session-*.md
+新建 文本文档.txt
+prototypes/
+
+# Historical frame-by-frame captures remain local; keep reports and key shots.
+docs/history/verification/**/seq-*/
+docs/history/verification/**/recording/

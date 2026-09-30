@@ -4,13 +4,13 @@
  * The same pty chunks are fed to the Unreal port (RhineSshEvents.cpp) and, here,
  * to the desktop pipeline itself: electron/session.cjs PtySession (splitter,
  * trusted authentication, prompt detection) driven through a fake pty, plus the
- * renderer half of src/ssh/client.ts bind() over the real events.ts/session.ts.
+ * renderer half of src/features/ssh/client.ts bind() over the real events.ts/session.ts.
  * Only that renderer glue is restated below; everything it calls is imported.
  * Clock: chunk index x 10 ms on both sides.
  */
 import { createRequire } from "node:module";
-import { parsePtyNotice, parseSshLine } from "../../src/ssh/events.ts";
-import { SshSessionTracker } from "../../src/ssh/session.ts";
+import { parsePtyNotice, parseSshLine } from "../../src/features/ssh/events.ts";
+import { SshSessionTracker } from "../../src/features/ssh/session.ts";
 
 const require = createRequire(import.meta.url);
 const { PtySession } = require("../../electron/session.cjs");

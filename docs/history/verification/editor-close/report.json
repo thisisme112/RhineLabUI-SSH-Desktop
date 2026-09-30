@@ -1,0 +1,11 @@
+{
+  "checks": {
+    "editor is the active surface": true,
+    "return button is below the desktop title bar": true,
+    "return button is excluded from the drag region": true,
+    "shot captured": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {}
+}

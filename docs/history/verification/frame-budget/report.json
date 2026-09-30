@@ -1,0 +1,37 @@
+{
+  "idle": {
+    "admitted": 120,
+    "skipped": 842,
+    "share": 0.12474012474012475,
+    "tier": "idle",
+    "refreshMs": 4.2
+  },
+  "afterInput": {
+    "tier": "busy",
+    "admitted": 1035,
+    "skipped": 951,
+    "refreshMs": 4.2
+  },
+  "busy": {
+    "admitted": 289,
+    "skipped": 0,
+    "share": 1,
+    "tier": "busy",
+    "refreshMs": 4.2
+  },
+  "settled": {
+    "admitted": 90,
+    "skipped": 628,
+    "share": 0.12534818941504178,
+    "tier": "idle",
+    "refreshMs": 4.2
+  },
+  "afterSelect": {
+    "tier": "active",
+    "admitted": 1679,
+    "skipped": 2320,
+    "refreshMs": 4.3
+  },
+  "gateOff": null,
+  "errors": []
+}

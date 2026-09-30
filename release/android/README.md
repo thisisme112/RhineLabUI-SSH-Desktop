@@ -21,5 +21,5 @@ npm run android:build
 
 - `src/ssh/android/`：Android 工作区界面与桥接
 - `android/app/src/main/`：原生 SSH、Keystore、文件选择和会话服务
-- `scripts/build-android-native.mjs`：原生服务编译与校验
+- `scripts/build/build-android-native.mjs`：原生服务编译与校验
 - `docs/ANDROID.md`：完整环境、权限、存储迁移和发布说明

@@ -15,8 +15,8 @@ const hasNovecento = ["Normal", "DemiBold", "Bold"].every(weight =>
 );
 export default defineConfig(({ mode, command }) => ({
   // Both non-web hosts load the built app from file://, so every asset URL has
-  // to stay relative. `src/asset-url.ts` already routes through BASE_URL.
-  base: ["wallpaper", "desktop", "android"].includes(mode) ? "./" : "/",
+  // to stay relative. `src/shared/asset-url.ts` already routes through BASE_URL.
+  base: ["wallpaper", "desktop", "android"].includes(mode) ? "./" : (process.env.VITE_BASE || "/"),
   define: {
     __RHINE_MODELS__: JSON.stringify(Object.fromEntries(models.map(model => [model.key,model.fileName]))),
     __RHINE_NOVECENTO__: JSON.stringify(hasNovecento),
@@ -76,7 +76,7 @@ export default defineConfig(({ mode, command }) => ({
   }] : []), ...(["desktop", "android"].includes(mode) ? [{
     // Never inject wallpaper/host.js here: it deliberately skips its own
     // fallback resolve under `file:`, which would leave the `await` in
-    // src/main.ts hanging and render a permanently blank window.
+    // src/app/application.ts hanging and render a permanently blank window.
     name: "desktop-index",
     transformIndexHtml(html: string) {
       // The marker lets the dev launcher prove a server is serving the desktop

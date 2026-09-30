@@ -76,4 +76,4 @@ AES-256-GCM 使用独立随机盐与 IV、PBKDF2-SHA256 210000 次及固定格�
 
 导入是分步骤合并；磁盘或密钥库出错时报告已新增主机数，已导入内容保留，可修正后重试。活动连接、传输队列、未执行命令和草稿不在备份内。
 
-字体及编辑器许可见 `licenses/SSH-UI-NOTICES.txt`，由 `node scripts/build-ssh-ui-notices.mjs` 生成，仅随 desktop / android renderer 打包。本轮按用户要求仅做源码检查、类型检查、编译和打包，没有自动化或手机操作；记录见 `verification/SSH-WORKSPACE-SETTINGS.md`。
+字体及编辑器许可见 `licenses/SSH-UI-NOTICES.txt`，由 `node scripts/build/build-ssh-ui-notices.mjs` 生成，仅随 desktop / android renderer 打包。本轮按用户要求仅做源码检查、类型检查、编译和打包，没有自动化或手机操作；记录见 `verification/SSH-WORKSPACE-SETTINGS.md`。

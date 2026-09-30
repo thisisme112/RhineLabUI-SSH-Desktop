@@ -1,0 +1,24 @@
+{
+  "checks": {
+    "the far-layer poster is on over the archive": true,
+    "the poster has been drawn (not an empty canvas)": true,
+    "the corner card is not there before the change-over has cleared": true,
+    "the flip wave runs after a theme change": true,
+    "the corner card waits while the settings sheet is open": true,
+    "a theme change leaves its corner card": true,
+    "the card carries the theme number and Latin name": true,
+    "the card carries the motif glyph": true,
+    "the card's name turns over to the new theme": true,
+    "the palette itself changed": true,
+    "the corner card fades away after 1.7 s": true,
+    "the flip wave has ended and the rows are at rest": true,
+    "the poster follows the theme (redrawn after the change)": true,
+    "the poster stays behind the detail page": true,
+    "reduced motion shows no corner card": true,
+    "an opened portal page stands over a sleeping scene (no frames rendered)": true,
+    "the scene wakes when the page closes": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {}
+}

@@ -1,11 +1,11 @@
-import '../../src/style.css';
-import '../../src/decryption.css';
-import { ArchiveScene } from '../../src/scene';
-import { ModelViewer } from '../../src/model-viewer';
-import { TerminalDeck, TERMINAL_INSPECTION_PARTS } from '../../src/ssh/terminal-deck';
-import { SshClient } from '../../src/ssh/client';
-import { SshTerminalPanel } from '../../src/ssh/terminal';
-import { paintTheme, setPalette } from '../../src/theme-ui';
+import '../../src/app/style.css';
+import '../../src/features/archives/decryption.css';
+import { ArchiveScene } from '../../src/rendering/scene';
+import { ModelViewer } from '../../src/rendering/model-viewer';
+import { TerminalDeck, TERMINAL_INSPECTION_PARTS } from '../../src/features/ssh/terminal-deck';
+import { SshClient } from '../../src/features/ssh/client';
+import { SshTerminalPanel } from '../../src/features/ssh/terminal';
+import { paintTheme, setPalette } from '../../src/features/theme/theme-ui';
 
 document.documentElement.dataset.desktop = 'true';
 setPalette('warm'); paintTheme(0);

@@ -1,0 +1,16 @@
+{
+  "checks": {
+    "the row's buttons appear on hover, and the other row steps back": true,
+    "a host that is not connected has no 断开": true,
+    "the button beside 复制 is 删除, and the connect button reads 连接": true,
+    "复制 adds a saved copy named 副本": true,
+    "the copy keeps the endpoint": true,
+    "a second copy is 副本 2": true,
+    "a host from the ssh config says where to delete it and stays": true,
+    "the first 删除 click only asks": true,
+    "the second click removes the host": true,
+    "连接 starts a session": true,
+    "a live host reads 重连 and offers 断开": true
+  },
+  "errors": []
+}

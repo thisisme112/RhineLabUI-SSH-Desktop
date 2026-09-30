@@ -1,0 +1,15 @@
+{
+  "checks": {
+    "host row opens archive without inspection or SSH": true,
+    "connecting does not reopen the inspector": true,
+    "settings is visible outside more": true,
+    "appearance can return to connection": true,
+    "appearance can return to security": true,
+    "appearance can return to data": true,
+    "appearance can return to terminal": true,
+    "closing terminal returns to archive without forced inspection": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {}
+}
