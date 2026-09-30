@@ -1,8 +1,10 @@
 import * as THREE from "three";
 import { ArchiveVisibility } from "./archive-visibility";
 import { disposeThreeTree } from "./three-resources";
-import { ThemeWave } from "./theme-motion";
-import { themeMaterial, themeEnvironment } from "./theme-material";
+import { isAndroid } from "./android";
+import { PaletteFlip, ThemeWave, type FlipSample } from "./theme-motion";
+const NO_FLIP: FlipSample = { lift: 0, tilt: 0, flash: 0 };
+import { themeMaterial, themeEnvironment, setFlashColor } from "./theme-material";
 import { RhythmMotion, rhythmDisplacement, quietBands, type MusicBands, type RhythmStyle } from "./archive-play-motion";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { createArchiveLighting, type LightingLook } from "./archive-lighting";
@@ -136,6 +138,23 @@ export class ArchiveScene {
   }
   setSelectedIndexAccent(onlySelected: boolean) { this.selectedIndexOnly = onlySelected; }
   private themeAttribute?: THREE.InstancedBufferAttribute;
+  private flashAttribute?: THREE.InstancedBufferAttribute;
+  private flip = new PaletteFlip();
+  private flashWasOn = false;
+  /**
+   * After a palette change the rows turn over card by card from the selected one
+   * (PaletteFlip): each rises, leans and flashes `color`. `after` waits for the
+   * change-over's own reveal. Reduced motion skips it.
+   */
+  flipPalette(color: string, after = .35) {
+    if (this.reduced) return;
+    setFlashColor(color);
+    this.flip.begin(performance.now() / 1000, this.selectedCell, after);
+    this.redrawUntil = this.clock + after + 2;
+    this.coveredAt = 0;
+  }
+  /** Whether a flip wave is running: the frame budget keeps its full rate for it. */
+  get flipActive() { return this.flip.active(performance.now() / 1000); }
   get themeAmount() { return this.theme.background(performance.now() / 1000); }
   setTheme(dark: boolean, immediate = false) {
     if (dark !== this.requestedDark) { this.redrawUntil = this.clock + 2; this.coveredAt = 0; this.requestedDark = dark; }
@@ -254,6 +273,16 @@ export class ArchiveScene {
   private manualExtraction = false;
   private dragTrack: DragPosition | null = null;
   private navigatingDrag = false;
+  /**
+   * While a drag, a coast or a run of wheel steps crosses cells, each is chosen
+   * quietly: no ripple, no lift. The last one is settled once the plane rests.
+   */
+  private coastCell: ArchiveCell | null = null;
+  private coastTime = 0;
+  /** Selections made now are passing ones (see coastCell). */
+  get coasting() { return this.navigatingDrag; }
+  /** The plane has come to rest on a cell chosen while coasting. */
+  onSettle?: () => void;
   private archiveMomentum: { motion: ArchivePlaneMomentum; time: number } | null = null;
   // The terminal and its Blender assembly replace only this selected file.
   // Package separation and camera framing share one accelerating movement.
@@ -283,6 +312,17 @@ export class ArchiveScene {
   setSessionSurfaceCovered(covered: boolean) {
     this.deckCovered = covered;
     if (!covered) this.coveredAt = 0;
+  }
+  private pageCovered = false;
+  private pageCoveredAt = 0;
+  /**
+   * A full-window opaque page (the portals' paper sheet) stands over the scene:
+   * once its own reveal has finished, the scene stops rendering (Unreal's
+   * UpdateSceneSleep) and wakes the moment the page closes.
+   */
+  setPageCovered(covered: boolean) {
+    this.pageCovered = covered;
+    if (!covered) this.pageCoveredAt = 0;
   }
   get sessionRendering() { return { frames: this.renderedFrames, frozen: this.coveredAt > 0 && this.clock - this.coveredAt > 1.2, returning: this.outgoing.filter(item => item.deck).length }; }
   private disposeReturning(item: (typeof this.outgoing)[number]) {
@@ -399,7 +439,9 @@ export class ArchiveScene {
     private readonly lightingLook: LightingLook = "baseline",
   ) {
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      // Every frame goes through the composer's own targets, so the canvas's MSAA buffer is only
+      // its final blit: a phone's tiler pays for it in memory and bandwidth for nothing.
+      antialias: !isAndroid,
       alpha: false,
       powerPreference: "high-performance",
     });
@@ -619,6 +661,8 @@ export class ArchiveScene {
       this.appearance.register(name, mat, arrayMat);
       this.themeAttribute ??= new THREE.InstancedBufferAttribute(new Float32Array(count), 1).setUsage(THREE.DynamicDrawUsage);
       geom.setAttribute("archiveTheme", this.themeAttribute);
+      this.flashAttribute ??= new THREE.InstancedBufferAttribute(new Float32Array(count), 1).setUsage(THREE.DynamicDrawUsage);
+      geom.setAttribute("archiveFlash", this.flashAttribute);
       themeMaterial(arrayMat, name, true, this.subduedIndex);
       const inst = new THREE.InstancedMesh(geom, arrayMat, count);
       inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -758,6 +802,13 @@ export class ArchiveScene {
   setReduced(value: boolean) {
     if (value && !this.reduced) this.cancelPointer();
     this.reduced = value;
+  }
+  private dynamicScale = 1;
+  /** The frame governor's share of the render resolution (main.ts): steps the buffers, not the look. */
+  setDynamicScale(factor: number) {
+    if (Math.abs(factor - this.dynamicScale) < 1e-6) return;
+    this.dynamicScale = factor;
+    this.resize();
   }
   setQuality(value: RenderQuality | boolean) {
     const quality =
@@ -925,9 +976,12 @@ export class ArchiveScene {
       this.disposeReturning(o);
       this.outgoing.splice(returning, 1);
     }
-    if (this.deferSelectionPulse) {
+    if (this.navigatingDrag) {
+      this.coastCell = { ...cell };
+      this.coastTime = this.clock;
+    } else if (this.deferSelectionPulse) {
       this.pendingPulse = this.looping ? { ...cell } : null;
-    } else this.emitPulse(cell);
+    } else { this.coastCell = null; this.emitPulse(cell); }
     this.targetRotation = 0;
     this.drawLabel(index);
   }
@@ -977,6 +1031,10 @@ export class ArchiveScene {
     this.themeAttribute = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(THREE.DynamicDrawUsage);
     if (previousTheme) this.themeAttribute.array.set(previousTheme.array);
     for (const inst of this.instances) inst.geometry.setAttribute("archiveTheme", this.themeAttribute);
+    const previousFlash = this.flashAttribute;
+    this.flashAttribute = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(THREE.DynamicDrawUsage);
+    if (previousFlash) this.flashAttribute.array.set(previousFlash.array);
+    for (const inst of this.instances) inst.geometry.setAttribute("archiveFlash", this.flashAttribute);
     this.instanceCapacity = capacity;
   }
   resize() {
@@ -1001,6 +1059,7 @@ export class ArchiveScene {
       this.container,
       this.quality,
       this.superPerformance,
+      this.dynamicScale,
     );
     this.ao.setSize(
       Math.max(1, Math.floor(dimensions.width * this.quality.aoResolution)),
@@ -1405,6 +1464,10 @@ export class ArchiveScene {
     this.last = time;
     this.clock = time;
     if (!this.loaded) return;
+    if (!cinematic && this.pageCovered) {
+      this.pageCoveredAt ||= time;
+      if (time - this.pageCoveredAt > 0.8) return;
+    } else this.pageCoveredAt = 0;
     if (!cinematic && this.deckCovered && this.sessionDeckReady && !this.outgoing.length && time > this.redrawUntil) {
       this.coveredAt ||= time;
       if (time - this.coveredAt > 1.2) return;
@@ -1477,6 +1540,12 @@ export class ArchiveScene {
       this.columnCamera.velocity = momentum.motion.lane.velocity * COLUMN_SPACING;
       this.rail.velocity = -momentum.motion.row.velocity * ROW_SPACING;
       if (momentum.motion.phase === "idle") this.archiveMomentum = null;
+    }
+    if (this.coastCell && !this.holdingArchive && !this.archiveMomentum && this.clock - this.coastTime > .17) {
+      if (this.deferSelectionPulse) this.pendingPulse = this.looping ? this.coastCell : null;
+      else if (!this.reduced) this.emitPulse(this.coastCell);
+      this.coastCell = null;
+      this.onSettle?.();
     }
     if (this.dragTrack && !cinematic) {
       this.columnCamera.value = this.dragTrack.lane;
@@ -1610,7 +1679,7 @@ export class ArchiveScene {
                     Math.abs(o.cell.row - selectedRow) < 5,
                 )
               ? 0
-              : 0.4 * this.targetReveal * (1 - this.flatMix),
+              : this.coastCell ? 0 : 0.4 * this.targetReveal * (1 - this.flatMix),
           this.reduced
             ? 35
             : this.deferSelectionPulse &&
@@ -1911,20 +1980,26 @@ export class ArchiveScene {
     hidden.add(cellKey(this.selectedCell));
     this.drawnCells.length = 0;
     this.relayPoints.clear();
+    const flipping = this.flip.active(time);
+    // A wave that has just ended still has to write its last (zero) values once.
+    const flashDirty = flipping || this.flashWasOn;
+    this.flashWasOn = flipping;
     for (const cell of this.cells) {
       const { row, lane } = cell;
       if (hidden.has(cellKey(cell))) continue;
       const x = (lane - 2) * COLUMN_SPACING - trackX;
-      const y = -4.6 + field(row, lane) + hoverLift(cell) - this.presentationDrop(cell) + (returning.get(cellKey(cell))?.lift.value ?? 0);
+      const turn = flipping ? this.flip.sample(cell, time) : NO_FLIP;
+      const y = -4.6 + field(row, lane) + hoverLift(cell) - this.presentationDrop(cell) + (returning.get(cellKey(cell))?.lift.value ?? 0) + turn.lift;
       const z = (row - 15.5) * ROW_SPACING + entryZ + this.rail.value;
       if (!fixed && !this.visibility.intersects(x, y, z)) continue;
       const i = this.drawnCells.length;
       this.ensureInstanceCapacity(i + 1);
       this.drawnCells.push({ lane, row });
       this.themeAttribute?.setX(i, this.theme.sample(cell, time));
+      this.flashAttribute?.setX(i, turn.flash);
       const slope = field(row + .5, lane) - field(row - .5, lane);
       this.dummy.position.set(x, y, z);
-      this.dummy.rotation.set(slope * .024 * (1 - detail), 0, 0);
+      this.dummy.rotation.set(slope * .024 * (1 - detail) - turn.tilt, 0, 0);
       this.dummy.scale.setScalar(1);
       this.dummy.updateMatrix();
       if (play.enabled) this.relayPoints.set(cellKey(cell), { cell: { ...cell }, point: new THREE.Vector3(0, 3.5, 0).applyMatrix4(this.dummy.matrix) });
@@ -1942,6 +2017,7 @@ export class ArchiveScene {
     // renderer culling and do not need an O(n) bound recomputation each frame.
     this.instances[0]?.computeBoundingSphere();
     if (this.themeAttribute) this.themeAttribute.needsUpdate = true;
+    if (this.flashAttribute && flashDirty) this.flashAttribute.needsUpdate = true;
     let neighborTop = -Infinity;
     const lane = selectedLane,
       row = selectedRow;
@@ -2006,6 +2082,17 @@ export class ArchiveScene {
   setDecryptionReference(seconds: number | null) { this.decryptionReference = seconds; }
   get detailVisibility() {
     return ease((this.detail - 0.25) / 0.55);
+  }
+  /**
+   * A cheap fingerprint of what moves the picture: camera, reveal, detail, deck
+   * and theme. The frame budget (frame-budget.ts) compares it between frames to
+   * notice motion nobody announced, so an animation added here later cannot be
+   * starved by the idle rate.
+   */
+  motionSignature() {
+    const p = this.camera.position, q = this.camera.quaternion;
+    return p.x * 7.1 + p.y * 11.3 + p.z * 13.7 + (q.x * 3.1 + q.y * 5.3 + q.z * 17.9 + q.w * 19.1) * 100 + this.camera.fov * 2.3 +
+      this.presence * 29 + this.detail * 31 + this.openBlend * 37 + this.reveal * 41 + this.rotation * 47 + this.themeAmount * 43;
   }
   getStats() {
     this.model.updateMatrixWorld(true);

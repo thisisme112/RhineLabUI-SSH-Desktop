@@ -183,6 +183,8 @@ declare global {
       platform: string;
       /** Which of the two window captions to use; the OS draws it. */
       theme?: (value: "light" | "dark") => void;
+      /** The window as it is now (JPEG), for the theme change-over. */
+      capture?: () => Promise<Uint8Array | null>;
       versions: { electron: string; chrome: string; node: string };
       session?: DesktopSessionBridge | DesktopSessionsBridge;
       services?: ServicesBridge;

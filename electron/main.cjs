@@ -777,6 +777,11 @@ let appliedChrome = null;
  *  has to be told. Only the two palettes above are reachable: the payload is a
  *  name, never a colour. */
 function registerShellIpc() {
+  // The theme change-over captures the window as it is, to break it up over the new theme.
+  ipcMain.handle("shell:capture", async (event) => {
+    const image = await event.sender.capturePage();
+    return image.isEmpty() ? null : image.toJPEG(90);
+  });
   ipcMain.on("shell:theme", (event, value) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win || win.isDestroyed()) return;

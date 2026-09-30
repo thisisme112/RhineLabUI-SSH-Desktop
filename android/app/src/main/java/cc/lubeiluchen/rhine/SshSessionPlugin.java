@@ -27,6 +27,9 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import org.json.JSONObject;
 import android.content.Context;
+import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.inputmethod.InputMethodManager;
 
 @CapacitorPlugin(name = "SshSession", permissions = { @Permission(alias = "notifications", strings = { Manifest.permission.POST_NOTIFICATIONS }) })
@@ -76,13 +79,41 @@ public class SshSessionPlugin extends RhinePlugin {
         catch (Exception error) { JSObject event = new JSObject(); event.put("message", "后台服务无法启动，请回到应用后重新开启：" + error.getMessage()); notifyListeners("backgroundError", event); }
     }
 
+    /**
+     * Raises the soft keyboard for the terminal. SHOW_IMPLICIT alone is dropped on some ROMs (vivo's
+     * among them) when the WebView has only just taken focus, so on Android 11+ the window's own
+     * inset controller is asked, and either way the request is repeated once if the keyboard is
+     * still not up a moment later.
+     */
     @PluginMethod public void keyboard(PluginCall call) {
         authorized(call, () -> getActivity().runOnUiThread(() -> {
-            getBridge().getWebView().requestFocus();
-            InputMethodManager input = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            input.showSoftInput(getBridge().getWebView(), InputMethodManager.SHOW_IMPLICIT);
+            View view = getBridge().getWebView();
+            view.requestFocus();
+            showKeyboard(view);
+            view.postDelayed(() -> { if (!keyboardVisible(view)) showKeyboard(view); }, 220);
             call.resolve();
         }));
+    }
+    @PluginMethod public void hideKeyboard(PluginCall call) {
+        authorized(call, () -> getActivity().runOnUiThread(() -> {
+            View view = getBridge().getWebView();
+            InputMethodManager input = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            input.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            call.resolve();
+        }));
+    }
+    private void showKeyboard(View view) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            WindowInsetsController controller = view.getWindowInsetsController();
+            if (controller != null) { controller.show(WindowInsets.Type.ime()); return; }
+        }
+        InputMethodManager input = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        input.showSoftInput(view, 0);
+    }
+    private static boolean keyboardVisible(View view) {
+        if (Build.VERSION.SDK_INT < 30) return false;
+        WindowInsets insets = view.getRootWindowInsets();
+        return insets != null && insets.isVisible(WindowInsets.Type.ime());
     }
 
     @PluginMethod public void resolve(PluginCall call) {

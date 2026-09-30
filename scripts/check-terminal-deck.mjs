@@ -254,12 +254,18 @@ try {
       source: `if (!localStorage.getItem('rhine-settings')) localStorage.setItem('rhine-settings', JSON.stringify({sound:false,music:false,reduced:false,superPerformance:${process.argv.includes("--fast")}}));`,
     });
     await send("Page.navigate", {
-      url: `http://127.0.0.1:${port}/?scene=archive`,
+      // Scripted runs keep every frame (their timings assume it) unless the run is about the frame budget itself.
+      url: `http://127.0.0.1:${port}/?scene=archive${process.argv.includes("--theme-sync") ? "" : "&no-frame-budget"}`,
     });
     await until(
       "scene and hosts",
       `window.rhine?.stats().ready && window.rhineSshUi?.cardOf('review-host') !== null && !!window.rhineSshUi`,
     );
+    if (process.argv.includes("--theme-sync")) {
+      const { checkThemeSync } = await import("./theme-sync-checks.mjs");
+      await checkThemeSync({ evaluate, until, check, shot, key, send, sleep });
+      return;
+    }
     if (process.argv.includes("--flow-fix")) {
       const { checkFlowFix } = await import("./flow-fix-checks.mjs");
       await checkFlowFix({ evaluate, until, check, shot, key, send, sleep });

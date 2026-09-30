@@ -15,6 +15,7 @@ type NativeSession = {
   send(options: { id: string; line: string }): Promise<void>;
   stop(options: { id: string }): Promise<void>;
   keyboard(): Promise<void>;
+  hideKeyboard(): Promise<void>;
   background(options: { enabled: boolean }): Promise<{ enabled: boolean; notificationGranted: boolean }>;
   backgroundStatus(): Promise<{ enabled: boolean; notificationGranted: boolean }>;
   addListener(event: "line" | "closed", handler: (event: NativeEvent) => void): Promise<{ remove(): Promise<void> }>;
@@ -23,6 +24,7 @@ type NativeSession = {
 };
 const plugin = registerPlugin<NativeSession>("SshSession");
 export const showTerminalKeyboard = () => plugin.keyboard();
+export const hideTerminalKeyboard = () => plugin.hideKeyboard();
 export const nativeBackground = { set: (enabled: boolean) => plugin.background({ enabled }), status: () => plugin.backgroundStatus(), onDisconnect: (handler: () => void) => plugin.addListener("disconnectAll", handler), onError: (handler: (event: { message: string }) => void) => plugin.addListener("backgroundError", handler) };
 
 /** Each pipe owns a token. Late process events cannot reach a new connection. */

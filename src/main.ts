@@ -32,12 +32,19 @@ import {
   archiveFiles,
   isActiveArchive,
 } from "./data";
-import { TerminalAudio } from "./audio";
+import { TerminalAudio, VOICES } from "./audio";
+import { motifOf } from "./theme-design";
+import { ThemePoster } from "./theme-poster";
+import { setSurfacePalette } from "./theme-material";
+import { playThemeReveal } from "./theme-reveal";
+import { showThemeMark } from "./theme-mark";
+import { configureHoverCards } from "./hover-card";
 import { audioSettingsMarkup } from "./audio-settings";
 import { StartupGate } from "./startup";
 import { isWallpaper, wallpaperHost, wallpaperFrame, type WallpaperProperties } from "./wallpaper";
 import { isDesktop } from "./desktop";
 import { isAndroid } from "./android";
+import { FrameBudget, ResolutionGovernor, ANDROID_RATES, DESKTOP_RATES } from "./frame-budget";
 import { hostLabel, hostSubtitle, SshHostCards } from "./ssh/host-cards";
 import {
   hostDetailMarkup,
@@ -61,7 +68,7 @@ import { Workbench } from "./workbench";
 let workbench: Workbench | undefined;
 import { ArchivePlayground } from "./archive-playground";
 import { ARRAY_OPENING_END, openingShowsDetail } from "./wallpaper-opening";
-import { paintTheme, setPalette, themeSettingsMarkup, THEMES, type ThemeName } from "./theme-ui";
+import { currentPalette, paintTheme, paletteRgb, setPalette, signalsOf, themeSettingsMarkup, THEMES, type ThemeName } from "./theme-ui";
 import { settingsNavigation, type SettingsSection } from "./settings-navigation";
 let openSettingsSection: (section: SettingsSection) => void = () => {};
 let playground: ArchivePlayground | undefined;
@@ -100,6 +107,7 @@ let sshBank: SshSessionBank | undefined;
 let sshLibrary: SshLibrary | undefined;
 let openSshShortcut: (id: string, force?: boolean) => void = () => {};
 let sshOverview: import("./ssh/overview").SshOverview | undefined;
+let portals: import("./portals").SpatialPortals | undefined;
 let desktopModalScope: import("./ssh/surface").SurfaceScope | undefined;
 /** Desktop SSH: open a stored session record in the record surface. */
 let openStoredRecord: (file: string) => void = () => {};
@@ -118,7 +126,8 @@ let pruneSshHistory: () => void = () => {};
  * Host archives share the original HUD and detail surfaces while authored
  * archives keep their own records and positions.
  */
-const hostCards = isDesktop || isAndroid ? new SshHostCards(true) : undefined;
+const demoSsh = !isDesktop && !isAndroid && !isWallpaper;
+const hostCards = isDesktop || isAndroid || demoSsh ? new SshHostCards(true) : undefined;
 /** The session client, once the desktop layer has loaded. */
 let sshClient: SshClient | undefined;
 const hostAtCard = (card: number) => hostCards?.hostAt(card);
@@ -185,10 +194,6 @@ import { logo, brandHeading } from "./brand";
 
 // The desktop launcher verifies its Vite mode. Keeping this compile-time
 // gate lets web and wallpaper builds omit the SSH terminal and native bridge.
-// The web build exposes a safe, read-only SSH showcase.  It reuses the real
-// workspace UI with fixture hosts, but never attempts to access a native SSH
-// bridge (browsers cannot open the local ssh/PTY APIs).
-const demoSsh = !isDesktop && !isAndroid && !isWallpaper;
 const desktopShell = isDesktop || isAndroid || demoSsh;
 // Never forward exception messages: they can contain terminal or file contents.
 if (window.rhineDesktop?.captureError) {
@@ -203,10 +208,10 @@ if (window.rhineDesktop?.captureError) {
   window.addEventListener("unhandledrejection", () => report("rejection"));
 }
 
-
 $("#stage").innerHTML = `
   ${isDesktop ? '<div class="titlebar-drag" aria-hidden="true"></div>' : ""}
   <div id="three-scene" class="three-scene"></div>
+  ${desktopShell ? '<canvas id="theme-poster" class="theme-poster" aria-hidden="true"></canvas>' : ""}
   <div class="scene-atmosphere archive-atmosphere"></div>
   <div id="boot-background" class="boot-background"><svg viewBox="0 0 1920 1080" preserveAspectRatio="none"><g fill="none" stroke="#fff" stroke-width="3"><path d="M-210 705C-45 705 182 704 247 567C337 377 99 306 4 435S27 680 169 631C309 584 227 314 279 111S568-113 568-113"/><path d="M1560-80C1374 114 1671 168 1601 323S1371 367 1431 480S1692 666 1559 787S1329 886 1498 1130"/><circle cx="1450" cy="648" r="346"/><circle cx="1450" cy="648" r="348"/></g></svg></div>
   <header class="brand">${brandHeading}</header>
@@ -231,9 +236,9 @@ $("#stage").innerHTML = `
     <div class="archive-callout"><div class="eyebrow">INTERNAL DATABASE <span>／</span> <span id="archive-category">机构档案</span></div><button class="file-title" data-action="open">FILE NUMBER: <span id="selected-id">X-<span id="selected-code">001</span></span><span class="file-open">↗</span></button><div class="callout-rule"><i></i></div><div class="file-summary"><span id="selected-title">莱茵生命</span><span id="selected-clearance">BUSINESS AREA</span></div><button class="read-file" data-action="open">ACCESS FILE <span>→</span></button>${desktopShell ? '<button class="archive-session" data-action="ssh-terminal" hidden>打开终端 <span>↗</span></button><p class="archive-pull-hint">点击选中模型读取，或按住向上抽出</p>' : ""}</div>
     <div id="hover-label" class="hover-label" hidden>X-<span id="hover-code">001</span> / <span id="hover-title"></span></div>
     <div class="archive-counter"><span class="tiny-label">ARCHIVE / SELECT</span><div><span id="selected-number">01</span><i>/</i><span class="count-total">12</span></div></div>
-    <div class="archive-navigation"><button data-action="prev" aria-label="上一个档案">↑</button><div id="file-ticks" class="file-ticks"></div><button data-action="next" aria-label="下一个档案">↓</button></div>
-    <div class="column-navigation"><button data-action="column-prev" aria-label="上一列">←</button><div><span id="column-number">COLUMN <span id="column-index">03</span> / ${String(archiveColumns.length).padStart(2, "0")}</span><strong id="column-name">机构档案</strong></div><button data-action="column-next" aria-label="下一列">→</button></div>
-    <div class="archive-hint"><kbd>←</kbd> <kbd>→</kbd> 切换列 <span>／</span> <kbd>↑</kbd> <kbd>↓</kbd> 前后档案 <span>／</span> <kbd>ENTER</kbd> 读取</div>
+    <div class="archive-navigation"><button data-action="prev" aria-label="上一个档案">←</button><div id="file-ticks" class="file-ticks"></div><button data-action="next" aria-label="下一个档案">→</button></div>
+    <div class="column-navigation"><button data-action="column-prev" aria-label="上一列">↑</button><div><span id="column-number">COLUMN <span id="column-index">03</span> / ${String(archiveColumns.length).padStart(2, "0")}</span><strong id="column-name">机构档案</strong></div><button data-action="column-next" aria-label="下一列">↓</button></div>
+    <div class="archive-hint"><kbd>←</kbd> <kbd>→</kbd> 前后档案 <span>／</span> <kbd>↑</kbd> <kbd>↓</kbd> 切换列 <span>／</span> <kbd>ENTER</kbd> 读取</div>
   </section>
   <section id="detail-ui" class="detail-ui" aria-label="档案内容" hidden>
     <button class="back-button" data-action="back">← <span>ARCHIVE OVERVIEW</span><small>ESC</small></button>
@@ -241,7 +246,7 @@ $("#stage").innerHTML = `
     <article id="detail-content" class="detail-content"></article>
   </section>
   <div class="powered">POWERED BY <b>RHINE LAB</b><i></i></div>
-    <footer class="system-footer"><span><i class="status-light"></i> ${desktopShell ? "SSH WORKSPACE" : "SESSION AUTHORIZED"}${demoSsh ? ' · 演示模式' : ''}${isWallpaper ? '<button type="button" class="three-toggle" data-action="toggle-three" aria-pressed="true" title="卸载三维模型，保留 2D 界面">3D 开启</button>' : ''}</span><span>${desktopShell ? "REMOTE SESSION" : "JOYCE MOORE"} <i>／</i> <span id="clock">00:00:00</span></span><button data-action="replay" title="重播启动流程">REINITIALIZE ↗</button></footer>
+  <footer class="system-footer"><span><i class="status-light"></i> ${desktopShell ? "SSH WORKSPACE" : "SESSION AUTHORIZED"}${demoSsh ? ' · 演示模式' : ""}${isWallpaper ? '<button type="button" class="three-toggle" data-action="toggle-three" aria-pressed="true" title="卸载三维模型，保留 2D 界面">3D 开启</button>' : ''}</span><span>${desktopShell ? "REMOTE SESSION" : "JOYCE MOORE"} <i>／</i> <span id="clock">00:00:00</span></span><button data-action="replay" title="重播启动流程">REINITIALIZE ↗</button></footer>
   <div id="pwa-update-notice" class="pwa-update-notice" role="status" hidden><span>新版本已就绪</span><button data-pwa-action="update">更新并重启 ↻</button></div>
   <div id="modal-root"></div><div id="toast" class="toast" role="status"></div>
   <div id="loading" class="loading"><div class="loading-mark">${logo}</div><span>CONNECTING TO INTERNAL DATABASE</span><i></i></div>
@@ -301,7 +306,7 @@ function readLocal<T>(key: string, fallback: T): T {
   }
 }
 const saved = new Set<string>(readLocal<string[]>("rhine-saved", []));
-const storedPrefs = readLocal<Partial<{ sound: boolean; music: boolean; soundVolume: number; musicVolume: number; reduced: boolean; quality: boolean; rendering: RenderQuality; superPerformance: boolean; colorTheme: "light" | "dark"; palette: ThemeName }>>("rhine-settings", {});
+const storedPrefs = readLocal<Partial<{ sound: boolean; music: boolean; soundVolume: number; musicVolume: number; reduced: boolean; quality: boolean; rendering: RenderQuality; renderingChosen: boolean; superPerformance: boolean; colorTheme: "light" | "dark"; palette: ThemeName }>>("rhine-settings", {});
 const prefs = {
   sound: true,
   music: storedPrefs.sound ?? true,
@@ -311,7 +316,11 @@ const prefs = {
   quality: true,
   superPerformance: false,
   ...storedPrefs,
-  rendering: normalizeQuality(storedPrefs.rendering, storedPrefs.quality !== false),
+  // A phone starts on the `mobile` preset and stays there until a preset or a control is picked in
+  // settings (`renderingChosen`); older installs saved the desktop default without ever choosing it.
+  rendering: isAndroid && storedPrefs.renderingChosen !== true
+    ? { ...qualityPresets.mobile }
+    : normalizeQuality(storedPrefs.rendering, storedPrefs.quality !== false),
   colorTheme: storedPrefs.colorTheme === "dark" ? "dark" : "light",
   // Which pair of endpoints the light/dark interpolation runs between. An
   // unknown or absent name leaves the shell's own default in place.
@@ -374,6 +383,33 @@ const audio = new TerminalAudio();
 let musicSuppressed = false;
 function configureAudio() { audio.configure({ ...prefs, music: prefs.music && !musicSuppressed }); }
 configureAudio();
+configureHoverCards({ reduced: () => prefs.reduced, onShow: () => audio.play("hover") });
+setSurfacePalette(prefs.palette ?? "warm");
+audio.setVoice(VOICES[motifOf(prefs.palette)]);
+/**
+ * The theme change-over: the new theme's sound, then the window as it was
+ * leaves in the new motif's pieces while the palette and the 3D surfaces
+ * switch underneath at once.
+ */
+let markedPalette: ThemeName = prefs.palette ?? "warm";
+function changePalette(name: ThemeName, origin: readonly [number, number]) {
+  const motif = motifOf(name);
+  // The corner card (theme-mark.ts) follows once the change-over has cleared the screen.
+  showThemeMark({ stage: $("#stage"), from: markedPalette, to: name, reduced: prefs.reduced, visible: () => mode === "archive" && (scene?.sessionDeckFocus ?? 0) < 0.05 && !document.querySelector(".modal-backdrop:not([hidden])") });
+  markedPalette = name;
+  audio.setVoice(VOICES[motif]);
+  audio.play("theme");
+  const [light, dark] = signalsOf(name);
+  const signals = prefs.colorTheme === "dark" ? dark : light;
+  void playThemeReveal({
+    motif,
+    apply: () => { setPalette(name, true); setSurfacePalette(name); scene?.flipPalette(signals[0]); },
+    accent: signals[0],
+    second: signals[1],
+    origin,
+    reduced: prefs.reduced,
+  });
+}
 const reviewEntry = reviewParams.has("scene") || reviewParams.has("time") || reviewParams.get("review") === "1";
 let started = false;
 const loading = $("#loading");
@@ -499,6 +535,18 @@ function savePrefs() {
   syncWallpaperBackground();
 }
 let previousLayout = "";
+let resizeTimer = 0;
+/**
+ * Re-measure the WebGL targets. A phone's soft keyboard slides in over a few
+ * frames and each of them changes the viewport: reallocating the composer's
+ * targets, the AO and bokeh buffers for every one is a visible hitch, so on
+ * Android the last size wins after the animation has settled.
+ */
+function resizeScenes() {
+  if (!isAndroid) { scene?.resize(); viewer?.resize(); return; }
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => { scene?.resize(); viewer?.resize(); }, 140);
+}
 function fit() {
   const stage = $("#stage");
   const viewport = $("#viewport");
@@ -529,8 +577,7 @@ function fit() {
   const layoutKey = JSON.stringify([width, height, scale, kind, devicePixelRatio]);
   if (layoutKey !== previousLayout) {
     previousLayout = layoutKey;
-    scene?.resize();
-    viewer?.resize();
+    resizeScenes();
   }
   updateQualitySummary();
   // Re-measure line covers and tab underline after wrapping changes.
@@ -626,10 +673,13 @@ function select(index: number, navigation?: ArchiveNavigation, silent = false) {
   columnMemory[fileLocation(selected).lane] = selected;
   if (mode === "detail") setMode("archive");
   activeTab = "overview";
+  // A cell crossed by a drag, a coast or a wheel run: the counters follow, the
+  // titles wait and turn over once, when the plane settles (scene.onSettle).
+  const passing = Boolean(scene?.coasting);
   scene?.select(selected, navigation);
-  updateSelection(navigation);
+  updateSelection(navigation, passing);
   const columnMove = navigation && "axis" in navigation && navigation.axis === "lane";
-  if (!silent) audio.play(columnMove ? "column" : "tick", columnMove ? navigation.direction * .45 : 0);
+  if (!silent) audio.play(columnMove ? "column" : "tick", columnMove ? navigation.direction * .45 : 0, passing ? .35 : 1);
 }
 function stepFile(direction: number) {
   const files = columnFiles(fileLocation(selected).lane);
@@ -644,29 +694,32 @@ function stepColumn(direction: number) {
   const next = wrap(lane + direction, archiveColumns.length);
   select(columnMemory[next], { axis: "lane", direction });
 }
-function updateSelection(navigation?: ArchiveNavigation) {
+function updateSelection(navigation?: ArchiveNavigation, passing = false) {
   const r = records[selected];
   const host = hostAtCard(selected);
   const { lane } = fileLocation(selected);
   const files = columnFiles(lane);
-  $("#selected-id").firstChild!.textContent = `${r.id.slice(0, 2)}`;
-  selectionTitle.update({ text: host ? hostLabel(host) : r.title, animated: !prefs.reduced && mode === "archive" });
-  clearanceTitle.update({ text: host ? hostStateLabel(selected) : r.clearance, animated: !prefs.reduced && mode === "archive" });
-  categoryTitle.update({ text: host ? hostSubtitle(host) || r.category : r.category, animated: !prefs.reduced && mode === "archive" });
+  const animated = !prefs.reduced && mode === "archive" && !passing;
+  if (!passing) {
+    $("#selected-id").firstChild!.textContent = `${r.id.slice(0, 2)}`;
+    selectionTitle.update({ text: host ? hostLabel(host) : r.title, animated });
+    clearanceTitle.update({ text: host ? hostStateLabel(selected) : r.clearance, animated });
+    categoryTitle.update({ text: host ? hostSubtitle(host) || r.category : r.category, animated });
+  }
   const direction =
     navigation && "axis" in navigation
       ? navigation.direction > 0
         ? "up"
         : "down"
       : "auto";
-  selectedCode.update({
+  if (!passing) selectedCode.update({
     value: Number(r.id.slice(2)),
-    animated: !prefs.reduced && mode === "archive",
+    animated,
     direction,
   });
   fileCounter.update({
     value: files.indexOf(selected) + 1,
-    animated: !prefs.reduced && mode === "archive",
+    animated,
     direction:
       navigation && "axis" in navigation && navigation.axis === "row"
         ? direction
@@ -675,13 +728,13 @@ function updateSelection(navigation?: ArchiveNavigation) {
   $(".count-total").textContent = String(files.length).padStart(2, "0");
   columnCounter.update({
     value: lane + 1,
-    animated: !prefs.reduced && mode === "archive",
+    animated,
     direction:
       navigation && "axis" in navigation && navigation.axis === "lane"
         ? direction
         : "auto",
   });
-  columnTitle.update({ text: archiveColumns[lane], animated: !prefs.reduced && mode === "archive" });
+  if (!passing) columnTitle.update({ text: archiveColumns[lane], animated });
   $<HTMLButtonElement>('[data-action="column-prev"]').disabled = false;
   $<HTMLButtonElement>('[data-action="column-next"]').disabled = false;
   const firstTick = Math.max(0, Math.min(files.indexOf(selected) - 3, files.length - fileTicks.length));
@@ -1110,10 +1163,12 @@ document.addEventListener("change", (e) => {
   }
   if (el.id === "quality-preset" && Object.hasOwn(qualityPresets, el.value)) {
     prefs.rendering = { ...qualityPresets[el.value as QualityPreset] };
+    prefs.renderingChosen = true;
     savePrefs();
   } else if (el.dataset.quality) {
     const key = el.dataset.quality as keyof RenderQuality;
     prefs.rendering = normalizeQuality({ ...prefs.rendering, [key]: key === "antialias" ? el.value : Number(el.value) });
+    prefs.renderingChosen = true;
     savePrefs();
   }
   if (el.dataset.pref) {
@@ -1130,9 +1185,14 @@ document.addEventListener("click", (e) => {
   const paletteButton = (e.target as Element).closest<HTMLElement>("button[data-color-palette]");
   if (paletteButton) {
     const name = paletteButton.dataset.colorPalette as ThemeName;
-    if ((THEMES as readonly string[]).includes(name)) { prefs.palette = name; setPalette(name, prefs.reduced); savePrefs(); }
+    if ((THEMES as readonly string[]).includes(name) && name !== prefs.palette) {
+      prefs.palette = name;
+      savePrefs();
+      changePalette(name, [e.clientX / innerWidth, e.clientY / innerHeight]);
+    }
     return;
   }
+  if ((e.target as Element).closest('[data-action="sound-preview"]')) { audio.play("confirm"); return; }
   if (!started) return;
   if (modalClosing) return;
   const el = (e.target as Element).closest<HTMLElement>("button");
@@ -1332,6 +1392,12 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
+  // A portal page covers the archive: only Escape reaches it.
+  if (portals?.isPageOpen) {
+    if (e.key === "Escape") { e.preventDefault(); portals.escape(); }
+    return;
+  }
+  if (e.key === "Escape" && !modal && portals?.escape()) { e.preventDefault(); return; }
   const typing = e.target instanceof Element && Boolean(e.target.closest("input,select,textarea,summary,[contenteditable=true]"));
   if (e.key === "Escape") {
     // Same path as a history pop (see `goBack`), so Escape and the Android back
@@ -1375,17 +1441,13 @@ document.addEventListener("keydown", (e) => {
     if (mode === "boot") setMode("archive");
     openModal("search");
   }
-  if (e.key === "ArrowLeft" && mode !== "boot") {
+  if (["ArrowLeft", "ArrowRight"].includes(e.key) && mode !== "boot") {
     e.preventDefault();
-    stepColumn(-1);
-  }
-  if (e.key === "ArrowRight" && mode !== "boot") {
-    e.preventDefault();
-    stepColumn(1);
+    stepFile(e.key === "ArrowLeft" ? -1 : 1);
   }
   if (["ArrowUp", "ArrowDown"].includes(e.key) && mode !== "boot") {
     e.preventDefault();
-    stepFile(e.key === "ArrowUp" ? -1 : 1);
+    stepColumn(e.key === "ArrowUp" ? -1 : 1);
   }
   if (
     e.key === "Enter" &&
@@ -1470,13 +1532,73 @@ let lastTime = 0,
   frameCount = 0,
   frameStart = performance.now(),
   fps = 0;
+// The frame rate follows what is on screen (frame-budget.ts). Scripted browsers keep every frame
+// unless ?frame-budget asks for the gate, and ?no-frame-budget turns it off; the wallpaper host paces itself.
+const budgetQuery = new URLSearchParams(location.search);
+const frameBudget = !isWallpaper && !budgetQuery.has("no-frame-budget") && (budgetQuery.has("frame-budget") || !navigator.webdriver)
+  ? new FrameBudget(isAndroid ? ANDROID_RATES : DESKTOP_RATES) : undefined;
+if (frameBudget) {
+  // Input is motion the eye follows: hold the full rate for two seconds after it.
+  for (const type of ["pointerdown", "pointermove", "pointerup", "wheel", "keydown", "touchstart", "touchmove"])
+    window.addEventListener(type, () => frameBudget.busy(performance.now(), 2000), { passive: true, capture: true });
+}
+// The far-layer poster (theme-poster.ts): the theme's flat graphic behind the archive and its detail page.
+const posterCanvas = desktopShell ? $<HTMLCanvasElement>("#theme-poster") : undefined;
+const poster = posterCanvas ? new ThemePoster(posterCanvas) : undefined;
+function updatePoster(time: number, amount: number) {
+  if (!poster || !posterCanvas) return;
+  const show = ready && (mode === "archive" || mode === "detail") && !sshSurfaceActive() && !viewer?.isOpen && !portals?.isPageOpen;
+  posterCanvas.dataset.on = String(show);
+  if (!show) return;
+  const name = currentPalette();
+  const { lane } = fileLocation(selected);
+  const files = columnFiles(lane);
+  poster.update({
+    motif: motifOf(name),
+    colors: { ink: paletteRgb(name, "ink", amount), accent: paletteRgb(name, "accent", amount), cyan: paletteRgb(name, "cyan", amount) },
+    // The figure reads as the card's own number: X-001 becomes X.001.
+    code: records[selected].id.replace("-", "."),
+    position: files.indexOf(selected) + 1,
+    count: files.length,
+    group: archiveColumns[lane],
+    time,
+    reduced: prefs.reduced,
+  });
+}
+// A phone that cannot hold its budget renders smaller instead of stuttering (frame-budget.ts ResolutionGovernor).
+const governor = frameBudget && isAndroid ? new ResolutionGovernor() : undefined;
+let governedAt = 0;
+function governResolution(ms: number) {
+  if (!governor || !frameBudget) return;
+  const tier = frameBudget.tier;
+  // Idle and background frames are held back on purpose: they are not the scene's cost.
+  if (tier === "idle" || tier === "background") { governedAt = 0; return; }
+  const dt = governedAt ? ms - governedAt : 0;
+  governedAt = ms;
+  const next = dt > 0 ? governor.observe(ms, dt, 1000 / 60) : null;
+  if (next !== null) scene?.setDynamicScale(next);
+}
+let budgetMotion = 0, budgetSelected = -1;
+/** Whether this animation frame does the full work. Everything not announced here is caught by motionSignature. */
+function budgetAdmit(ms: number) {
+  if (!frameBudget) return true;
+  if (mode === "boot" || !ready || threeState === "loading" || viewer?.isOpen || playground?.active || scene?.flipActive) frameBudget.busy(ms, 250);
+  else if (sshSurfaceActive() || modal) frameBudget.active(ms, 500);
+  // Only a desktop window that lost focus drops to the background rate: a phone app that is not in front is not ticking.
+  return frameBudget.admit(ms, isDesktop && document.visibilityState === "visible" && !document.hasFocus());
+}
 function frame(ms: number) {
   if (!wallpaperFrame(ms)) { requestAnimationFrame(frame); return; }
   if (document.hidden) { requestAnimationFrame(frame); return; }
+  if (!budgetAdmit(ms)) { requestAnimationFrame(frame); return; }
+  governResolution(ms);
   workbench?.tick();
+  portals?.sync();
+  scene?.setPageCovered(Boolean(portals?.isPageOpen));
   const time = ms / 1000;
   const theme = scene?.themeAmount ?? (prefs.colorTheme === "dark" ? 1 : 0);
   paintTheme(theme);
+  updatePoster(time, theme);
   viewer?.setTheme(theme);
   playground?.tick(time);
   const cinema =
@@ -1487,6 +1609,13 @@ function frame(ms: number) {
   sshFrame?.(time);
   // The calibrated 2D opening fully covers the scene until array entry.
   if (!viewer?.isOpen && (!cinema || cinema.time >= 21.9)) scene?.update(time, cinema);
+  if (frameBudget && scene) {
+    // Motion nobody announced (a new animation in the scene) still lifts the rate for half a second.
+    const motion = scene.motionSignature();
+    if (Math.abs(motion - budgetMotion) > 1e-4) frameBudget.busy(ms, 500);
+    budgetMotion = motion;
+    if (selected !== budgetSelected) { budgetSelected = selected; frameBudget.active(ms); }
+  }
   sshAfterFrame?.();
   sshOverview?.setVisible(mode === "archive" && ready, Boolean(modal) || sshSurfaceActive());
   if (desktopShell) syncArchiveChrome();
@@ -1514,6 +1643,7 @@ function frame(ms: number) {
     (x, y) => currentScene.projectCard(x, y), Boolean(cinema));
   if (Math.floor(time) !== lastTime) {
     lastTime = Math.floor(time);
+    // The digits roll on the compositor (WAAPI), not on this loop, so the clock does not lift the rate.
     updateFooterClock(new Date(), !prefs.reduced);
   }
   frameCount++;
@@ -1522,6 +1652,7 @@ function frame(ms: number) {
     frameStart = ms;
     frameCount = 0;
     $("#three-scene").dataset.fps = String(Math.round(fps));
+    if (frameBudget) $("#three-scene").dataset.budget = frameBudget.tier;
     $("#three-scene").dataset.renderStats = JSON.stringify(scene?.getStats() ?? { loaded: false, drawCalls: 0, triangles: 0 });
   }
   requestAnimationFrame(frame);
@@ -1547,6 +1678,7 @@ function bindScene(scene: ArchiveScene, cell?: { lane: number; row: number }) {
         }
       };
     }
+    scene.onSettle = () => { if (mode === "archive") updateSelection(); };
     scene.onNavigate = (axis, direction) => {
       if (mode !== "archive" || modal || viewer?.isOpen) return;
       if (axis === "lane") stepColumn(direction);
@@ -1819,6 +1951,8 @@ Object.assign(window, {
       ...scene?.getStats(),
       threeState,
       fps: Math.round(fps),
+      flipping: Boolean(scene?.flipActive),
+      budget: frameBudget ? { tier: frameBudget.tier, admitted: frameBudget.admitted, skipped: frameBudget.skipped, refreshMs: Math.round(frameBudget.refreshMs * 10) / 10 } : null,
       mode,
       ready,
       startup: started ? "started" : entry?.phase ?? "loading",
@@ -1847,6 +1981,16 @@ if (desktopShell) {
       reconnect: session => { void reconnect(session); },
     });
     sshBank = bank;
+    void import("./portals").then(({ SpatialPortals }) => {
+      portals = new SpatialPortals($("#stage"), {
+        bank: () => sshBank,
+        reduced: () => prefs.reduced,
+        sound: cue => audio.play(cue),
+        openSession: session => { if (session.client.target) openHostSession(session.client.target); },
+        home: () => started && mode === "archive" && !modal && !viewer?.isOpen && !playground?.active
+          && !sshSurfaceActive() && !sshTerminalPending && (sshOverview?.isCollapsed ?? true),
+      });
+    });
     let current = bank.active;
     let client = current.client;
     let services = current.services;
@@ -2130,6 +2274,7 @@ if (desktopShell) {
       hidePrompt();
     };
     const startSession = async (input: string | SshLaunchDescriptor, reuse?: WorkspaceSession, background = false, project?: import("./ssh/workspace-store").ArchiveShortcut, enter = false) => {
+      if (demoSsh) { notify("SSH 演示模式：此页面不会连接真实主机"); return; }
       if (reuse?.client.active) return { ok: false as const, error: "这次会话仍在运行" };
       const descriptor = typeof input === "string" ? { target: input } : { ...input, ...(input.extraArgs ? { extraArgs: [...input.extraArgs] } : {}) };
       const context = reuse ?? (current.descriptor || client.target ? bank.create() : current);
@@ -2190,16 +2335,25 @@ if (desktopShell) {
       void startSession(descriptor, undefined, false, undefined, true);
     };
     connectHostAlias = (alias: string, newSession = false) => {
-      const host = [...cards.bound, ...cards.overflow].find(entry => entry.alias === alias);
-      if (demoSsh) {
-        const card = cards.cardOf(alias);
-        if (card !== undefined && card !== selected) select(card);
-        if (card !== undefined && mode !== "detail") setMode("detail");
-        notify("SSH 演示模式：此页面不会连接真实主机");
-        return;
-      }
-      connectLaunch({ target: alias, displayName: host ? hostLabel(host) : alias }, newSession);
-
+      connectLaunch({ target: alias, displayName: alias }, newSession);
+    };
+    /** The overview's 重连: end this host's live session (if any) and connect it again in the same tab. */
+    const reconnectHostAlias = (alias: string) => {
+      const context = bank.forAlias(alias);
+      if (!context) { connectHostAlias(alias); return; }
+      const card = cards.cardOf(alias);
+      if (card !== undefined && card !== selected) select(card);
+      if (card !== undefined && mode !== "detail") setMode("detail");
+      audio.play("open");
+      void (async () => {
+        if (context.client.active) {
+          context.manualStop = true; context.client.stop();
+          // The exit arrives from the main process; the tab can start again once it has.
+          for (let waited = 0; context.client.active && waited < 4000; waited += 50) await new Promise(resolve => setTimeout(resolve, 50));
+          if (context.client.active) { notify("连接还没有结束，请稍后再试"); return; }
+        }
+        await reconnect(context);
+      })();
     };
     openHostSession = alias => {
       const context = bank.forAlias(alias);
@@ -2596,6 +2750,20 @@ if (desktopShell) {
       inspect: alias => { const card = cards.cardOf(alias); if (card !== undefined) { openHostCard(card); audio.play("open"); } },
       preview: alias => { const card = cards.cardOf(alias); if (card !== undefined && mode === "archive" && !modal && !sshSurfaceActive()) scene?.previewArchive(card); },
       connect: (alias, fresh) => connectHostAlias(alias, fresh),
+      reconnect: alias => reconnectHostAlias(alias),
+      disconnect: alias => { const context = bank.forAlias(alias); if (context) requestStop(context); },
+      duplicate: async alias => {
+        const result = await hosts.duplicate(alias);
+        if (result.ok) notify("已复制主机，口令需在首次连接时输入");
+        return result;
+      },
+      remove: async alias => {
+        // A live session keeps its host: end it first, as the host editor's own remove does.
+        if (bank.forAlias(alias)?.client.active) return { ok: false, error: "先断开会话" };
+        const result = await hosts.removeByAlias(alias);
+        if (result.ok) notify("主机已移除，会话历史已保留");
+        return result;
+      },
       session: key => { const context = bank.byKey(key); if (context) openWorkspace(context); },
       closeSession: key => { const context = bank.byKey(key); if (context) requestStop(context, true); },
       settings: () => openWorkspacePreferences(), search: () => openQuickSearch(), pageSound: () => audio.play("ui-tick"),

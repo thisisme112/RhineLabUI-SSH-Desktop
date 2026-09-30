@@ -1,0 +1,107 @@
+/* The drop-follow detail card; one per page, dressed by the palette's motif. */
+.rhine-hover-card {
+  --card-series: var(--theme-accent);
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 2147482000;
+  box-sizing: border-box;
+  min-width: 210px;
+  max-width: min(340px, calc(100vw - 16px));
+  padding: 12px 14px 11px 17px;
+  pointer-events: none;
+  will-change: transform;
+  color: var(--theme-ink);
+  background: var(--theme-paper);
+  border: 1px solid color-mix(in srgb, var(--theme-line) 80%, transparent);
+  box-shadow: 0 14px 34px -18px rgb(0 0 0 / 0.45);
+  font-size: 12px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+.rhine-hover-card[hidden] { display: none; }
+.rhine-hover-card small {
+  display: block;
+  color: var(--card-series);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.rhine-hover-card small:empty { display: none; }
+.rhine-hover-card strong {
+  display: block;
+  margin: 2px 0 7px;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.rhine-hover-card dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 14px;
+  margin: 0;
+}
+.rhine-hover-card dt { color: var(--theme-muted); white-space: nowrap; }
+.rhine-hover-card dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.rhine-hover-mark { position: absolute; pointer-events: none; }
+
+/* Paper: a paper card, a hairline and a 3 px series bar. */
+.rhine-hover-card[data-motif="shutters"] .rhine-hover-mark { inset: 0 auto 0 0; width: 3px; background: var(--card-series); }
+
+/* Night: translucent and dark, a cyan waterline along the bottom. */
+.rhine-hover-card[data-motif="tide"] {
+  color: #e7eef2;
+  background: rgb(10 18 26 / 0.84);
+  border-color: rgb(140 190 210 / 0.22);
+  backdrop-filter: blur(10px);
+}
+.rhine-hover-card[data-motif="tide"] dt { color: rgb(200 220 230 / 0.6); }
+.rhine-hover-card[data-motif="tide"] .rhine-hover-mark { inset: auto 0 0 0; height: 2px; background: var(--card-series); box-shadow: 0 0 12px var(--card-series); }
+
+/* Hazard: solid graphite, a 4 px safety-yellow top and a striped corner. */
+.rhine-hover-card[data-motif="hazard"] {
+  color: #f1efe6;
+  background: #2a2a28;
+  border: 0;
+  border-top: 4px solid #f2c230;
+  padding-left: 14px;
+}
+.rhine-hover-card[data-motif="hazard"] dt { color: #a7a397; }
+.rhine-hover-card[data-motif="hazard"] small { color: #f2c230; }
+.rhine-hover-card[data-motif="hazard"] .rhine-hover-mark {
+  top: 0; right: 0; width: 34px; height: 14px;
+  background: repeating-linear-gradient(-45deg, #f2c230 0 5px, transparent 5px 10px);
+}
+
+/* Clinic: pure white, a hairline, a signal dot in the corner. */
+.rhine-hover-card[data-motif="frames"] {
+  color: #1d2327;
+  background: #fff;
+  border-color: #cfd6da;
+  box-shadow: 0 10px 26px -18px rgb(0 0 0 / 0.35);
+  padding-left: 14px;
+}
+.rhine-hover-card[data-motif="frames"] dt { color: #7b868d; }
+.rhine-hover-card[data-motif="frames"] .rhine-hover-mark { top: 11px; right: 11px; width: 7px; height: 7px; border-radius: 50%; background: var(--card-series); }
+
+/* Orbit: deep blue, a small ring at the left. */
+.rhine-hover-card[data-motif="orbit"] {
+  color: #e4ecff;
+  background: #0d1633;
+  border-color: rgb(120 150 255 / 0.3);
+  border-radius: 10px;
+  padding-left: 30px;
+}
+.rhine-hover-card[data-motif="orbit"] dt { color: rgb(190 205 255 / 0.6); }
+.rhine-hover-card[data-motif="orbit"] .rhine-hover-mark { top: 15px; left: 11px; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--card-series); }
+
+/* Print: a mis-registered pink plate under a blue outline. */
+.rhine-hover-card[data-motif="plates"] {
+  color: #1f2a6b;
+  background: #fbf6ec;
+  border: 1.5px solid #2c46b8;
+  box-shadow: 4px 4px 0 #f08fb2;
+  padding-left: 14px;
+}
+.rhine-hover-card[data-motif="plates"] dt { color: #6a73a8; }
+.rhine-hover-card[data-motif="plates"] small { color: #d9477c; }

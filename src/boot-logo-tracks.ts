@@ -1,4 +1,4 @@
-import { track } from "./boot-tracks";
+import { track } from "./boot-tracks.ts";
 
 // Position along the single shared contour, unwrapped across its closing point.
 // These are the visible stroke's trailing/leading ends, not whole-logo opacity.

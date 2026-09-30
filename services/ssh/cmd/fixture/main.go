@@ -31,6 +31,7 @@ import (
 func main() {
 	dir := flag.String("directory", "", "owned temporary directory for fixture identity files")
 	port := flag.Int("port", 0, "loopback listening port")
+	showcase := flag.Bool("showcase", false, "presentation data: any user with the key, named hosts, GPU telemetry and a prompt")
 	flag.Parse()
 	if *dir == "" {
 		panic("--directory is required")
@@ -63,7 +64,7 @@ func main() {
 			return nil, errors.New("fixture password rejected")
 		},
 		PublicKeyCallback: func(meta ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-			if meta.User() == "key" && string(key.Marshal()) == string(sshPublic.Marshal()) {
+			if (meta.User() == "key" || *showcase) && string(key.Marshal()) == string(sshPublic.Marshal()) {
 				return nil, nil
 			}
 			return nil, errors.New("fixture key rejected")
@@ -189,6 +190,10 @@ func main() {
 								return
 							case "shell":
 								_ = request.Reply(true, nil)
+								if *showcase {
+									go showcaseShell(channel, connection.User())
+									continue
+								}
 								go func() {
 									defer channel.Close()
 									_, _ = io.WriteString(channel, "Isolated SSH fixture\r\nfixture$ ")
@@ -220,7 +225,11 @@ func main() {
 								if nonce := regexp.MustCompile(`RHINE_[a-f0-9]+`).FindString(command.Command); nonce != "" {
 									_, _ = fmt.Fprintf(channel, "%s\nLinux\nx86_64\n/cache\n", nonce)
 								} else if strings.HasPrefix(command.Command, "exec ") && strings.Contains(command.Command, "/cache/rhine-lab/monitor/") {
-									monitorFixture(ctx, channel, emit)
+									if *showcase {
+										showcaseMonitor(ctx, channel, emit, connection.User())
+									} else {
+										monitorFixture(ctx, channel, emit)
+									}
 								} else {
 									_, _ = io.WriteString(channel, "fixture-command-output\n")
 								}

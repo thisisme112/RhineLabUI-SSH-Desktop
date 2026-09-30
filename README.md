@@ -74,8 +74,6 @@ Android：
 npm run android:build
 ```
 
-当前 Android APK 位于 [`release/android/`](release/android/)，安装和更新注意事项见其中的 README；完整 Android 构建说明见 [`docs/ANDROID.md`](docs/ANDROID.md)。
-
 ## 自定义位置
 
 - 档案名称、分类和正文：编辑 `content/archives.json`，然后运行 `npm run export:archives`。
@@ -101,10 +99,6 @@ npm run build:desktop
 ```
 
 桌面检查使用匿名 fixture，不代表已经连接或验收真实 SSH 服务器。真实主机、密码、私钥和会话日志只保存在本机用户数据目录，不应提交到 Git。
-
-## GitHub Actions 云端构建
-
-`.github/workflows/build.yml` 会在推送到 `main`、提交 Pull Request 或手动运行时自动构建网页、Windows 展开式桌面包和 Android debug APK。构建完成后，在 GitHub Actions 的运行记录中下载对应 artifact；Android 任务不需要正式签名密钥，产物是 debug APK。
 
 ## 许可和资源
 

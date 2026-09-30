@@ -180,7 +180,8 @@ export class SshTerminalPanel {
     this.term = this.createTerminal();
     if (isAndroid) void import("./android/terminal-controls").then(({ MobileTerminalControls }) => {
       if (!this.disposed) this.mobileControls = new MobileTerminalControls(this.root, this.screen, () => this.term,
-        () => this.open && !this.root.inert && this.hasShell && (this.workspace?.terminalVisible ?? true));
+        () => this.open && !this.root.inert && this.hasShell && (this.workspace?.terminalVisible ?? true),
+        () => { void this.tools.copy(); });
     });
     if (services?.available)
       this.workspace = new SshWorkspace(this.root, services, {
@@ -201,6 +202,7 @@ export class SshTerminalPanel {
         this.hasShell = false;
         // Discard pending parser writes as well as the old visible buffer.
         this.tools.resetSession();
+        this.mobileControls?.suspend();
         this.term.dispose();
         this.screen.replaceChildren();
         this.term = this.createTerminal();
@@ -243,6 +245,8 @@ export class SshTerminalPanel {
       convertEol: false,
       scrollback: 5000,
       theme: this.screenTheme,
+      // Programs pick ANSI colours for a dark screen; on paper they must still read.
+      minimumContrastRatio: this.dark ? 1 : 4.5,
       allowProposedApi: true,
       disableStdin: true,
     });
@@ -328,6 +332,7 @@ export class SshTerminalPanel {
       this.dark = dark;
       this.themeSignature = signature;
       this.term.options.theme = this.screenTheme;
+      this.term.options.minimumContrastRatio = dark ? 1 : 4.5;
       this.screenRevision++;
     }
     if (reduced !== this.reduced) {
@@ -456,6 +461,7 @@ export class SshTerminalPanel {
     // this parser also accepts IME/insertText input without another keystroke.
     this.term.textarea?.dispatchEvent(new KeyboardEvent("keyup", { key: "Control", code: "ControlLeft", keyCode: 17 }));
     this.open = false;
+    this.mobileControls?.suspend();
     this.tools.suspend();
     this.workspace?.setVisible(false);
     this.syncInput();

@@ -1,4 +1,4 @@
-import { track } from "./boot-tracks";
+import { track } from "./boot-tracks.ts";
 
 // Source frames 543–568. Angles are unwrapped: the left arc turns clockwise,
 // the right arc counterclockwise. Each grows while its angular speed decays.

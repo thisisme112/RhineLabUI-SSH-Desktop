@@ -1,3 +1,4 @@
+import { haptics } from "./haptics";
 import { AndroidSshSession, type AuthRequest, type HostKey, type SessionEvent, type ConnectOptions } from "./session";
 import { createCapacitorPipe, nativeBackground } from "./pipe";
 import { AndroidHostStore, credentialIdentity, normalizeProfile, type HostProfile } from "./store";
@@ -246,13 +247,14 @@ export async function initAndroidBridge() {
         fact(c, "auth.succeeded", { method: host.method }, raw); fact(c, "session.entering", {}, raw);
         void persistAuth(c).catch(error => emitServices({ sessionId: c.id, event: "credential-error", data: { message: errorText(error) } })); break;
       case "interactive":
-        c.interactive = true; fact(c, "session.authenticated", {}, raw);
+        c.interactive = true; fact(c, "session.authenticated", {}, raw); haptics.success();
         c.state.active = true; emitServices({ sessionId: c.id, event: "snapshot", data: c.state });
         void c.agent.resize(c.cols, c.rows).catch(() => {}); c.auth = undefined; c.hops = undefined; break;
       case "failed": {
         const name: SshEventName = /host key changed/i.test(event.detail) ? "hostkey.mismatch" : /authenticat|permission denied/i.test(event.detail) ? "auth.denied" : "tcp.failed";
         fact(c, name, { reason: event.detail, message: event.detail }, raw);
         if (name === "auth.denied" && !c.failedCredential) void failCredential(c);
+        haptics.failure();
         finish(c, null); break;
       }
     }

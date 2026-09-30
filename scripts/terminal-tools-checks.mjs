@@ -543,11 +543,11 @@ export async function checkTerminalTools({
   await evaluate(`rhine.settings()`);
   await until("settings panel opens", `!!document.querySelector('[data-color-palette]')`);
   await check(
-    "the settings panel offers ten preview palettes with the current one marked",
+    "the settings panel offers fourteen preview palettes with the current one marked",
     `(() => {
       const buttons = [...document.querySelectorAll('button[data-color-palette]')];
       const pressed = buttons.filter(button => button.getAttribute('aria-pressed') === 'true');
-      return buttons.length === 10 && buttons.every(button => button.querySelector('.theme-sample')) && pressed.length === 1 && pressed[0].dataset.colorPalette === 'warm';
+      return buttons.length === 14 && buttons.every(button => button.querySelector('.theme-sample')) && pressed.length === 1 && pressed[0].dataset.colorPalette === 'warm';
     })()`,
   );
   await shot("settings-palettes");
@@ -555,7 +555,7 @@ export async function checkTerminalTools({
   for (const mode of ["dark", "light"]) {
     await evaluate(`document.querySelector('button[data-color-theme="${mode}"]').click()`);
     await sleep(300);
-  for (const name of ["warm", "cool", "sand", "phosphor", "hologram", "amber", "nova", "cryo", "hazard", "voidwave"]) {
+  for (const name of ["warm", "cool", "sand", "phosphor", "hologram", "amber", "nova", "cryo", "hazard", "voidwave", "industrial", "clinic", "orbit", "riso"]) {
     await evaluate(`document.querySelector('button[data-color-palette="${name}"]').click()`);
     await sleep(450);
     await check(`${name}: ${mode} settings controls retain readable contrast`, `(() => {

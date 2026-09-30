@@ -425,3 +425,4 @@ try {
 console.log(JSON.stringify({ checks, errors, evidence }, null, 2));
 process.exitCode =
   Object.values(checks).every(Boolean) && !errors.length ? 0 : 1;
+

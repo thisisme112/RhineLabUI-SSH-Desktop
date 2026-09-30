@@ -1,4 +1,5 @@
 import { createRollingText } from "@kitlangton/rolling-number";
+import { bindHoverCards, type HoverContent } from "../hover-card";
 import { SshPageMotion } from "./page-motion";
 import {
   bytes,
@@ -16,8 +17,8 @@ const markup = `
   <div class="ssh-monitor-status" role="status" data-ssh-reveal><i aria-hidden="true"></i><span></span></div>
   <div class="ssh-monitor-host" data-ssh-reveal><strong></strong><span></span></div>
   <div class="ssh-host-metrics" data-ssh-reveal>
-    <section class="ssh-metric" data-metric="cpu"><div class="ssh-side-kicker">CPU <span>占用</span></div><div class="ssh-metric-value">—</div>${chart}<small></small></section>
-    <section class="ssh-metric" data-metric="memory"><div class="ssh-side-kicker">MEMORY <span>内存</span></div><div class="ssh-metric-value">—</div>${chart}<small></small></section>
+    <section class="ssh-metric" data-metric="cpu" style="--series: var(--theme-signal-0)"><div class="ssh-side-kicker">CPU <span>占用</span></div><div class="ssh-metric-value">—</div>${chart}<small></small></section>
+    <section class="ssh-metric" data-metric="memory" style="--series: var(--theme-signal-1)"><div class="ssh-side-kicker">MEMORY <span>内存</span></div><div class="ssh-metric-value">—</div>${chart}<small></small></section>
   </div>
   <div class="ssh-monitor-summary" data-ssh-reveal></div>
   <div class="ssh-monitor-section" data-ssh-reveal><div class="ssh-side-kicker"><span>NVIDIA / GPU</span><span>01 s</span></div><p class="ssh-gpu-status"></p><div class="ssh-gpu-overview" aria-label="GPU 总览"></div><div class="ssh-monitor-gpus"></div></div>
@@ -149,6 +150,7 @@ export class MonitorPanel {
       },
       { signal: this.abort.signal },
     );
+    bindHoverCards(root, ".ssh-metric, .ssh-gpu-overview-row, .ssh-gpu, .ssh-disk", (el) => this.details(el), this.abort.signal);
     document.addEventListener("visibilitychange", () => {
       this.syncTimer();
       if (this.visible && !document.hidden) this.render(true);
@@ -209,6 +211,61 @@ export class MonitorPanel {
         node.setAttribute("d", "");
     }
     if (this.visible && !document.hidden) this.render();
+  }
+  /** The hover card for a metric, a GPU or a disk, read from the latest sample. */
+  private details(el: HTMLElement): HoverContent | null {
+    const sample = this.state?.sample;
+    if (!sample || !this.visible) return null;
+    const history = this.state!.history.filter(point => point.receivedAt > this.state!.receivedAt - 300000);
+    const peak = (values: (number | null)[]) => {
+      const known = values.filter((v): v is number => v != null && Number.isFinite(v));
+      return known.length ? percent(Math.max(...known)) : "—";
+    };
+    const metric = el.dataset.metric;
+    if (metric === "cpu") {
+      const cpu = sample.cpu;
+      return { kicker: "CPU", title: sample.hostname, series: 0, rows: cpu ? [
+        ["占用", percent(cpu.usage)],
+        ["核心", String(cpu.cores)],
+        ["LOAD 1 / 5 / 15", cpu.load.map(n => n.toFixed(2)).join(" / ")],
+        ["5 分钟峰值", peak(history.map(point => point.cpu))],
+      ] : [["状态", "CPU 数据不可用"]] };
+    }
+    if (metric === "memory") {
+      const memory = sample.memory;
+      return { kicker: "MEMORY 内存", title: sample.hostname, series: 1, rows: memory ? [
+        ["占用", percent(ratio(memory.used, memory.total))],
+        ["已用 / 总量", `${bytes(memory.used)} / ${bytes(memory.total)}`],
+        ["可用", bytes(memory.available)],
+        ["SWAP", `${bytes(memory.swapUsed)} / ${bytes(memory.swapTotal)}`],
+        ["5 分钟峰值", peak(history.map(point => point.memory))],
+      ] : [["状态", "内存数据不可用"]] };
+    }
+    if (el.dataset.uuid) {
+      const gpu = sample.gpus.find(item => item.uuid === el.dataset.uuid);
+      if (!gpu) return null;
+      return { kicker: `GPU ${String(gpu.index).padStart(2, "0")}`, title: gpu.name, series: 2, rows: [
+        ["GPU 占用", percent(gpu.utilization)],
+        ["显存占用", percent(ratio(gpu.memoryUsed, gpu.memoryTotal))],
+        ["显存", `${bytes(gpu.memoryUsed)} / ${bytes(gpu.memoryTotal)}`],
+        ["温度", unit(gpu.temperature, " °C")],
+        ["功耗", `${unit(gpu.power, " W")} / ${unit(gpu.powerLimit, " W")}`],
+        ["风扇", percent(gpu.fan)],
+        ["进程", String(gpu.processes.length)],
+        ["5 分钟峰值", peak(history.map(point => point.gpus.find(item => item.uuid === gpu.uuid)?.utilization ?? null))],
+      ] };
+    }
+    if (el.dataset.mount) {
+      const disk = sample.disks.find(item => item.mount === el.dataset.mount);
+      if (!disk) return null;
+      return { kicker: "FILESYSTEM", title: disk.mount, series: 4, rows: [
+        ["设备", disk.device],
+        ["占用", percent(ratio(disk.used, disk.total))],
+        ["已用 / 总量", `${bytes(disk.used)} / ${bytes(disk.total)}`],
+        ["可用", bytes(disk.available)],
+      ] };
+    }
+    return null;
   }
   private renderStatus() {
     const state = this.state;
@@ -322,6 +379,8 @@ export class MonitorPanel {
       if (!row) {
         row = document.createElement("div");
         row.className = "ssh-disk";
+        row.dataset.mount = disk.mount;
+        row.style.setProperty("--series", "var(--theme-signal-4)");
         row.innerHTML =
           '<div><strong></strong><span></span></div><div class="ssh-meter"><i></i></div><small></small>';
         diskRoot.append(row);
@@ -330,7 +389,6 @@ export class MonitorPanel {
       const value = ratio(disk.used, disk.total);
       row.dataset.tone = tone(value);
       row.querySelector("strong")!.textContent = disk.mount;
-      row.querySelector("strong")!.title = disk.device;
       row.querySelector("span")!.textContent = percent(value);
       row.querySelector<HTMLElement>("i")!.style.width =
         Math.min(100, value || 0) + "%";
@@ -360,16 +418,21 @@ export class MonitorPanel {
       if (!row) {
         row = document.createElement("button"); row.setAttribute("type", "button");
         row.className = "ssh-gpu-overview-row";
-        row.innerHTML = '<span></span><strong></strong><span></span><i aria-hidden="true"></i>';
+        row.innerHTML = '<span></span><strong></strong><span class="ssh-gpu-pct"><b></b><small></small></span><i aria-hidden="true"></i><i class="ssh-gpu-vram-bar" aria-hidden="true"></i>';
+        row.dataset.uuid = gpu.uuid;
+        row.style.setProperty("--series", "var(--theme-signal-2)");
         row.addEventListener("click", () => this.gpus.get(gpu.uuid)?.root.scrollIntoView({ block: "nearest", behavior: this.reduced() ? "instant" : "smooth" }), { signal: this.abort.signal });
         this.overview.set(gpu.uuid, row); overview.append(row);
       }
       row.dataset.tone = tone(gpu.utilization);
       row.children[0].textContent = String(gpu.index).padStart(2, "0");
       row.children[1].textContent = gpu.name;
-      row.children[2].textContent = percent(gpu.utilization);
-      row.title = `GPU ${gpu.index} · 显存 ${bytes(gpu.memoryUsed)} / ${bytes(gpu.memoryTotal)} · ${unit(gpu.temperature, " °C")}`;
+      const vram = ratio(gpu.memoryUsed, gpu.memoryTotal);
+      row.querySelector("b")!.textContent = percent(gpu.utilization);
+      row.querySelector(".ssh-gpu-pct small")!.textContent = "显存 " + percent(vram);
+      row.setAttribute("aria-label", `GPU ${gpu.index} ${gpu.name} · 占用 ${percent(gpu.utilization)} · 显存 ${percent(vram)}`);
       row.style.setProperty("--gpu-load", Math.max(0, Math.min(100, gpu.utilization || 0)) + "%");
+      row.style.setProperty("--gpu-vram", Math.max(0, Math.min(100, vram || 0)) + "%");
     }
     for (const [key, row] of this.overview) if (!sample.gpus.some(gpu => gpu.uuid === key)) { row.remove(); this.overview.delete(key); }
     for (const gpu of sample.gpus)
@@ -395,7 +458,9 @@ export class MonitorPanel {
     if (!view) {
       const root = document.createElement("section");
       root.className = "ssh-gpu";
-      root.innerHTML = `<header><span></span><strong></strong></header><div class="ssh-gpu-readings"><div><small>GPU 占用</small><div class="ssh-gpu-usage ssh-metric-value"></div></div><div><small>显存占用</small><div class="ssh-gpu-memory ssh-metric-value"></div></div></div>${chart}<div class="ssh-gpu-vram"></div><div class="ssh-gpu-thermals"></div><details class="ssh-gpu-processes"><summary></summary><div class="ssh-gpu-process-list"></div></details>`;
+      root.dataset.uuid = gpu.uuid;
+      root.style.setProperty("--series", "var(--theme-signal-2)");
+      root.innerHTML = `<header><span></span><strong></strong></header><div class="ssh-gpu-readings"><div><small>GPU 占用</small><div class="ssh-gpu-usage ssh-metric-value"></div></div><div><small>显存占用</small><div class="ssh-gpu-memory ssh-metric-value"></div></div></div>${chart}<div class="ssh-gpu-vram"><div><small>VRAM 显存</small><span></span></div><div class="ssh-meter ssh-meter-thick"><i></i></div></div><div class="ssh-gpu-thermals"></div><details class="ssh-gpu-processes"><summary></summary><div class="ssh-gpu-process-list"></div></details>`;
       view = {
         root,
         usage: new Reading(root.querySelector(".ssh-gpu-usage")!),
@@ -412,7 +477,6 @@ export class MonitorPanel {
     const root = view.root;
     root.dataset.stale = String(stale);
     root.dataset.tone = tone(gpu.utilization);
-    root.title = gpu.uuid;
     root.querySelector("header span")!.textContent = String(gpu.index).padStart(
       2,
       "0",
@@ -433,8 +497,12 @@ export class MonitorPanel {
         state.receivedAt,
       ),
     );
-    root.querySelector(".ssh-gpu-vram")!.textContent =
-      `${bytes(gpu.memoryUsed)} / ${bytes(gpu.memoryTotal)}`;
+    const vram = ratio(gpu.memoryUsed, gpu.memoryTotal);
+    root.querySelector(".ssh-gpu-vram span")!.textContent =
+      `${bytes(gpu.memoryUsed)} / ${bytes(gpu.memoryTotal)} · ${percent(vram)}`;
+    const vramRow = root.querySelector<HTMLElement>(".ssh-gpu-vram")!;
+    vramRow.dataset.tone = tone(vram);
+    vramRow.querySelector<HTMLElement>(".ssh-meter i")!.style.width = Math.min(100, vram || 0) + "%";
     root.querySelector(".ssh-gpu-thermals")!.textContent =
       `${unit(gpu.temperature, " °C")} · ${unit(gpu.power, " W")} / ${unit(gpu.powerLimit, " W")} · 风扇 ${percent(gpu.fan)}`;
     root.querySelector("summary")!.textContent =

@@ -432,7 +432,7 @@ export class TerminalTools {
       this.feedbackTimer = window.setTimeout(() => this.message(""), 4500);
   }
 
-  private async copy() {
+  async copy() {
     if (!this.available || !this.term || this.clipboardBusy) return;
     const text = this.term.getSelection();
     if (!text) {

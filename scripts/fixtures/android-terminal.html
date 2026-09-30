@@ -1,0 +1,42 @@
+<!doctype html>
+<html data-native-shell="true">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        background: #eeede7;
+      }
+      .ssh-terminal {
+        position: relative !important;
+        width: 390px;
+        height: 700px;
+        --terminal-bg: #eeede7;
+        --terminal-fg: #202d32;
+        --terminal-line: #888;
+        --terminal-muted: #555;
+      }
+      .ssh-terminal-screen {
+        height: 400px !important;
+        min-height: 400px;
+      }
+      .ssh-terminal-foot {
+        font: 14px sans-serif;
+      }
+      .ssh-mobile-selection[hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="ssh-terminal" data-workspace-page="terminal">
+      <div class="ssh-terminal-screen"></div>
+      <footer class="ssh-terminal-foot">
+        <button class="ssh-terminal-shortcut">工具</button
+        ><span class="ssh-terminal-tool-feedback" hidden></span>
+      </footer>
+    </section>
+    <script type="module" src="./android-terminal.ts"></script>
+  </body>
+</html>

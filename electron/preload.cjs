@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld("rhineDesktop", {
   platform: process.platform,
   /** Report which of the two captions to use; the OS draws it, not us. */
   theme: (value) => ipcRenderer.send("shell:theme", value),
+  capture: () => ipcRenderer.invoke("shell:capture"),
   services: {
     snapshot: (sessionId) => ipcRenderer.invoke("services:snapshot", { sessionId }),
     answer: (request) => ipcRenderer.invoke("services:answer", request),

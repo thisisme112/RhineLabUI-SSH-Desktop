@@ -39,11 +39,13 @@ export function resizeQuality(
   host: HTMLElement,
   quality: RenderQuality,
   superPerformance = false,
+  /** The frame governor's share of the resolution (ResolutionGovernor); 1 leaves the quality as chosen. */
+  dynamicScale = 1,
 ) {
   const width = Math.max(1, host.clientWidth),
     height = Math.max(1, host.clientHeight);
   const dimensions = renderDimensions(
-    quality,
+    dynamicScale === 1 ? quality : { ...quality, scale: quality.scale * dynamicScale },
     width,
     height,
     host.getBoundingClientRect().width / width,
@@ -65,6 +67,7 @@ export function resizeQuality(
       renderer.capabilities.getMaxAnisotropy(),
     ),
     superPerformance,
+    dynamicScale,
   });
   return dimensions;
 }

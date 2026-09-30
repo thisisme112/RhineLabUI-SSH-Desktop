@@ -72,6 +72,13 @@ export class SshOverview {
       inspect(alias: string): void;
       collapsedChanged(value: boolean): void;
       connect(alias: string, fresh?: boolean): void;
+      /** End the host's live session, if any, and connect it again in the same tab. */
+      reconnect?(alias: string): void;
+      disconnect?(alias: string): void;
+      /** A saved copy of the host (same endpoint, options and groups; no saved secret). */
+      duplicate?(alias: string): Promise<{ ok: boolean; error?: string }>;
+      /** Remove a saved host; the reason comes back when it may not be. */
+      remove?(alias: string): Promise<{ ok: boolean; error?: string }>;
       session(key: string): void;
       closeSession(key: string): void;
       settings(): void;
@@ -84,7 +91,7 @@ export class SshOverview {
     this.root.setAttribute("aria-label", "SSH 主机总览");
     this.root.innerHTML = `<div class="ssh-overview-glass"><header class="ssh-overview-heading"><div><span>RHINE LAB / NETWORK OPERATIONS</span><h1>主机总览<small>HOST OVERVIEW</small></h1></div><div class="ssh-overview-heading-actions"><button type="button" data-overview-action="collapse" aria-expanded="true" title="收起总览，让出三维档案阵列 · Ctrl+Shift+H"><span>收起</span> ⇱</button><button type="button" data-overview-action="settings">设置 ⚙</button></div></header>
       <div class="ssh-overview-summary" aria-live="off"></div><nav class="ssh-overview-nav" aria-label="主机管理"><button type="button" data-overview-page="hosts" aria-current="page">主机</button><button type="button" data-overview-page="command">命令</button><button type="button" data-overview-page="files">目录收藏</button><button type="button" data-overview-page="history">历史</button><button type="button" data-overview-page="keys">密钥库</button><button type="button" data-overview-action="add">添加主机 ＋</button></nav>
-      <div class="ssh-overview-content"><div class="ssh-overview-hosts"><div class="ssh-overview-search"><span>⌕</span><input type="search" aria-label="搜索主机总览" placeholder="检索名称、地址、用户或档案编号" autocomplete="off"><span>悬停定位 · 单击打开</span></div><div class="ssh-overview-groups" role="group" aria-label="主机分组"></div><div class="ssh-overview-columns"><span>HOST / 主机档案</span><span>SESSION / 连接状态</span><span>LOAD / 实时占用</span></div><div class="ssh-overview-scroll"><div class="ssh-overview-host-list"></div></div><p class="ssh-overview-empty" role="status"></p></div><div class="ssh-overview-secondary" hidden></div></div>
+      <div class="ssh-overview-content"><div class="ssh-overview-hosts"><div class="ssh-overview-search"><span>⌕</span><input type="search" aria-label="搜索主机总览" placeholder="检索名称、地址、用户或档案编号" autocomplete="off"><span>悬停定位 · 单击打开</span></div><div class="ssh-overview-groups" role="group" aria-label="主机分组"></div><div class="ssh-overview-columns"><span>HOST / 主机档案</span><span>SESSION / 连接状态</span><span>LOAD / 实时占用</span></div><div class="ssh-overview-scroll"><div class="ssh-overview-host-list"></div><button type="button" class="ssh-overview-add" data-overview-action="add"><b>＋</b><span>添加主机<small>填写地址和用户，保存后成为档案阵列里的一张档案</small></span></button></div><p class="ssh-overview-empty" role="status"></p></div><div class="ssh-overview-secondary" hidden></div></div>
       <footer class="ssh-overview-footer"><span>LOCAL ARCHIVES <i>●</i></span><span class="ssh-overview-selection">等待选择主机</span></footer></div>
       <button type="button" class="ssh-overview-restore" data-overview-action="collapse" aria-expanded="false" title="展开主机总览 · Ctrl+Shift+H"><span>▲ 主机总览</span><small></small><kbd>Ctrl+Shift+H</kbd></button>`;
     this.content = this.root.querySelector(".ssh-overview-content")!;
@@ -153,6 +160,10 @@ export class SshOverview {
       else if (action === "search") this.actions.search();
       else if (action === "add") this.edit();
       else if (alias && action === "edit") this.edit(alias);
+      else if (alias && action === "reconnect") this.actions.reconnect ? this.actions.reconnect(alias) : this.actions.connect(alias);
+      else if (alias && action === "disconnect") this.actions.disconnect?.(alias);
+      else if (alias && action === "duplicate") void this.duplicate(button, alias);
+      else if (alias && action === "remove") void this.remove(button, alias);
       else if (alias && (action === "inspect" || action === "connect")) this.actions.inspect(alias);
       else if (alias) this.actions.connect(alias, action === "new");
     });
@@ -446,6 +457,59 @@ export class SshOverview {
       }
     }
   }
+  /** A button says something else for a moment (a result, a question), then its own label again. */
+  private say(button: HTMLButtonElement, text: string, ms: number) {
+    const label = (button.dataset.label ??= button.textContent ?? "");
+    button.textContent = text;
+    window.clearTimeout(Number(button.dataset.timer));
+    button.dataset.timer = String(
+      window.setTimeout(() => {
+        button.textContent = label;
+        delete button.dataset.armed;
+        if (this.armedRemove === button) this.armedRemove = undefined;
+      }, ms),
+    );
+  }
+  private armedRemove: HTMLButtonElement | undefined;
+  private async duplicate(button: HTMLButtonElement, alias: string) {
+    if (!this.actions.duplicate || button.dataset.busy) return;
+    button.dataset.busy = "true";
+    this.say(button, "复制中…", 10000);
+    try {
+      const result = await this.actions.duplicate(alias);
+      this.say(button, result.ok ? "已复制" : result.error || "复制失败", result.ok ? 1400 : 3200);
+    } catch (error) {
+      this.say(button, error instanceof Error ? error.message : "复制失败", 3200);
+    } finally {
+      delete button.dataset.busy;
+    }
+  }
+  /** Delete asks twice: the first click arms the button, a second within 3 s removes the host. */
+  private async remove(button: HTMLButtonElement, alias: string) {
+    if (!this.actions.remove || button.dataset.busy) return;
+    if (button.closest<HTMLElement>("[data-host-alias]")?.dataset.source === "config") {
+      this.say(button, "来自 SSH config，请在配置文件中删除", 3200);
+      return;
+    }
+    if (this.armedRemove !== button) {
+      if (this.armedRemove) this.say(this.armedRemove, this.armedRemove.dataset.label ?? "删除", 0);
+      this.armedRemove = button;
+      button.dataset.armed = "true";
+      this.say(button, "确认删除？", 3000);
+      return;
+    }
+    this.armedRemove = undefined;
+    delete button.dataset.armed;
+    button.dataset.busy = "true";
+    try {
+      const result = await this.actions.remove(alias);
+      if (!result.ok) this.say(button, result.error || "移除失败", 3200);
+    } catch (error) {
+      this.say(button, error instanceof Error ? error.message : "移除失败", 3200);
+    } finally {
+      delete button.dataset.busy;
+    }
+  }
   private commitRename() {
     if (!this.renaming) return;
     const input = this.root.querySelector<HTMLInputElement>(".ssh-overview-group-edit input");
@@ -514,6 +578,8 @@ export class SshOverview {
         header.remove();
         this.headers.delete(title);
       }
+    // The way to add one stays under the last row, unless a search is narrowing the list.
+    this.root.querySelector<HTMLElement>(".ssh-overview-add")!.hidden = Boolean(query);
     const empty = this.root.querySelector<HTMLElement>(".ssh-overview-empty")!;
     empty.hidden = hosts.length > 0;
     empty.textContent = query
@@ -545,7 +611,7 @@ export class SshOverview {
       row.className = "ssh-overview-host";
       row.dataset.hostAlias = host.alias;
       row.innerHTML =
-        '<button type="button" class="ssh-overview-connect" data-overview-action="connect"><span class="ssh-overview-host-name"><b></b><span><strong></strong><small></small></span></span><span class="ssh-overview-host-state"></span><span class="ssh-overview-host-load"></span></button><div class="ssh-overview-host-actions"><button type="button" data-overview-action="inspect" title="查看这台主机的详情">详情</button><button type="button" data-overview-action="new" title="另开一个会话">＋</button><button type="button" data-overview-action="edit">编辑</button></div>';
+        '<button type="button" class="ssh-overview-connect" data-overview-action="connect"><span class="ssh-overview-host-name"><b></b><span><strong></strong><small></small></span></span><span class="ssh-overview-host-state"><i></i><em></em></span><span class="ssh-overview-host-load"></span></button><div class="ssh-overview-host-actions" role="group" aria-label="主机操作"><button type="button" class="primary" data-overview-action="reconnect" title="结束当前连接并重新连接"><span>连接</span> ↻</button><button type="button" data-overview-action="disconnect" title="断开连接，保留记录">断开</button><button type="button" data-overview-action="duplicate" title="复制为新主机（不含已保存的口令）">复制</button><button type="button" class="danger" data-overview-action="remove" title="从主机档案中移除（再点一次确认）">删除</button><i aria-hidden="true"></i><button type="button" data-overview-action="inspect" title="查看这台主机的详情">详情</button><button type="button" data-overview-action="new" title="另开一个会话">＋</button><button type="button" data-overview-action="edit">编辑</button></div>';
       this.rows.set(host.alias, row);
     }
     const session = this.bank.forAlias(host.alias),
@@ -574,12 +640,20 @@ export class SshOverview {
     row.dataset.pending = String(
       Boolean(session?.client.pendingPrompt || state?.prompt),
     );
+    // A host from the ssh config is not this app's to delete; a saved profile is.
+    row.dataset.source = host.source ?? "config";
+    // The busiest of CPU and RAM, as the thin bar under the load line.
+    const usage = sample
+      ? Math.max(sample.cpu?.usage ?? 0, sample.memory?.total ? (sample.memory.used / sample.memory.total) * 100 : 0)
+      : 0;
+    row.style.setProperty("--load", String(Math.min(1, Math.max(0, usage / 100))));
     const values = [
       ["b", records[this.cards.cardOf(host.alias)!].id],
       ["strong", hostLabel(host)],
       ["small", hostSubtitle(host)],
-      [".ssh-overview-host-state", session ? sessionState(session) : "未连接"],
+      [".ssh-overview-host-state em", session ? sessionState(session) : "未连接"],
       [".ssh-overview-host-load", load],
+      ['[data-overview-action="reconnect"] > span', session?.client.active ? "重连" : "连接"],
     ];
     for (const [selector, value] of values) {
       const node = row.querySelector(selector)!;

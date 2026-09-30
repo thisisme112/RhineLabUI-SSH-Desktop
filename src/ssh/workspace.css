@@ -469,19 +469,25 @@
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
-.ssh-file-row[data-kind="directory"] .ssh-file-glyph,
-.ssh-file-row[data-kind="archive"] .ssh-file-glyph {
-  color: var(--terminal-accent);
-}
-.ssh-file-row[data-kind="code"] .ssh-file-glyph,
-.ssh-file-row[data-kind="link"] .ssh-file-glyph {
-  color: var(--ssh-code);
-}
-.ssh-file-row[data-kind="media"] .ssh-file-glyph {
-  color: var(--ssh-media);
-}
-.ssh-file-row[data-kind="executable"] .ssh-file-glyph {
-  color: var(--ssh-low);
+/* Each kind of file wears one of the palette's signal colours and the motif's icon. */
+.ssh-file-glyph { display: grid; place-items: center; height: 100%; }
+.ssh-file-glyph .ssh-theme-icon { width: 16px; height: 16px; overflow: visible; }
+.ssh-file-row[data-kind="directory"] .ssh-file-glyph { color: var(--theme-signal-0, var(--terminal-accent)); }
+.ssh-file-row[data-kind="executable"] .ssh-file-glyph { color: var(--theme-signal-1, var(--ssh-low)); }
+.ssh-file-row[data-kind="code"] .ssh-file-glyph { color: var(--theme-signal-2, var(--ssh-code)); }
+.ssh-file-row[data-kind="media"] .ssh-file-glyph { color: var(--theme-signal-3, var(--ssh-media)); }
+.ssh-file-row[data-kind="archive"] .ssh-file-glyph { color: var(--theme-signal-4, var(--terminal-accent)); }
+.ssh-file-row[data-kind="link"] .ssh-file-glyph { color: var(--terminal-accent); }
+.ssh-file-row[data-kind="directory"] .ssh-file-name { font-weight: 500; }
+.ssh-file-row[data-hidden="true"] .ssh-file-name { opacity: .62; }
+/* Hovering a row lets the rest of the list recede; the row steps forward a little. */
+.ssh-file-row { transition: opacity 150ms, transform 150ms; }
+.ssh-files:not(:has(.ssh-files-menu:not([hidden]))) .ssh-file-rows:hover .ssh-file-row:not(:hover) { opacity: .55; }
+.ssh-files:not(:has(.ssh-files-menu:not([hidden]))) .ssh-file-rows .ssh-file-row:hover { transform: translateX(3px); }
+.ssh-overview-host { transition: background-color 180ms, opacity 160ms; }
+.ssh-overview:has(.ssh-overview-host:hover) .ssh-overview-host:not(:hover, [data-preview="true"]) { opacity: .55; }
+@media (prefers-reduced-motion: reduce) {
+  .ssh-file-rows .ssh-file-row:hover { transform: none; }
 }
 .ssh-files-empty {
   padding: 32px 10px;
@@ -610,6 +616,24 @@
 .ssh-gpu-overview-row strong { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ssh-gpu-overview-row span { font-size: 12px; color: var(--terminal-muted); font-variant-numeric: tabular-nums; }
 .ssh-gpu-overview-row i { grid-column: 2 / -1; height: 2px; background: linear-gradient(90deg, var(--meter-color) var(--gpu-load), var(--terminal-line) var(--gpu-load)); }
+/* Video memory is the scarce resource: its share sits under the load, its bar is the thick one. */
+.ssh-workspace-side .ssh-gpu-overview-row { grid-template-columns: 26px minmax(0, 1fr) 66px; row-gap: 4px; }
+.ssh-gpu-overview-row .ssh-gpu-pct { display: grid; justify-items: end; line-height: 1.25; }
+.ssh-gpu-overview-row .ssh-gpu-pct b { font-weight: 500; color: var(--terminal-fg); }
+.ssh-gpu-overview-row .ssh-gpu-pct small { font-size: 11px; color: var(--vram-color); }
+.ssh-gpu-overview-row .ssh-gpu-vram-bar { height: 5px; background: linear-gradient(90deg, var(--vram-color) var(--gpu-vram), color-mix(in srgb, var(--terminal-line) 70%, transparent) var(--gpu-vram)); }
+.ssh-monitor { --vram-color: var(--theme-signal-3, var(--terminal-accent)); }
+.ssh-meter.ssh-meter-thick { height: 6px; margin: 5px 0 8px; }
+.ssh-gpu-vram > div:first-child { display: flex; justify-content: space-between; gap: 10px; }
+.ssh-gpu-vram > div:first-child small { color: var(--vram-color); letter-spacing: .06em; }
+.ssh-gpu-vram > div:first-child span { color: var(--terminal-fg); }
+.ssh-gpu-vram:is([data-tone="low"], [data-tone="medium"]) { --meter-color: var(--vram-color); }
+/* Each series keeps its theme colour until it runs high. */
+.ssh-monitor [style*="--series"]:is([data-tone="low"], [data-tone="medium"]) { --meter-color: var(--series); }
+.ssh-monitor .ssh-metric[style*="--series"] .ssh-side-kicker::before,
+.ssh-monitor .ssh-gpu[style*="--series"] header::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 7px; background: var(--series); vertical-align: 1px; }
+.ssh-monitor :is(.ssh-metric, .ssh-gpu-overview-row, .ssh-gpu, .ssh-disk) { transition: opacity 160ms, transform 160ms; }
+.ssh-monitor:has(:is(.ssh-gpu-overview-row, .ssh-disk):hover) :is(.ssh-gpu-overview-row, .ssh-disk):not(:hover) { opacity: .55; }
 .ssh-metric small {
   display: block;
   font-size: 12px;

@@ -12,6 +12,27 @@ export type RenderQuality = {
 };
 
 export const qualityPresets = {
+  /**
+   * A phone's default (Android builds until the person picks a preset): the look
+   * of `original` without what a phone's GPU pays most for — ambient occlusion and
+   * the bokeh pass are off, transmission and shadows are cheaper, and the frame
+   * budget (frame-budget.ts) keeps it from running hotter than 60 fps.
+   *
+   * The density cap is 2: a phone's screen is 2.6-3x, so a cap of 1.5 drew the scene at about half
+   * its physical pixels and stretched it up, which read as blur. The resolution governor
+   * (ResolutionGovernor) still steps the buffers down when a phone cannot hold its budget.
+   */
+  mobile: {
+    scale: 100,
+    pixelRatio: 2,
+    antialias: "off",
+    shadows: 1024,
+    aoSamples: 0,
+    aoResolution: 0.5,
+    depthOfField: 0,
+    transmission: 0.5,
+    anisotropy: 4,
+  },
   performance: {
     scale: 80,
     pixelRatio: 1,
@@ -59,6 +80,7 @@ export const qualityPresets = {
 } as const satisfies Record<string, RenderQuality>;
 export type QualityPreset = keyof typeof qualityPresets;
 export const presetLabels: Record<QualityPreset, string> = {
+  mobile: "手机",
   performance: "性能",
   original: "原始",
   high: "高",

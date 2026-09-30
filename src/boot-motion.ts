@@ -1,8 +1,8 @@
 // Original footage is 25 fps. App time zero corresponds to video time 5 s.
 // Discrete editorial cuts use frame numbers; spatial motion uses continuous time.
-import { brandTrack, companyTrack, scanTrack, track } from "./boot-tracks";
-import { scanOrbitTrack } from "./boot-orbit-tracks";
-import { bootLogoTrack } from "./boot-logo-tracks";
+import { brandTrack, companyTrack, scanTrack, track } from "./boot-tracks.ts";
+import { scanOrbitTrack } from "./boot-orbit-tracks.ts";
+import { bootLogoTrack } from "./boot-logo-tracks.ts";
 export const progress = (t: number, a: number, b: number) =>
   Math.max(0, Math.min(1, (t - a) / (b - a)));
 export const smooth = (p: number) => p * p * (3 - 2 * p);

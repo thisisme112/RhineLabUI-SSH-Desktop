@@ -29,6 +29,7 @@
     "check:ssh-terminal-tools": "node scripts/check-terminal-deck.mjs --tools --out verification/ssh-terminal-tools/browser",
     "check:ssh-deck-teardown": "node scripts/check-deck-teardown.mjs",
     "check:ssh-overview-collapse": "node scripts/check-overview-collapse.mjs",
+    "check:ssh-overview-actions": "node scripts/check-overview-actions.mjs",
     "check:ssh-terminal-deck": "node scripts/check-terminal-deck.mjs --out verification/terminal-deck",
     "check:ssh-session-agent": "node --experimental-strip-types scripts/check-ssh-session-agent.mjs",
     "check:android-ssh-driver": "node --experimental-strip-types scripts/check-android-ssh-driver.mjs",
@@ -77,7 +78,16 @@
     "preview": "vite preview --host 127.0.0.1",
     "check:ssh-inspection": "node scripts/check-terminal-deck.mjs --inspection --out verification/redesign",
     "check:ssh-inspection-sessions": "node scripts/check-terminal-deck.mjs --sessions --out verification/redesign-sessions",
-    "check:ssh-inspection-performance": "node scripts/check-inspection-performance.mjs"
+    "check:ssh-inspection-performance": "node scripts/check-inspection-performance.mjs",
+    "export:boot-tracks": "node scripts/export-boot-tracks.mjs",
+    "render:boot-frames": "node scripts/render-boot-frames.mjs",
+    "check:unreal-workbench": "node scripts/check-unreal-workbench.mjs",
+    "check:android-terminal": "node scripts/check-android-terminal.mjs",
+    "check:unreal-dlss5": "node scripts/check-unreal-dlss5.mjs",
+    "check:frame-budget": "node --experimental-strip-types --test scripts/check-frame-budget.mjs && node scripts/check-frame-budget-page.mjs",
+    "check:theme-sync": "node scripts/check-terminal-deck.mjs --theme-sync --out verification/theme-sync",
+    "check:theme-motion": "node --experimental-strip-types --test scripts/check-theme-motion.mjs",
+    "check:android-layout": "node scripts/capture-phone-layout.mjs --check"
   },
   "dependencies": {
     "@capacitor/app": "^6.0.3",

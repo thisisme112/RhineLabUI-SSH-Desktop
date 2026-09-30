@@ -1,3 +1,5 @@
+import { bindHoverCards } from "../hover-card";
+import { motifOf, themeIcon, type IconName, type Motif } from "../theme-design";
 import { SshPageMotion } from "./page-motion";
 import type { WorkspaceStore } from "./workspace-store";
 import {
@@ -135,6 +137,17 @@ export function fileTone(entry: RemoteEntry) {
   return "file";
 }
 
+const KIND_ICONS: Record<string, IconName> = { directory: "folder", link: "link", archive: "archive", code: "file", media: "image", executable: "exec", file: "file" };
+const kindIcons = new Map<string, string>();
+/** The motif's icon for a file tone, drawn once per motif. */
+function kindIcon(kind: string | undefined, motif: Motif) {
+  const key = motif + ":" + kind;
+  let svg = kindIcons.get(key);
+  if (!svg) kindIcons.set(key, svg = themeIcon(KIND_ICONS[kind ?? "file"] ?? "file", motif));
+  return svg;
+}
+const KIND_LABELS: Record<string, string> = { directory: "目录", link: "链接", archive: "压缩包", code: "代码 / 文本", media: "媒体", executable: "可执行文件", file: "文件" };
+
 export class SftpPanel {
   private textEditor?: import("./text-editor").RemoteTextEditor;
   private disposed = false;
@@ -201,6 +214,22 @@ export class SftpPanel {
       .querySelector('[data-file-action="hidden"]')!
       .setAttribute("aria-pressed", String(this.showHidden));
     const options = { signal: this.abort.signal };
+    bindHoverCards(this.rows, ".ssh-file-row", (row) => {
+      const entry = this.filtered[Number(row.dataset.fileIndex)];
+      if (!entry || !row.isConnected) return null;
+      const kind = fileTone(entry);
+      return {
+        kicker: KIND_LABELS[kind] ?? "文件",
+        title: entry.name,
+        series: ["directory", "executable", "code", "media", "archive"].indexOf(kind) >>> 0,
+        rows: [
+          ["大小", entry.kind === "directory" ? "—" : bytes(entry.size)],
+          ["权限", entry.permissions],
+          ["修改时间", new Date(entry.modified).toLocaleString()],
+          ["路径", entry.path],
+        ],
+      };
+    }, this.abort.signal);
     root.querySelector("form")!.addEventListener(
       "submit",
       (event) => {
@@ -818,6 +847,7 @@ export class SftpPanel {
     this.syncActions();
   }
   private renderRows() {
+    const motif = motifOf(document.documentElement.dataset.colorPalette);
     const count = this.filtered.length,
       start = Math.max(0, Math.floor(this.viewport.scrollTop / rowHeight) - 5);
     const end = Math.min(
@@ -848,15 +878,13 @@ export class SftpPanel {
       row.id = "ssh-file-row-" + index;
       row.setAttribute("role", "option");
       row.setAttribute("aria-selected", String(this.selection.has(entry.path)));
-      row.title =
-        entry.name +
-        "\n" +
-        entry.permissions +
-        " · " +
-        new Date(entry.modified).toLocaleString();
-      const icon = row.children[0];
-      icon.textContent =
-        entry.kind === "directory" ? "▱" : entry.kind === "link" ? "↗" : "▤";
+      row.dataset.hidden = String(entry.name.startsWith("."));
+      const icon = row.children[0] as HTMLElement;
+      const glyph = `${motif}:${row.dataset.kind}`;
+      if (icon.dataset.glyph !== glyph) {
+        icon.dataset.glyph = glyph;
+        icon.innerHTML = kindIcon(row.dataset.kind, motif);
+      }
       row.children[1].textContent = entry.name;
       row.children[2].textContent =
         entry.kind === "directory"
@@ -953,15 +981,14 @@ export class SftpPanel {
       this.syncActions();
       return;
     }
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    const page = Math.max(1, Math.floor(this.viewport.clientHeight / rowHeight) - 1);
+    const moves: Record<string, number> = { ArrowDown: 1, ArrowUp: -1, PageDown: page, PageUp: -page, Home: -Infinity, End: Infinity };
+    if (event.key in moves && this.filtered.length) {
       event.preventDefault();
       event.stopPropagation();
       const index = Math.max(
         0,
-        Math.min(
-          this.filtered.length - 1,
-          this.cursor + (event.key === "ArrowDown" ? 1 : -1),
-        ),
+        Math.min(this.filtered.length - 1, this.cursor + moves[event.key]),
       );
       this.select(index, event.ctrlKey, event.shiftKey);
       if (index * rowHeight < this.viewport.scrollTop)
@@ -972,6 +999,12 @@ export class SftpPanel {
       )
         this.viewport.scrollTop =
           (index + 1) * rowHeight - this.viewport.clientHeight;
+    } else if (event.key === "Escape" && this.selection.size) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.selection.clear();
+      this.renderRows();
+      this.syncActions();
     } else if (event.key === "Enter") {
       event.preventDefault();
       event.stopPropagation();

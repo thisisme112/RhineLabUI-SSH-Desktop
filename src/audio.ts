@@ -27,7 +27,26 @@ export type Sound =
   | "ssh-ended"
   | "ssh-switch"
   | "ssh-transfer-complete"
-  | "ssh-transfer-failed";
+  | "ssh-transfer-failed"
+  | "hover"
+  | "theme";
+/**
+ * A theme's voice (the Unreal build's RhineAudio.cpp VoiceOf): the same cues
+ * played another way. Pitch and decay scale every partial, air the noise;
+ * wave 1 is a relay's soft square, 2 an FM chirp; `double` adds a riso second
+ * strike 8 ms late and a little sharp; `click` a relay's contact noise.
+ */
+export type Voice = { pitch: number; decay: number; air: number; gain: number; chirp: number; band: number; wave: 0 | 1 | 2; modes: number; double: boolean; click: boolean };
+const PAPER_VOICE: Voice = { pitch: 1, decay: 1, air: 1, gain: 1, chirp: 1, band: 1, wave: 0, modes: 5, double: false, click: false };
+export const VOICES: Record<"shutters" | "tide" | "hazard" | "frames" | "orbit" | "plates" | "vector", Voice> = {
+  shutters: PAPER_VOICE, // the web's warm glass
+  tide: { ...PAPER_VOICE, pitch: .841, decay: 1.35, air: 1.5, gain: .9, band: .8 }, // lower, longer, breathier
+  hazard: { ...PAPER_VOICE, pitch: .72, decay: .6, air: .6, wave: 1, click: true, modes: 3 }, // a relay's clack
+  frames: { ...PAPER_VOICE, pitch: 1.5, decay: .45, air: .3, modes: 1, gain: .85 }, // a clean monitor beep
+  orbit: { ...PAPER_VOICE, pitch: 1.1, decay: 1.1, wave: 2, chirp: 1.08, band: 1.3 }, // an FM telemetry chirp
+  plates: { ...PAPER_VOICE, pitch: .95, decay: .8, air: 1.2, band: .6, double: true }, // a pluck, then its second plate
+  vector: { ...PAPER_VOICE, pitch: 1.38, decay: 0.42, air: 0.35, gain: 0.9, chirp: 1.22, wave: 2, band: 1.5, click: true }, // high-energy piezoelectric pulse
+};
 export type SoundScene = "boot" | "archive" | "detail" | "viewer";
 export type AudioPreferences = {
   sound: boolean;
@@ -94,6 +113,7 @@ export function synthesizeSound(
   type: Sound,
   at: number,
   pan = 0,
+  voice: Voice = PAPER_VOICE,
 ) {
   const output = c.createGain(),
     stereo = c.createStereoPanner();
@@ -143,6 +163,7 @@ export function synthesizeSound(
     source.stop(start + duration + 0.015);
     end = Math.max(end, start + duration + 0.015);
   };
+  let relayWave: PeriodicWave | undefined;
   const tone = (
     f: number,
     to: number,
@@ -150,20 +171,47 @@ export function synthesizeSound(
     duration: number,
     delay = 0,
     attack = 0.006,
+    second = false,
   ) => {
+    const v = voice;
+    const f0 = f * v.pitch, t0 = to * v.pitch * v.chirp, d = duration * v.decay, g = gain * v.gain;
     const osc = c.createOscillator();
-    osc.frequency.setValueAtTime(f, at + delay);
-    osc.frequency.exponentialRampToValueAtTime(to, at + delay + duration);
-    connect(osc, osc, gain, delay, duration, attack);
+    if (v.wave === 1) {
+      // A soft square (1, 1/3, 1/5): the relay's body.
+      relayWave ??= c.createPeriodicWave(new Float32Array(6), new Float32Array([0, 1, 0, .33, 0, .2]));
+      osc.setPeriodicWave(relayWave);
+    }
+    osc.frequency.setValueAtTime(f0, at + delay);
+    osc.frequency.exponentialRampToValueAtTime(t0, at + delay + d);
+    if (v.wave === 2) {
+      // FM: a modulator an octave up, its depth falling fast, bends the tone into a chirp.
+      const mod = c.createOscillator(), depth = c.createGain();
+      mod.frequency.setValueAtTime(f0 * 2, at + delay);
+      depth.gain.setValueAtTime(f0 * 1.1, at + delay);
+      depth.gain.exponentialRampToValueAtTime(1, at + delay + Math.max(.02, d * .5));
+      mod.connect(depth); depth.connect(osc.frequency);
+      mod.start(at + delay); mod.stop(at + delay + d + .02);
+      mod.onended = () => { mod.disconnect(); depth.disconnect(); };
+    }
+    connect(osc, osc, g, delay, d, attack);
+    if (v.click && !second) air(3000, 2400, g * 1.6, .004, delay, .0004, true);
+    if (v.double && !second) {
+      // The second plate: 8 ms late, slightly sharp, softer.
+      tone(f * 1.012, to * 1.012, gain * .55, duration, delay + .008, attack, true);
+    }
   };
-  const air = (
+  function air(
     f: number,
     to: number,
     gain: number,
     duration: number,
     delay = 0,
     attack = 0.008,
-  ) => {
+    raw = false,
+  ) {
+    // The voice moves the band and the amount of air (a relay's click is taken as given).
+    if (!raw) { f *= voice.band; to *= voice.band; gain *= voice.air * voice.gain; duration *= voice.decay; }
+    if (gain <= 0) return;
     let buffer = noiseBuffers.get(c);
     if (!buffer) {
       buffer = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
@@ -184,7 +232,7 @@ export function synthesizeSound(
     filter.frequency.exponentialRampToValueAtTime(to, at + delay + duration);
     src.connect(filter);
     connect(src, filter, gain, delay, duration, attack);
-  };
+  }
   // A thin glass plate: a fast contact transient excites unequal modes.
   // Upper modes fade first, leaving a small, clear body instead of a long bell.
   const glass = (
@@ -200,9 +248,9 @@ export function synthesizeSound(
       [2.73, 0.095, 0.25],
       [3.86, 0.035, 0.15],
     ];
-    for (const [ratio, amplitude, damping] of modes) {
+    for (const [ratio, amplitude, damping] of modes.slice(0, voice.modes)) {
       const frequency = fundamental * ratio;
-      if (frequency > Math.min(8500, c.sampleRate * 0.42)) continue;
+      if (frequency * voice.pitch > Math.min(8500, c.sampleRate * 0.42)) continue;
       tone(
         frequency,
         frequency,
@@ -321,6 +369,15 @@ export function synthesizeSound(
       [2260, 1680, 1220].forEach((f, i) =>
         glass(f, 0.035 + i * 0.008, 0.2, i * 0.095),
       );
+      break;
+    case "hover":
+      // A breath of a tick: the pointer resting on something.
+      air(2400, 2000, .012, .026, 0, .002); tone(1240, 1240, .007, .03, 0, .002);
+      break;
+    case "theme":
+      // A rising wash and the theme's three-note signature (its voice colours it).
+      air(500, 2600, .05, .55, 0, .06);
+      [1, 1.25, 1.5].forEach((ratio, i) => tone(440 * ratio, 440 * ratio, .03, .5, .08 * i, .02));
       break;
   }
   return {
@@ -612,7 +669,10 @@ export class TerminalAudio {
       level(g.gain, gains[i], this.context!.currentTime, 1.1),
     );
   }
-  play(type: Sound = "tick", pan = 0) {
+  private voice: Voice = PAPER_VOICE;
+  /** The theme's voice for every cue after this (VOICES). */
+  setVoice(voice: Voice) { this.voice = voice; }
+  play(type: Sound = "tick", pan = 0, gain = 1) {
     const c = this.context;
     if (
       !this.prefs.sound ||
@@ -634,7 +694,7 @@ export class TerminalAudio {
     this.lastSound.set(type, now);
     this.voices = this.voices.filter((v) => v.end > now);
     if (this.voices.length >= 10) this.voices.shift()!.stop(now);
-    const voice = synthesizeSound(c, this.effects!, type, now + 0.004, pan);
+    const voice = synthesizeSound(c, this.effects!, type, now + 0.004, pan, gain === 1 ? this.voice : { ...this.voice, gain: this.voice.gain * gain });
     this.voices.push(voice);
     if (this.prefs.soundVolume > 0) window.dispatchEvent(new CustomEvent("rhine-local-sound", {
       detail: { until: performance.now() / 1000 + Math.max(0, voice.end - now) + .2 },

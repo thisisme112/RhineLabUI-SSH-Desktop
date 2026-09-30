@@ -453,5 +453,58 @@ export class SshHostsPanel {
     if (!result?.ok) this.message.textContent = result?.error || "凭据删除失败";
     else { this.field("credential").value = ""; await this.refreshCredentials(); }
   }
+  /**
+   * The overview's 复制: a saved copy of a host (a host from the ssh config becomes a saved
+   * profile), with its endpoint and options, "副本" after the name, and in the same groups.
+   * A secret is bound to the profile's own id, so none is copied; the copy asks on first use.
+   */
+  async duplicate(alias: string): Promise<{ ok: boolean; alias?: string; error?: string }> {
+    const profiles = this.options.profiles;
+    if (!profiles) return { ok: false, error: "只有桌面版可以保存主机" };
+    const host = this.hosts.find((entry) => entry.alias === alias);
+    if (!host) return { ok: false, error: "找不到这台主机" };
+    const label = hostLabel(host);
+    const from: SshHostProfile = host.profile ?? {
+      name: label,
+      hostname: host.hostname,
+      ...(host.user ? { user: host.user } : {}),
+      ...(host.port ? { port: Number(host.port) } : {}),
+      ...(host.identityFile ? { identityFile: host.identityFile } : {}),
+    };
+    const { id: _id, ...options } = from;
+    // 副本, then 副本 2, 副本 3...: two copies are never told apart by position alone.
+    const taken = new Set(this.hosts.map(hostLabel));
+    let name = `${label} 副本`;
+    for (let n = 2; taken.has(name); n++) name = `${label} 副本 ${n}`;
+    try {
+      const result = await profiles.save({ ...options, name }, this.revision);
+      if (!result.ok || !result.profile?.id) return { ok: false, error: result.error || "主机保存失败" };
+      const copy = `rhine-profile:${result.profile.id}`;
+      const groups = this.options.groups();
+      const memberOf = groups.groupsOf(alias);
+      await this.refresh();
+      for (const id of memberOf) groups.setMembership(copy, id, true);
+      return { ok: true, alias: copy };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+  /** The overview's 删除: a saved profile only; a host that comes from the ssh config is not this app's to remove. */
+  async removeByAlias(alias: string): Promise<{ ok: boolean; error?: string }> {
+    const profiles = this.options.profiles;
+    const host = this.hosts.find((entry) => entry.alias === alias);
+    const id = host?.profile?.id;
+    if (!profiles || !host) return { ok: false, error: "找不到这台主机" };
+    if (host.source !== "saved" || !id) return { ok: false, error: "来自 SSH config，请在配置文件中删除" };
+    try {
+      const result = await profiles.remove(id, this.revision);
+      if (!result.ok) return { ok: false, error: result.error || "主机移除失败" };
+      this.drafts.delete(`config:${alias}`);
+      await this.refresh();
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
   dispose() { this.request++; this.stopWatchingGroups(); this.editorGeneration++; this.motion.cancel(); this.root.remove(); this.drafts.clear(); }
 }

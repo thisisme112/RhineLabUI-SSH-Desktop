@@ -8,9 +8,15 @@
   touch-action: pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
 }
 [data-native-shell="true"] .ssh-terminal-screen { touch-action: none; }
-[data-native-shell="true"] .ssh-mobile-keys { display: flex; justify-content: space-between; gap: 2px; border-bottom: 1px solid var(--terminal-line); }
-[data-native-shell="true"] .ssh-mobile-keys button { flex: 1; min-height: 34px; min-width: 0; padding: 3px; color: var(--terminal-fg); background: transparent; border: 0; font: 12px MiSans, sans-serif; }
+[data-native-shell="true"] .ssh-mobile-selection { display: flex; align-items: center; justify-content: space-around; gap: 4px; padding: 4px; border-bottom: 1px solid var(--terminal-line); }
+[data-native-shell="true"] .ssh-mobile-selection[hidden] { display: none; }
+[data-native-shell="true"] .ssh-mobile-selection span { font-size: 11px; color: var(--terminal-muted); }
+[data-native-shell="true"] .ssh-mobile-selection button { min-height: 40px; padding: 4px 10px; font: inherit; color: var(--terminal-fg); background: var(--terminal-bg); border: 1px solid var(--terminal-line); }
+[data-native-shell="true"] .ssh-mobile-keys { display: flex; gap: 2px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; touch-action: pan-x; border-bottom: 1px solid var(--terminal-line); }
+[data-native-shell="true"] .ssh-mobile-keys::-webkit-scrollbar { display: none; }
+[data-native-shell="true"] .ssh-mobile-keys button { flex: 1 0 auto; min-height: 40px; min-width: 44px; padding: 3px 10px; color: var(--terminal-fg); background: transparent; border: 0; font: 13px MiSans, sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 [data-native-shell="true"] .ssh-mobile-keys button[aria-pressed="true"] { color: var(--terminal-accent); background: color-mix(in srgb, var(--terminal-accent) 15%, transparent); }
+[data-native-shell="true"] .ssh-mobile-keys button[data-locked="true"] { font-weight: 700; box-shadow: inset 0 -2px 0 var(--terminal-accent); }
 [data-native-shell="true"] .ssh-terminal:not([data-workspace-page="terminal"]) .ssh-mobile-keys { display: none; }
 @media (max-width: 840px) {
   [data-native-shell="true"] .ssh-overview-columns { display: none; }
@@ -84,4 +90,50 @@
   [data-native-shell="true"] .ssh-monitor { padding: 10px; font-size: 12px; }
   [data-native-shell="true"] .ssh-workspace-side { min-width: 0; }
   [data-native-shell="true"] .ssh-transfer-drawer { max-height: 42vh; overflow-y: auto; }
+}
+
+/* Phone review pass (scripts/capture-phone-layout.mjs): thumb-sized targets, a landscape that still lists hosts,
+   and headings that do not break a word over three lines. */
+@media (max-width: 840px) {
+  [data-native-shell="true"] .ssh-overview-heading > div > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58vw; }
+  [data-native-shell="true"] .ssh-overview-host-name b { white-space: nowrap; min-width: 3.6em; }
+  [data-native-shell="true"] .ssh-overview-nav button { min-height: 40px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  [data-native-shell="true"] .ssh-overview-groups button { min-height: 36px; padding: 0 12px; }
+  [data-native-shell="true"] .ssh-overview-host-actions { width: 132px; }
+  [data-native-shell="true"] .ssh-overview-host-actions button { min-width: 42px; }
+  [data-native-shell="true"] .settings-sections button, [data-native-shell="true"] .ssh-settings-sections button { min-height: 40px; min-width: 44px; }
+  [data-native-shell="true"] .system-footer, [data-native-shell="true"] .system-footer button { font-size: 10.5px; }
+  [data-native-shell="true"] :is(.portal-drawer .portal-card small, .portal-launcher small, .settings-modal small, .theme-card small) { font-size: 10.5px; }
+}
+/* A phone on its side has about 360 px of height: the heading, tabs and search share one band so the list keeps most of it. */
+@media (max-width: 960px) and (max-height: 480px) {
+  [data-native-shell="true"] .ssh-overview { padding: 4px; }
+  [data-native-shell="true"] .ssh-overview-heading { padding: 6px 12px 2px; flex-wrap: nowrap; align-items: center; }
+  [data-native-shell="true"] .ssh-overview-heading > div > span { display: none; }
+  [data-native-shell="true"] .ssh-overview-heading h1 { margin-top: 0; font-size: 18px; }
+  [data-native-shell="true"] .ssh-overview-summary { padding: 0 12px 4px; gap: 10px; font-size: 11px; }
+  [data-native-shell="true"] .ssh-overview-summary strong { font-size: 13px; }
+  [data-native-shell="true"] .ssh-overview-nav { padding: 0 12px; }
+  [data-native-shell="true"] .ssh-overview-nav button { min-height: 36px; padding: 0; }
+  [data-native-shell="true"] .ssh-overview-content { padding: 4px 12px; }
+  [data-native-shell="true"] .ssh-overview-search { min-height: 32px; margin-bottom: 4px; }
+  [data-native-shell="true"] .ssh-overview-groups button { min-height: 32px; }
+  [data-native-shell="true"] .ssh-overview-row { min-height: 46px; padding: 4px 0; }
+  [data-native-shell="true"] .ssh-overview .ssh-overview-connect { min-height: 48px; padding: 4px; }
+  [data-native-shell="true"] .ssh-overview-footer { display: none; }
+  [data-native-shell="true"] .ssh-terminal-bar { min-height: 30px; }
+}
+@media (max-width: 960px) and (max-height: 480px) {
+  [data-native-shell="true"] .ssh-overview-search { padding: 2px 12px 0; }
+  [data-native-shell="true"] .ssh-overview-groups { padding: 2px 12px 4px; gap: 6px; }
+  [data-native-shell="true"] .ssh-overview .ssh-overview-connect { grid-template-columns: minmax(0, 1.4fr) minmax(64px, 0.45fr) minmax(0, 0.9fr); gap: 8px; min-height: 44px; padding: 3px 4px; }
+  [data-native-shell="true"] .ssh-overview-scroll { padding: 0 0 4px; }
+  [data-native-shell="true"] .ssh-overview-host-actions { width: 120px; }
+}
+@media (max-width: 840px) and (orientation: portrait) {
+  /* Title and the three actions do not fit side by side on 360 px: the actions take their own line. */
+  [data-native-shell="true"] .ssh-overview-heading { flex-wrap: wrap; row-gap: 2px; }
+  [data-native-shell="true"] .ssh-overview-heading > div:first-child { flex: 1 1 60%; min-width: 0; }
+  [data-native-shell="true"] .ssh-overview-heading-actions { flex: 1 1 100%; justify-content: flex-end; }
+  [data-native-shell="true"] .ssh-overview-heading > div > span { max-width: 100%; }
 }
