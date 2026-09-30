@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 /** Actual xterm + Android input/touch controls in a Chromium mobile viewport. */
 import { createServer } from "vite";
 import { spawn } from "node:child_process";
@@ -6,7 +7,7 @@ import path from "node:path";
 import os from "node:os";
 import assert from "node:assert/strict";
 const server = await createServer({
-  server: { host: "127.0.0.1", port: 0 },
+  server: { host: "127.0.0.1", port: 0, watch: null, hmr: false },
   configFile: false,
 });
 await server.listen();
@@ -232,9 +233,9 @@ try {
     String.raw`fixture.clipboard.text.includes('中文')&&fixture.clipboard.text.includes('\nsecond')`,
   );
   const screenshot = await send("Page.captureScreenshot", { format: "png" });
-  await mkdir(".tools/android-terminal", { recursive: true });
+  await mkdir(artifactPath("android-terminal"), { recursive: true });
   await writeFile(
-    ".tools/android-terminal/selection.png",
+    artifactPath("android-terminal/selection.png"),
     Buffer.from(screenshot.data, "base64"),
   );
   await evaluate(`document.querySelector('[data-selection=cancel]').click()`);
@@ -356,7 +357,7 @@ try {
   const settled = await evaluate(`fixture.term.buffer.active.viewportY`);
   await sleep(400);
   await check("the edge scroll stops when the selection ends", `${(await evaluate(`fixture.term.buffer.active.viewportY`)) === settled}`);
-  const out = path.resolve(".tools/android-terminal");
+  const out = path.resolve(artifactPath("android-terminal"));
   await mkdir(out, { recursive: true });
   await writeFile(
     path.join(out, "report.json"),

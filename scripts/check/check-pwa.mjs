@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 // Uses a disposable HTTP server to exercise real service-worker updates/failures.
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
@@ -35,7 +36,7 @@ try{
  const exported=await page.locator('.export-button').evaluate(async a=>{const r=await fetch(a.href);return {ok:r.ok,text:await r.text()}});assert.ok(exported.ok&&exported.text.includes('X-001'));
  await page.locator('.viewer-open').click();await page.waitForFunction(()=>JSON.parse(document.querySelector('.model-viewer')?.dataset.stats||'{}').ready);
  await page.locator('[data-viewer="explode"]').click();await page.waitForFunction(()=>JSON.parse(document.querySelector('.model-viewer').dataset.stats).spread===1);
- await mkdir('.tools/responsive',{recursive:true});await page.screenshot({path:'.tools/responsive/pwa-offline.png'});
+ await mkdir(artifactPath("responsive"),{recursive:true});await page.screenshot({path:artifactPath("responsive/pwa-offline.png")});
  assert.ok(await page.evaluate(async()=>{const r=await fetch('/audio/motif.ogg');return r.ok&&(await r.arrayBuffer()).byteLength>100000}));
  report.checks.push('offline reload, fonts, document export, model viewer, explosion and audio resource');
  await context.setOffline(false);revision=2;
@@ -57,4 +58,4 @@ try{
  assert.ok(!(await page.evaluate(()=>caches.keys())).some(k=>k.endsWith('-test-3')));
  report.checks.push('failed update leaves the previous complete offline release usable');
  assert.deepEqual(errors,[]);console.log(JSON.stringify(report,null,2));
-}finally{await writeFile('.tools/responsive/pwa-report.json',JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r))}
+}finally{await writeFile(artifactPath("responsive/pwa-report.json"),JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r))}

@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -12,7 +13,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ["--use-angle=d3d11", "--enable-gpu", "--ignore-gpu-blocklist"],
 });
-const output = resolve(".tools/array-input");
+const output = resolve(artifactPath("array-input"));
 await mkdir(output, { recursive: true });
 const report = [];
 const stats = (page) => page.evaluate(() => window.rhine.stats());

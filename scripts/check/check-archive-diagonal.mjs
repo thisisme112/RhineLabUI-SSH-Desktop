@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -13,7 +14,7 @@ const browser = await chromium.launch({
   args: ["--use-angle=d3d11", "--enable-gpu", "--ignore-gpu-blocklist"],
 });
 const report = [];
-await mkdir(".tools/array-input", { recursive: true });
+await mkdir(artifactPath("array-input"), { recursive: true });
 const stats = (page) => page.evaluate(() => rhine.stats());
 try {
   for (const [width, height, mobile] of [
@@ -189,7 +190,7 @@ try {
       });
     }
     await page.screenshot({
-      path: resolve(`.tools/array-input/diagonal-${width}x${height}.png`),
+      path: resolve(artifactPath(`array-input/diagonal-${width}x${height}.png`)),
     });
     assert.deepEqual(errors, []);
     report.push({ width, height, mobile, results, checks: "passed" });
@@ -199,9 +200,9 @@ try {
     await context.close();
   }
 } finally {
-  await mkdir(".tools/array-input", { recursive: true });
+  await mkdir(artifactPath("array-input"), { recursive: true });
   await writeFile(
-    ".tools/array-input/diagonal.json",
+    artifactPath("array-input/diagonal.json"),
     JSON.stringify(report, null, 2),
   );
   await browser.close();

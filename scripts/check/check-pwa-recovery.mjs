@@ -1,3 +1,4 @@
+import { artifactPath } from "../lib/artifacts.mjs";
 // Preserve an earlier production dist, then set PWA_PREVIOUS_DIST to its path.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -55,4 +56,4 @@ try {
  await freshPage.goto(base+'update.html');await freshPage.getByRole('button',{name:'更新并返回'}).click();await freshPage.waitForURL(base,{timeout:90000});
  report.checks.push('recovery also works without a previous service worker');await fresh.close();
  assert.deepEqual(report.errors,[]);console.log(JSON.stringify(report,null,2));
-}finally{await mkdir('.tools/responsive',{recursive:true});await writeFile(`.tools/responsive/recovery-${channel}.json`,JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r))}
+}finally{await mkdir(artifactPath("responsive"),{recursive:true});await writeFile(artifactPath(`responsive/recovery-${channel}.json`),JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r))}
