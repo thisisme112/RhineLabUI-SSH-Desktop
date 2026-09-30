@@ -1,0 +1,202 @@
+{
+  "checks": {
+    "driver completed": false
+  },
+  "errors": [
+    "Error: Timed out: native settings"
+  ],
+  "evidence": {
+    "timeout": {
+      "stats": {
+        "sessionDeck": {
+          "available": true,
+          "state": "packed",
+          "progress": 0,
+          "focus": 0,
+          "ready": false,
+          "screen": {
+            "corners": [
+              [
+                560.3151821269867,
+                408.03048337518385
+              ],
+              [
+                892.7026436427095,
+                236.50702790324843
+              ],
+              [
+                893.0698465029651,
+                565.039752112357
+              ],
+              [
+                562.5507406861609,
+                743.8454317796067
+              ]
+            ],
+            "width": 1891,
+            "height": 1050
+          },
+          "contentKey": "host:directory",
+          "cardId": "H-000",
+          "screenCurrent": true
+        },
+        "decryption": {
+          "time": -1,
+          "intervals": [],
+          "markers": 0,
+          "point": 0,
+          "label": 0,
+          "labelValue": 0,
+          "clarity": 0,
+          "phase": "waiting"
+        },
+        "topLeft": [
+          517,
+          288
+        ],
+        "topRight": [
+          899,
+          95
+        ],
+        "labelTopLeft": [
+          600,
+          329
+        ],
+        "labelBottomLeft": [
+          600,
+          393
+        ],
+        "modelPosition": [
+          0,
+          -1.9963,
+          -2.17
+        ],
+        "cameraPosition": [
+          -114.5565,
+          45.5345,
+          68.6579
+        ],
+        "fieldOfView": 2.999158312912754,
+        "loaded": true,
+        "contextLost": false,
+        "drawCalls": 414,
+        "superPerformance": false,
+        "presentation": 1,
+        "triangles": 5634421,
+        "archiveCount": 317,
+        "archiveCandidates": 458,
+        "archiveCulled": 141,
+        "archiveCapacity": 576,
+        "archiveCoverage": "standard",
+        "returningFiles": 0,
+        "selectionPhase": "settled",
+        "pendingPulse": null,
+        "pulses": [],
+        "referenceTime": 54.64,
+        "selectedSlot": 12,
+        "selectedLane": 0,
+        "selectedCell": {
+          "lane": 0,
+          "row": 12
+        },
+        "hoverCell": null,
+        "hoverLifts": {},
+        "dragTrack": null,
+        "archiveMomentum": null,
+        "holdingArchive": false,
+        "archivePull": {
+          "active": false,
+          "progress": 0,
+          "ready": false
+        },
+        "dragProjection": {
+          "lane": {
+            "x": -395.91718354703187,
+            "y": 207.72891951838415
+          },
+          "row": {
+            "x": -76.56022398205819,
+            "y": -14.878672029268046
+          }
+        },
+        "dragMapping": null,
+        "coordinateOrigin": {
+          "lane": 0,
+          "row": 0
+        },
+        "poolBounds": {
+          "minLane": -6,
+          "maxLane": 7,
+          "minRow": -28,
+          "maxRow": 51
+        },
+        "laneFocus": 3.4386830785509336e-34,
+        "columnCamera": -10.399999999999963,
+        "rotation": 0,
+        "clearance": -3.286490313229034,
+        "canInspect": false,
+        "returnPhase": "lowering",
+        "extraction": 0.4,
+        "appearance": 1,
+        "cameraDetail": 0,
+        "idleGain": 0,
+        "flatten": 0,
+        "spectrumActivity": 0,
+        "selectedIndexDim": 0,
+        "returningIndexDims": [],
+        "cameraDistance": 139.99999999999986,
+        "cameraNear": 5,
+        "cameraFar": 300,
+        "fogNear": 144.99999999999986,
+        "fogFar": 164.99999999999986,
+        "returningAppearance": [],
+        "rail": 0,
+        "threeState": "on",
+        "fps": 203,
+        "mode": "archive",
+        "ready": true,
+        "startup": "started",
+        "motion": {
+          "reduced": false,
+          "systemReduced": false
+        },
+        "bootTime": null,
+        "selected": "H-000",
+        "selectedIndex": 0,
+        "saved": [],
+        "audio": {
+          "state": "locked",
+          "scene": "archive",
+          "tracks": 0,
+          "voices": 0,
+          "loaded": false,
+          "playedKeys": 0,
+          "error": "",
+          "preferences": {
+            "sound": false,
+            "music": false,
+            "soundVolume": 0.55,
+            "musicVolume": 0.5
+          }
+        },
+        "wallpaper": null
+      },
+      "phase": {
+        "phase": "idle",
+        "label": "准备中",
+        "last": null,
+        "stalled": true,
+        "stalledFor": 24115.40000000596,
+        "failure": null,
+        "facts": {},
+        "timeline": [],
+        "unknownLines": [],
+        "eventCount": 0
+      },
+      "hidden": false,
+      "focus": "<button type=\"button\" data-close=\"\">返回</button>",
+      "prompt": null
+    },
+    "toolsAtTimeout": {}
+  }
+}

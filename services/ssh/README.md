@@ -34,7 +34,7 @@ Electron 启动桥接前校验其哈希。采集器以用户缓存中的 `<版�
 - `npm run check:ssh-workspace`：实际桌面 bundle 的文件、监控、传输、动画和响应式交互。
 - `npm run check:ssh-terminal-geometry`：实际鼠标点击、ASCII/中文拖选、SGR 鼠标行列、侧栏位移，覆盖不同尺寸与 DPR。
 
-真实 Linux / GPU 验收与限制另见 [验证记录](../../verification/SSH-WORKSPACE.md)。
+真实 Linux / GPU 验收与限制另见 [验证记录](../../.artifacts/checks/SSH-WORKSPACE.md)。
 
 ## 依赖许可
 

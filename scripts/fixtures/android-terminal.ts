@@ -1,12 +1,12 @@
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import "../../src/android.css";
-import { MobileTerminalControls } from "../../src/ssh/android/terminal-controls";
-import { terminalAppearance } from "../../src/ssh/terminal-appearance";
+import "../../src/platform/android/android.css";
+import { MobileTerminalControls } from "../../src/platform/android/ssh/terminal-controls";
+import { terminalAppearance } from "../../src/features/ssh/terminal-appearance";
 import {
   TerminalTools,
   TERMINAL_TOOLS_MARKUP,
-} from "../../src/ssh/terminal-tools";
+} from "../../src/features/ssh/terminal-tools";
 const root = document.querySelector<HTMLElement>(".ssh-terminal")!;
 const screen = root.querySelector<HTMLElement>(".ssh-terminal-screen")!;
 root

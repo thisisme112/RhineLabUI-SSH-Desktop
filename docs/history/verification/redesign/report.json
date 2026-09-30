@@ -1,0 +1,146 @@
+{
+  "checks": {
+    "a host can be inspected without connecting or opening a terminal": true,
+    "terminal inspection owns nine shell and insert layers": true,
+    "dragging rotates the inspection camera": true,
+    "wheel zoom changes the camera distance": true,
+    "arrow keys pan the inspection": true,
+    "explosion keeps each layer on its assembly axis": true,
+    "exploded layers have six percent width clearance": true,
+    "reversing explosion retains the intermediate pose": true,
+    "reassembly does not reset the orbit": true,
+    "inspection controls fit 800x600 at 1x": true,
+    "inspection controls fit 1366x768 at 1x": true,
+    "inspection controls fit 1920x1080 at 2x": true,
+    "inspection controls fit 2560x1440 at 1x": true,
+    "terminal has no teardown or scan animation": true,
+    "return to model preserves the live connection": true,
+    "connection success without entry intent never steals the view": true,
+    "failed model still offers a regular terminal entry": true,
+    "fallback uses unscaled native terminal with reduced motion": true,
+    "reduced motion reaches the exploded target immediately": true,
+    "reduced motion reaches the assembled target immediately": true,
+    "dismissed inspection cannot start a connection": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {
+    "exploded": {
+      "ready": true,
+      "clarity": 1,
+      "targetClarity": 1,
+      "spread": 1,
+      "target": 1,
+      "distance": 14.50103444585936,
+      "targetPosition": [
+        0,
+        0,
+        0
+      ],
+      "requestedTarget": [
+        0,
+        0,
+        0
+      ],
+      "requestedDistance": 14.50103444585936,
+      "cameraPosition": [
+        7.199999999999996,
+        3.799999999999999,
+        11.99999999999999
+      ],
+      "resetting": false,
+      "clearance": 0.05999999999999991,
+      "azimuth": 0.5404195002705843,
+      "polar": 1.3056502214105623,
+      "parts": [
+        {
+          "id": "fasteners",
+          "z": 1.4077435570582744,
+          "x": 0,
+          "y": 1.85,
+          "restX": 0,
+          "restY": 1.85,
+          "meshes": 2
+        },
+        {
+          "id": "cover",
+          "z": 1.0381201433762908,
+          "x": 0,
+          "y": 1.85,
+          "restX": 0,
+          "restY": 1.85,
+          "meshes": 10
+        },
+        {
+          "id": "bezel",
+          "z": 0.764496747404337,
+          "x": 0,
+          "y": 1.565,
+          "restX": 0,
+          "restY": 1.565,
+          "meshes": 9
+        },
+        {
+          "id": "screen",
+          "z": 0.5048733649030333,
+          "x": 0,
+          "y": 1.565,
+          "restX": 0,
+          "restY": 1.565,
+          "meshes": 2
+        },
+        {
+          "id": "vents",
+          "z": -0.8979967815056439,
+          "x": 0,
+          "y": 1.565,
+          "restX": 0,
+          "restY": 1.565,
+          "meshes": 19
+        },
+        {
+          "id": "board",
+          "z": -1.2276201708242291,
+          "x": 0,
+          "y": 1.565,
+          "restX": 0,
+          "restY": 1.565,
+          "meshes": 10
+        },
+        {
+          "id": "backplate",
+          "z": -1.583743560761213,
+          "x": 0,
+          "y": 1.565,
+          "restX": 0,
+          "restY": 1.565,
+          "meshes": 5
+        },
+        {
+          "id": "substrate",
+          "z": -0.5193733934685584,
+          "x": 0,
+          "y": 1.85,
+          "restX": 0,
+          "restY": 1.85,
+          "meshes": 3
+        },
+        {
+          "id": "carrier",
+          "z": -0.021750008277594546,
+          "x": 0,
+          "y": 1.85,
+          "restX": 0,
+          "restY": 1.85,
+          "meshes": 2
+        }
+      ]
+    },
+    "recording": {
+      "frames": 332,
+      "file": "inspection.mp4"
+    },
+    "reversalSpread": 0.7157742151017547,
+    "expectedModelFailure": "Model viewer failed to load zv: fetch for \"http://127.0.0.1:64995/assets/archive-assembly.d411170676f55a32.glb\" responded with 404: Not Found\n    at http://127.0.0.1:64995/assets/index-DbfMTLaL.js:21:27323"
+  }
+}

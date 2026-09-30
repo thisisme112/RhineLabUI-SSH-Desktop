@@ -1,0 +1,254 @@
+{
+  "report": [
+    {
+      "screen": "home",
+      "viewport": "portrait",
+      "small": [],
+      "smallCount": 0,
+      "tiny": [
+        [
+          "●",
+          7
+        ]
+      ],
+      "tinyCount": 1,
+      "overflowX": false,
+      "headingClipped": false,
+      "nativeShell": "true",
+      "startup": "started",
+      "mode": "archive",
+      "toast": "",
+      "cssLinks": "index-BhrzXbx5.css,terminal-appearance-DhXHjCMc.css,session-bank-De5eWOiF.css,library-8HzM7Mtc.css,portals-DdD3zNRd.css,prompt-DT6QML7T.css,audit-panel-DifNqWa7.css,hosts-panel-DbTpEExr.css,utility-panels-D1CPGTM7.css,overview-uK8GSBtK.css,android-DtEmRQaG.css",
+      "cap": [
+        "android",
+        true,
+        true,
+        "android"
+      ],
+      "layout": "portrait",
+      "columnsDisplay": "none",
+      "innerWidth": 360
+    },
+    {
+      "screen": "overview",
+      "viewport": "portrait",
+      "small": [],
+      "smallCount": 0,
+      "tiny": [
+        [
+          "●",
+          7
+        ]
+      ],
+      "tinyCount": 1,
+      "overflowX": false,
+      "headingClipped": false,
+      "nativeShell": "true",
+      "startup": "started",
+      "mode": "archive",
+      "toast": "",
+      "cssLinks": "index-BhrzXbx5.css,terminal-appearance-DhXHjCMc.css,session-bank-De5eWOiF.css,library-8HzM7Mtc.css,portals-DdD3zNRd.css,prompt-DT6QML7T.css,audit-panel-DifNqWa7.css,hosts-panel-DbTpEExr.css,utility-panels-D1CPGTM7.css,overview-uK8GSBtK.css,android-DtEmRQaG.css",
+      "cap": [
+        "android",
+        true,
+        true,
+        "android"
+      ],
+      "layout": "portrait",
+      "columnsDisplay": "none",
+      "innerWidth": 360
+    },
+    {
+      "screen": "host-editor",
+      "viewport": "portrait",
+      "small": [],
+      "smallCount": 0,
+      "tiny": [
+        [
+          "●",
+          7
+        ]
+      ],
+      "tinyCount": 1,
+      "overflowX": false,
+      "headingClipped": false,
+      "nativeShell": "true",
+      "startup": "started",
+      "mode": "archive",
+      "toast": "",
+      "cssLinks": "index-BhrzXbx5.css,terminal-appearance-DhXHjCMc.css,session-bank-De5eWOiF.css,library-8HzM7Mtc.css,portals-DdD3zNRd.css,prompt-DT6QML7T.css,audit-panel-DifNqWa7.css,hosts-panel-DbTpEExr.css,utility-panels-D1CPGTM7.css,overview-uK8GSBtK.css,android-DtEmRQaG.css",
+      "cap": [
+        "android",
+        true,
+        true,
+        "android"
+      ],
+      "layout": "portrait",
+      "columnsDisplay": "none",
+      "innerWidth": 360
+    },
+    {
+      "screen": "settings",
+      "viewport": "portrait",
+      "small": [],
+      "smallCount": 0,
+      "tiny": [
+        [
+          "CLOSE",
+          10
+        ],
+        [
+          "×",
+          0
+        ],
+        [
+          "JOYCE MOORE",
+          10
+        ],
+        [
+          "·",
+          10
+        ],
+        [
+          "SESSION AUTHORIZED",
+          10
+        ]
+      ],
+      "tinyCount": 5,
+      "overflowX": false,
+      "headingClipped": false,
+      "nativeShell": "true",
+      "startup": "started",
+      "mode": "archive",
+      "toast": "",
+      "cssLinks": "index-BhrzXbx5.css,terminal-appearance-DhXHjCMc.css,session-bank-De5eWOiF.css,library-8HzM7Mtc.css,portals-DdD3zNRd.css,prompt-DT6QML7T.css,audit-panel-DifNqWa7.css,hosts-panel-DbTpEExr.css,utility-panels-D1CPGTM7.css,overview-uK8GSBtK.css,android-DtEmRQaG.css",
+      "cap": [
+        "android",
+        true,
+        true,
+        "android"
+      ],
+      "layout": "portrait",
+      "columnsDisplay": "none",
+      "innerWidth": 360
+    },
+    {
+      "screen": "home",
+      "viewport": "landscape",
+      "small": [],
+      "smallCount": 0,
+      "tiny": [],
+      "tinyCount": 0,
+      "overflowX": false,
+      "headingClipped": false,
+      "nativeShell": "true",
+      "startup": "started",
+      "mode": "archive",
+      "toast": "",
+      "cssLinks": "index-BhrzXbx5.css,terminal-appearance-DhXHjCMc.css,session-bank-De5eWOiF.css,library-8HzM7Mtc.css,portals-DdD3zNRd.css,prompt-DT6QML7T.css,audit-panel-DifNqWa7.css,hosts-panel-DbTpEExr.css,utility-panels-D1CPGTM7.css,overview-uK8GSBtK.css,android-DtEmRQaG.css",
+      "cap": [
+        "android",
+        true,
+        true,
+        "android"
+      ],
+      "layout": "compact",
+      "columnsDisplay": "none",
+      "innerWidth": 800
+    },
+    {
+      "screen": "overview",
+      "viewport": "landscape",
+      "small": [],
+      "smallCount": 0,
+      "tiny": [],
+      "tinyCount": 0,
+      "overflowX": false,
+      "headingClipped": false,
+      "nativeShell": "true",
+      "startup": "started",
+      "mode": "archive",
+      "toast": "",
+      "cssLinks": "index-BhrzXbx5.css,terminal-appearance-DhXHjCMc.css,session-bank-De5eWOiF.css,library-8HzM7Mtc.css,portals-DdD3zNRd.css,prompt-DT6QML7T.css,audit-panel-DifNqWa7.css,hosts-panel-DbTpEExr.css,utility-panels-D1CPGTM7.css,overview-uK8GSBtK.css,android-DtEmRQaG.css",
+      "cap": [
+        "android",
+        true,
+        true,
+        "android"
+      ],
+      "layout": "compact",
+      "columnsDisplay": "none",
+      "innerWidth": 800
+    },
+    {
+      "screen": "host-editor",
+      "viewport": "landscape",
+      "small": [],
+      "smallCount": 0,
+      "tiny": [],
+      "tinyCount": 0,
+      "overflowX": false,
+      "headingClipped": false,
+      "nativeShell": "true",
+      "startup": "started",
+      "mode": "archive",
+      "toast": "",
+      "cssLinks": "index-BhrzXbx5.css,terminal-appearance-DhXHjCMc.css,session-bank-De5eWOiF.css,library-8HzM7Mtc.css,portals-DdD3zNRd.css,prompt-DT6QML7T.css,audit-panel-DifNqWa7.css,hosts-panel-DbTpEExr.css,utility-panels-D1CPGTM7.css,overview-uK8GSBtK.css,android-DtEmRQaG.css",
+      "cap": [
+        "android",
+        true,
+        true,
+        "android"
+      ],
+      "layout": "compact",
+      "columnsDisplay": "none",
+      "innerWidth": 800
+    },
+    {
+      "screen": "settings",
+      "viewport": "landscape",
+      "small": [],
+      "smallCount": 0,
+      "tiny": [
+        [
+          "CLOSE",
+          10
+        ],
+        [
+          "×",
+          0
+        ],
+        [
+          "JOYCE MOORE",
+          10
+        ],
+        [
+          "·",
+          10
+        ],
+        [
+          "SESSION AUTHORIZED",
+          10
+        ]
+      ],
+      "tinyCount": 5,
+      "overflowX": false,
+      "headingClipped": false,
+      "nativeShell": "true",
+      "startup": "started",
+      "mode": "archive",
+      "toast": "",
+      "cssLinks": "index-BhrzXbx5.css,terminal-appearance-DhXHjCMc.css,session-bank-De5eWOiF.css,library-8HzM7Mtc.css,portals-DdD3zNRd.css,prompt-DT6QML7T.css,audit-panel-DifNqWa7.css,hosts-panel-DbTpEExr.css,utility-panels-D1CPGTM7.css,overview-uK8GSBtK.css,android-DtEmRQaG.css",
+      "cap": [
+        "android",
+        true,
+        true,
+        "android"
+      ],
+      "layout": "compact",
+      "columnsDisplay": "none",
+      "innerWidth": 800
+    }
+  ],
+  "errors": []
+}

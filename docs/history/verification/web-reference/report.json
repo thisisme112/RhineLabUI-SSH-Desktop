@@ -1,0 +1,23 @@
+{
+  "width": 1600,
+  "height": 900,
+  "shots": [
+    "web-01-home",
+    "web-02-selected",
+    "web-03-scanning",
+    "web-03-detail",
+    "web-04-return",
+    "web-05-overview",
+    "web-dark-01-home",
+    "web-dark-03-scanning",
+    "web-dark-03-detail"
+  ],
+  "errors": [
+    "SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document."
+  ],
+  "stats": {
+    "threeState": "on",
+    "fps": 240,
+    "mode": "detail"
+  }
+}

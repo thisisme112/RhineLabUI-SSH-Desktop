@@ -16,7 +16,7 @@ APK：`android/app/build/outputs/apk/debug/app-debug.apk`。包名仍为 `cc.lub
 
 安装同包名、同签名的新 APK 可保留已有主机、主机指纹和加密凭据。不要卸载旧版或清除应用数据后再更新。当前提供 debug 签名包；尚未配置正式发行签名。
 
-`scripts/android-build.mjs` 优先使用 `JAVA_HOME` / `ANDROID_HOME`，也支持本机已有工具链；不修改系统环境。临时目录下的工具链可能被系统清理，长期构建建议设置常驻 JDK 17 和 Android SDK。`android/local.properties`、生成的网页、JNI 代理及监控二进制均不进入 Git。
+`scripts/build/android-build.mjs` 优先使用 `JAVA_HOME` / `ANDROID_HOME`，也支持本机已有工具链；不修改系统环境。临时目录下的工具链可能被系统清理，长期构建建议设置常驻 JDK 17 和 Android SDK。`android/local.properties`、生成的网页、JNI 代理及监控二进制均不进入 Git。
 
 安卓版有独立的 Vite `android` 模式和 `dist-android/` 目录，Capacitor 使用原来的本地 HTTPS 来源。应用资源随 APK 离线打包，不注册 PWA Service Worker。网页和壁纸不启用 SSH，电脑端不调用安卓插件。
 
@@ -32,7 +32,7 @@ APK：`android/app/build/outputs/apk/debug/app-debug.apk`。包名仍为 `cc.lub
 
 ## 性能与画质
 
-安卓首次启动使用 **“手机”画质预设**（关闭环境光遮蔽与景深，透射和阴影减半），在设置里自选任一预设或单项后不再自动套用；升级前保存过的默认画质也按此处理。帧率跟随画面：交互和动画时最高 60 帧，静止的主页降到 30 帧，全屏终端 / 门户页遮住场景后暂停三维渲染（`src/frame-budget.ts`）。连续掉帧时渲染分辨率自动在 100%–60% 之间逐级降低，稳定后缓慢回升，不会来回震荡。WebGL 画布关闭多重采样（画面本来就经后处理管线输出）。软键盘弹出 / 收起时三维缓冲只在动画结束后重建一次。安装包不再带未带哈希的重复模型文件。
+安卓首次启动使用 **“手机”画质预设**（关闭环境光遮蔽与景深，透射和阴影减半），在设置里自选任一预设或单项后不再自动套用；升级前保存过的默认画质也按此处理。帧率跟随画面：交互和动画时最高 60 帧，静止的主页降到 30 帧，全屏终端 / 门户页遮住场景后暂停三维渲染（`src/rendering/frame-budget.ts`）。连续掉帧时渲染分辨率自动在 100%–60% 之间逐级降低，稳定后缓慢回升，不会来回震荡。WebGL 画布关闭多重采样（画面本来就经后处理管线输出）。软键盘弹出 / 收起时三维缓冲只在动画结束后重建一次。安装包不再带未带哈希的重复模型文件。
 
 ## 手机操作
 
@@ -66,7 +66,7 @@ SFTP 支持目录浏览、上传／下载、目录传输、创建、重命名、
 
 | 部件 | 位置与职责 |
 | --- | --- |
-| 共享 renderer 适配 | `src/ssh/android/bridge.ts`：提供会话、主机、凭据、文件、监控和记录接口；界面复用 `SshSessionBank`。 |
+| 共享 renderer 适配 | `src/platform/android/ssh/bridge.ts`：提供会话、主机、凭据、文件、监控和记录接口；界面复用 `SshSessionBank`。 |
 | SSH 协议代理 | `services/ssh/cmd/session`：使用 `golang.org/x/crypto/ssh`，通过 JSON-lines 发送真实协议阶段、认证提示和终端流。 |
 | 原生会话插件 | `SshSessionPlugin.java`：每个会话独立进程和 token，处理 DNS、输入输出、键盘及生命周期。 |
 | 文件选择与保存 | `SshDocumentsPlugin.java`：显式文件／目录选择器、缓存、导出和文本剪贴板。 |
@@ -87,4 +87,4 @@ SFTP 支持目录浏览、上传／下载、目录传输、创建、重命名、
 
 安卓已支持最多三层保存主机组成的跳板链和可选后台前台服务，仍不直接读取系统 OpenSSH config、ssh-agent、本机私钥路径或任意 SSH 参数。后台服务、恢复策略、SFTP 文本编辑、提醒与加密配置迁移见 [工作区设置与项目档案](SSH-WORKSPACE-SETTINGS.md)。
 
-用户已实测确认之前的安卓单会话版本可连接。本次升级在其后完成，按用户“不用测试”的要求，仅做源码检查、类型检查、编译和打包，没有再次安装、操作手机，也没有对新版多会话、SFTP、监控和视觉做运行时验收。最新产物与变更记录见 [SSH 工作区与终端排版](../verification/SSH-WORKSPACE-SETTINGS.md)，前轮记录见 [SSH 档案与安卓升级](../verification/SSH-ARCHIVES-ANDROID.md)。
+用户已实测确认之前的安卓单会话版本可连接。本次升级在其后完成，按用户“不用测试”的要求，仅做源码检查、类型检查、编译和打包，没有再次安装、操作手机，也没有对新版多会话、SFTP、监控和视觉做运行时验收。最新产物与变更记录见 [SSH 工作区与终端排版](history/verification/SSH-WORKSPACE-SETTINGS.md)，前轮记录见 [SSH 档案与安卓升级](history/verification/SSH-ARCHIVES-ANDROID.md)。

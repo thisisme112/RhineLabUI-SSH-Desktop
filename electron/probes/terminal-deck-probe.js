@@ -120,11 +120,12 @@
         "native pasted command",
       );
       checks["native pasted text reaches ConPTY and returns"] = true;
+      const largerSize = `${parseFloat(getComputedStyle(document.querySelector(".xterm-rows")).fontSize) + 1}px`;
       click("larger");
       await waitFor(
         () =>
           getComputedStyle(document.querySelector(".xterm-rows")).fontSize ===
-          "17px",
+          largerSize,
         "native font size",
       );
       checks["native font controls update terminal text"] = true;

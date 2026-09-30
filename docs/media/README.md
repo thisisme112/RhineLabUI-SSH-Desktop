@@ -34,7 +34,7 @@ README 直接展示解密动图，其余动图放在可展开区域。采集时�
 
 ## 重新采集
 
-采集脚本为 [`scripts/capture-readme.mjs`](../../scripts/capture-readme.mjs)。需要 Chrome、Playwright 与 FFmpeg；它们是文档制作工具，普通应用运行不需要安装。脚本会覆盖本目录同名素材，并将中间 JPEG 帧保存在被 Git 忽略的 `.tools/readme-capture/`。
+采集脚本为 [`scripts/capture/capture-readme.mjs`](../../scripts/capture/capture-readme.mjs)。需要 Chrome、Playwright 与 FFmpeg；它们是文档制作工具，普通应用运行不需要安装。脚本会覆盖本目录同名素材，并将中间 JPEG 帧保存在被 Git 忽略的 `.tools/readme-capture/`。
 
 先启动应用：
 
@@ -46,7 +46,7 @@ npm run dev -- --port 5186
 再从仓库根目录执行脚本。已能通过 Node 导入 Playwright、且 FFmpeg 在 PATH 中时：
 
 ```sh
-node scripts/capture-readme.mjs
+node scripts/capture/capture-readme.mjs
 ```
 
 也可以指定现有工具的位置，例如 PowerShell：
@@ -55,7 +55,7 @@ node scripts/capture-readme.mjs
 $env:PLAYWRIGHT_MODULE = 'C:/tools/node_modules/playwright/index.mjs'
 $env:FFMPEG = 'C:/tools/ffmpeg.exe'
 $env:CAPTURE_URL = 'http://127.0.0.1:5186'
-node scripts/capture-readme.mjs
+node scripts/capture/capture-readme.mjs
 ```
 
 其中工具路径需要替换为本机的实际位置。Windows 录制显式使用 D3D11；其他平台使用 Chrome 可用的 GPU 后端。录制后应查看截图、GIF 的起止帧及中间过渡，确认资源加载完整、没有遮挡或异常，检查 README 图片链接，并更新此处的版本与时长。

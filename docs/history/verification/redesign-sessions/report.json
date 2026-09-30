@@ -1,0 +1,13 @@
+{
+  "checks": {
+    "authentication is scoped to its own session": true,
+    "open sessions switch directly without model replay": true,
+    "session switch preserves output and separate transports": true,
+    "inspection navigation is isolated from terminal input": true,
+    "return from inspection retains the session and output": true,
+    "eight sessions retain independent buffers with one visible terminal": true,
+    "no page errors": true
+  },
+  "errors": [],
+  "evidence": {}
+}
