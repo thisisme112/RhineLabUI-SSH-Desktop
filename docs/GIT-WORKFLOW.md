@@ -16,4 +16,8 @@
 
 新 Unreal 仓库提取了原 `prototypes/unreal` 目录历史，`archive/source-import` 保存提取结果。结构调整发生在新提交中，原仓库和发布历史未重写。旧 `unreal 5.8` 工程单独归档，不作为活动工程。
 
+主目录当前使用 `integrate/repository-cleanup`；本地 `main` 已重新指向并跟踪 `origin/main`。源码 checkpoint 位于 `checkpoint/20260930/main`。旧 Unreal / upload-clean / 已完成桌面任务分支仅保留 archive 引用；桌面与迁移临时 worktree 的本地产物先归档后移除。Android worktree 的 12 项暂存改动原样保留，可继续开发或按 checkpoint 核对后收尾。
+
+旧工程、重复工程与旧发行包保存在上述迁移目录的 `original-prototypes`、`original-verification`、`original-reference`、`old-releases` 中。当前远程未改写；Unreal 仓库尚未配置远程地址，首次发布时再添加独立远程。
+
 备份包括未提交文件；bundle 仅保存 Git 对象与引用。恢复工作区内容时同时使用相应文件清单和补丁，先在临时目录核对。归档与 checkpoint 不推送为产品分支。

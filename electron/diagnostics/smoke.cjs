@@ -63,7 +63,7 @@ async function runSessionSmoke(win) {
   if (runtimeContext.TERMINAL_SMOKE) return runTerminalDeckSmoke(win);
   if (runtimeContext.EDITOR_SMOKE) return runEditorSmoke(win);
   // Where the probe should write its export, so automation never opens a dialog.
-  const exportPath = runtimeContext.path.join(runtimeContext.outputDir, "session-record-export.txt");
+  const exportPath = runtimeContext.path.join(runtimeContext.path.dirname(runtimeContext.reportPath), "session-record-export.txt");
   try {
     runtimeContext.fs.rmSync(exportPath, { force: true });
   } catch {

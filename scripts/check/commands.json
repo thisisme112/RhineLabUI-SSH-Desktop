@@ -43,5 +43,11 @@
   "check:theme-motion": "node --experimental-strip-types --test scripts/check/check-theme-motion.mjs",
   "check:android-layout": "node scripts/capture/capture-phone-layout.mjs --check",
   "check:shared": "node --test scripts/check/check-shared-package.mjs",
-  "check:structure": "node scripts/check/check-structure.mjs"
+  "check:structure": "node scripts/check/check-structure.mjs",
+  "smoke:desktop": "node node_modules/electron/cli.js . --smoke",
+  "smoke:desktop:session": "node node_modules/electron/cli.js . --session-smoke",
+  "smoke:desktop:terminal": "node node_modules/electron/cli.js . --session-smoke --terminal-deck-only",
+  "smoke:desktop:hosts": "node node_modules/electron/cli.js . --session-smoke --host-management-only",
+  "smoke:desktop:multisession": "node node_modules/electron/cli.js . --session-smoke --multisession-only",
+  "smoke:desktop:editor": "node node_modules/electron/cli.js . --session-smoke --editor-only"
 }

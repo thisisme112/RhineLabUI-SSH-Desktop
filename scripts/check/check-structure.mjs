@@ -58,9 +58,10 @@ function walk(directory) {
 }
 for (const directory of ["src", "scripts", "electron"])
   walk(path.join(root, directory));
-for (const [name, command] of Object.entries(
-  JSON.parse(fs.readFileSync("package.json")).scripts,
-)) {
+for (const [name, command] of Object.entries({
+  ...JSON.parse(fs.readFileSync("package.json")).scripts,
+  ...JSON.parse(fs.readFileSync("scripts/check/commands.json")),
+})) {
   for (const match of command.matchAll(
     /(?:node\s+(?:--[\w-]+\s+)*)?(scripts\/[^\s]+|electron\/[^\s]+\.cjs)/g,
   ))
