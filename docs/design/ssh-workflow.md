@@ -353,7 +353,7 @@ setPlayfield(enabled: boolean, bands: MusicBands, strength: number, flatten: num
 
 ## 9. 音效映射（SSH 事件 → 既有音色）
 
-项目已建立一条明确的音效语义约定（`verification/AUDIO-DESIGN.md:65`），**必须沿用而不是另起一套**：
+项目已建立一条明确的音效语义约定（`docs/history/verification/AUDIO-DESIGN.md:65`），**必须沿用而不是另起一套**：
 
 | 音色族 | 语义 | 既有用法 |
 | --- | --- | --- |

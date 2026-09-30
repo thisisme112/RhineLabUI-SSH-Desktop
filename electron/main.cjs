@@ -13,6 +13,7 @@ const { app, BrowserWindow, clipboard, dialog, ipcMain, shell, safeStorage } = r
 const path = require("node:path");
 const fs = require("node:fs");
 const os = require("node:os");
+const { artifactPath } = require("./artifacts.cjs");
 const { fileURLToPath } = require("node:url");
 const { PtySession } = require("./session.cjs");
 const { SessionRegistry } = require("./session-registry.cjs");
@@ -94,9 +95,10 @@ if (!hasSingleInstanceLock) app.quit();
 const reportPath =
   process.env.RHINE_SMOKE_REPORT ||
   path.join(
-    outputDir,
+    root, artifactPath("desktop-smoke"),
     EDITOR_SMOKE ? "desktop-editor-smoke.json" : MULTI_SMOKE ? "desktop-multisession-smoke.json" : HOST_SMOKE ? "desktop-hosts-smoke.json" : TERMINAL_SMOKE ? "desktop-terminal-smoke.json" : SESSION_SMOKE ? "desktop-session-smoke.json" : "desktop-smoke.json",
   );
+if (SMOKE || SESSION_SMOKE) fs.mkdirSync(path.dirname(reportPath), { recursive: true });
 
 function report(payload) {
   try {

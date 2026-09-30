@@ -81,7 +81,7 @@ SFTP 支持目录浏览、上传／下载、目录传输、创建、重命名、
 
 ## 电脑上的排版与交互检查
 
-不接手机也能复查：`npm run build:android` 后运行 `npm run check:android-layout`，用替身 Capacitor 桥在 Edge 里以 360×800 竖屏和 800×360 横屏截图（`verification/android-phone/`），并断言主机总览没有小于 36px 的点按目标、没有横向溢出、顶部操作没有被挤出屏幕；`npm run check:android-terminal` 覆盖输入法、按键条、Ctrl 锁定、连发、捏合、惯性滚动与选区边缘滚动。这些代替不了真机：软键盘、系统输入法、发热与帧率仍以手机实测为准。
+不接手机也能复查：`npm run build:android` 后运行 `npm run check:android-layout`，用替身 Capacitor 桥在 Edge 里以 360×800 竖屏和 800×360 横屏截图（`docs/history/verification/android-phone/`），并断言主机总览没有小于 36px 的点按目标、没有横向溢出、顶部操作没有被挤出屏幕；`npm run check:android-terminal` 覆盖输入法、按键条、Ctrl 锁定、连发、捏合、惯性滚动与选区边缘滚动。这些代替不了真机：软键盘、系统输入法、发热与帧率仍以手机实测为准。
 
 ## 当前边界与本轮记录
 
