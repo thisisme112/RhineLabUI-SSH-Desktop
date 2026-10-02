@@ -88,7 +88,10 @@ try {
   if (fastEnough) {
     assert.ok(idle.share < 0.62, `idle should admit about half the frames, admitted ${(idle.share * 100).toFixed(0)}%`);
     assert.equal(idle.tier, "idle");
-    assert.ok(busy.share > 0.85, `input should lift the rate to the display's, admitted ${(busy.share * 100).toFixed(0)}%`);
+    // Busy is capped at 120 (frame-budget.ts): the gate keeps every `stride`-th display frame.
+    const stride = Math.max(1, Math.ceil(1000 / 120 / busy.refreshMs - 0.5));
+    assert.ok(Math.abs(busy.share - 1 / stride) < 0.15 / stride,
+      `input should lift the rate to the display's, up to 120: expected ${(100 / stride).toFixed(0)}% of ${(1000 / busy.refreshMs).toFixed(0)} Hz, admitted ${(busy.share * 100).toFixed(0)}%`);
     assert.ok(settled.share < 0.62, "the rate settles again after input");
   } else console.log("display too slow to judge the idle share; tier transitions only");
   assert.equal(afterInput.tier, "busy", "input reports busy at once");

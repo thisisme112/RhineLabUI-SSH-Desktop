@@ -16,14 +16,20 @@
 export type BudgetTier = "busy" | "active" | "idle" | "background";
 
 export interface BudgetRates {
-  /** Cap while busy; Infinity follows the display. */
+  /**
+   * Cap while busy; Infinity follows the display. The gate only skips whole
+   * display frames, so a cap lands on the display rate divided by a whole
+   * number: 120 holds 120 on 120 and 240 Hz, 100 on 200 Hz, and leaves 144 and
+   * 165 Hz at their own rate rather than judder by dropping every sixth frame.
+   */
   busy: number;
   active: number;
   idle: number;
   background: number;
 }
 
-export const DESKTOP_RATES: BudgetRates = { busy: Infinity, active: 60, idle: 30, background: 15 };
+/** Busy stops at 120 like the Unreal build: a 240 Hz panel otherwise runs every pass twice as often for motion the eye cannot follow. */
+export const DESKTOP_RATES: BudgetRates = { busy: 120, active: 60, idle: 30, background: 15 };
 /** A phone's scene is not worth the heat above 60. */
 export const ANDROID_RATES: BudgetRates = { busy: 60, active: 60, idle: 30, background: 15 };
 

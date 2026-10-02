@@ -1,4 +1,4 @@
-// Unit checks for the frame gate (src/rendering/frame-budget.ts): the rates each tier admits on a 120 Hz and a 60 Hz display.
+// Unit checks for the frame gate (src/rendering/frame-budget.ts): the rates each tier admits on 60, 120, 144 and 240 Hz displays.
 import assert from "node:assert/strict";
 import test from "node:test";
 import { ANDROID_RATES, DESKTOP_RATES, FrameBudget, ResolutionGovernor } from "../../src/rendering/frame-budget.ts";
@@ -29,12 +29,24 @@ test("an untouched scene idles at 30 fps on a 60 Hz display", () => {
   near(run(budget, 60, 4, () => {}, false, 3000), 30);
 });
 
-test("busy follows the display on desktop and stops at 60 on a phone", () => {
+test("busy runs at the display rate up to 120 on desktop and stops at 60 on a phone", () => {
   const desktop = new FrameBudget(DESKTOP_RATES);
   near(run(desktop, 120, 3, (now, b) => b.busy(now, 600)), 120);
   const phone = new FrameBudget(ANDROID_RATES);
   run(phone, 120, 1, (now, b) => b.busy(now, 600));
   near(run(phone, 120, 3, (now, b) => b.busy(now, 600), false, 3000), 60);
+});
+
+test("a 240 Hz display is held to 120 while busy", () => {
+  const budget = new FrameBudget(DESKTOP_RATES);
+  run(budget, 240, 1, (now, b) => b.busy(now, 600));
+  near(run(budget, 240, 3, (now, b) => b.busy(now, 600), false, 3000), 120);
+});
+
+test("a 144 Hz display keeps every frame while busy rather than judder", () => {
+  const budget = new FrameBudget(DESKTOP_RATES);
+  run(budget, 144, 1, (now, b) => b.busy(now, 600));
+  near(run(budget, 144, 3, (now, b) => b.busy(now, 600), false, 3000), 144);
 });
 
 test("active holds 60 fps", () => {
