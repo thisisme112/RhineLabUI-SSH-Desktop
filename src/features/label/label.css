@@ -148,6 +148,10 @@
 .label-powered b { margin-left: .3em; }
 .label-powered i { width: 44px; height: 9px; margin-left: 14px; background: var(--ink); }
 
+/* The page turn (label-wipe.ts): over the stage and the overview sheet alike. */
+.label-wipe { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 14; pointer-events: none; }
+.label-wipe[hidden] { display: none; }
+
 /* ── The overview's ground (the sheet itself is label-overview.css) ────────── */
 .label-overview { position: absolute; inset: 0; opacity: 0; visibility: hidden; transform: translateY(28px); transition: opacity .25s, transform .25s, visibility 0s .25s; }
 .label-sheet[data-page="overview"] .label-overview { opacity: 1; visibility: visible; transform: none; transition: opacity .5s var(--settle), transform .5s var(--settle); }

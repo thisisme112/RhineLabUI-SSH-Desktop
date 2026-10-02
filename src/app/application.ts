@@ -79,7 +79,8 @@ import { setSceneThemes } from "../features/theme/theme-material";
 import { playThemeReveal } from "../features/theme/theme-reveal";
 import { showThemeMark } from "../features/theme/theme-mark";
 import { configureHoverCards } from "../shared/hover-card";
-import { LabelSheet, labelDocumentHeader, type LabelFile, type LabelPage } from "../features/label/label-sheet";
+import { LabelSheet, labelDocumentHeader, DOCUMENT_LEFT, type LabelFile, type LabelPage } from "../features/label/label-sheet";
+import { LabelWipe, type PageTurn } from "../features/label/label-wipe";
 import { hostMark, noteHostKey } from "../features/label/host-marks";
 import { setAttr, setData, setInert, setStyle } from "../shared/dom-write";
 import { audioSettingsMarkup } from "../features/settings/audio-settings";
@@ -315,6 +316,7 @@ const labelSheet = desktopShell && !isAndroid ? new LabelSheet(stageEl, {
   step: direction => stepFile(direction),
   column: direction => stepColumn(direction),
 }, demoSsh) : undefined;
+const labelWipe = labelSheet ? new LabelWipe(viewportEl) : undefined;
 
 $("#boot-background").insertAdjacentHTML(
   "beforeend",
@@ -1553,7 +1555,36 @@ function updatePoster(time: number) {
 function labelActive() {
   return Boolean(labelSheet) && prefs.design !== "classic" && ready && mode !== "boot" && stageEl.dataset.layout === "desktop";
 }
-let labelShown = false, labelMarksAt = 0;
+let labelShown = false, labelMarksAt = 0, labelTurnPage: LabelPage | "" = "", labelTurnTab = "";
+/** The document tabs as the page turn names them (MakeLabelWipe TabNames). */
+const TAB_NAMES: Record<string, string> = { overview: "OVERVIEW / 概述", config: "CONNECTION / 连接配置", notes: "SESSIONS / 会话记录", history: "EVENT LOG / 事件日志" };
+/**
+ * Which page turn a change of page or document tab makes (RhineLabelHome.cpp TickLabelHome), each over
+ * its own area with its own figure and name: reading a file, back to the array, the overview, a tab.
+ */
+function labelTurn(page: LabelPage, inset: number): PageTurn | null {
+  const tab = page === "detail" ? activeTab : "";
+  const previous = labelTurnPage, previousTab = labelTurnTab;
+  labelTurnPage = page; labelTurnTab = tab;
+  if (!previous || prefs.reduced) return null;
+  const head = inset + 72, width = stageWidth, left = DOCUMENT_LEFT * width;
+  if (page !== previous) {
+    if (page === "detail") {
+      const file = labelFile();
+      return { area: [left - 38, head, width, 1080], figure: `${file.prefix}${file.code}`, caption: `FILE / ${file.host ? "主机档案" : "档案"}  ${file.name}`, length: 2 };
+    }
+    if (page === "overview") return { area: [512, head + 232, width - 64, 1080 - 64], figure: String(hostCards?.bound.length ?? 0).padStart(2, "0"), caption: "HOSTS / 主机总览", length: 2 };
+    return { area: [0, head, 704, 1080 - 136], figure: "A—01", caption: "ARCHIVE / 档案阵列", length: 2 };
+  }
+  if (page !== "detail" || tab === previousTab) return null;
+  const button = document.querySelector<HTMLElement>(".detail-tabs button.active"), panel = document.querySelector<HTMLElement>("#tab-panel");
+  const tabs = button?.parentElement?.getBoundingClientRect(), body = panel?.getBoundingClientRect();
+  if (!button || !tabs || !body) return null;
+  return {
+    area: [left, tabs.top / stageScale, left + Math.min(636, .33125 * width) * 1.16, body.bottom / stageScale],
+    figure: (button.textContent ?? "").trim().slice(0, 2), caption: TAB_NAMES[tab] ?? button.querySelector("span")?.textContent ?? "", length: 1.1,
+  };
+}
 function labelPage(): LabelPage {
   return mode === "detail" ? "detail" : sshOverview && !sshOverview.isCollapsed ? "overview" : "archive";
 }
@@ -1582,8 +1613,12 @@ function updateLabel(time: number) {
   const page = labelPage();
   const inset = windowControlsHeight() / stageScale;
   scene?.setLabelLayout(active ? page === "overview" ? "shelf" : page === "archive" ? "home" : "" : "", inset);
-  if (!active) { labelShown = false; return; }
+  if (!active) { labelShown = false; labelTurnPage = ""; return; }
   if (!labelShown) { labelShown = true; labelSheet.arrive(time); }
+  const turn = labelTurn(page, inset);
+  if (turn) labelWipe?.begin(turn, time);
+  // A turning page runs at the full rate.
+  if (labelWipe?.draw(time, stageScale, labelSheet.hullPoints)) frameBudget?.busy(time * 1000, 300);
   // Once a second: a session that has verified its host's key gives that host its mark.
   if (time - labelMarksAt > 1) {
     labelMarksAt = time;

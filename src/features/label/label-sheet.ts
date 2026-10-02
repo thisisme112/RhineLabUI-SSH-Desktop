@@ -250,9 +250,13 @@ export class LabelSheet {
     else { this.leader(1, null, 0); this.leader(2, null, 0); }
   }
 
+  /** The selected archive's outline on the stage, as last cut: the page turn leaves it open too. */
+  hullPoints: [number, number][] = [];
+
   /** The archive's outline cuts the top strip and the frames. */
   private cut(frame: LabelFrame) {
     const hull = frame.probe ? outline(frame.probe.corners, 2.5) : [];
+    this.hullPoints = hull;
     const hole = outlinePath(hull);
     if (hole === this.hull) return;
     this.hull = hole;
