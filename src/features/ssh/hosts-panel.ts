@@ -493,9 +493,10 @@ export class SshHostsPanel {
   /** The overview's 删除: a saved profile only; a host that comes from the ssh config is not this app's to remove. */
   async removeByAlias(alias: string): Promise<{ ok: boolean; error?: string }> {
     const profiles = this.options.profiles;
+    if (!profiles) return { ok: false, error: "只有桌面版可以删除主机" };
     const host = this.hosts.find((entry) => entry.alias === alias);
     const id = host?.profile?.id;
-    if (!profiles || !host) return { ok: false, error: "找不到这台主机" };
+    if (!host) return { ok: false, error: "找不到这台主机" };
     if (host.source !== "saved" || !id) return { ok: false, error: "来自 SSH config，请在配置文件中删除" };
     try {
       const result = await profiles.remove(id, this.revision);
