@@ -1,4 +1,4 @@
-/* The drop-follow detail card; one per page, dressed by the palette's motif. */
+/* The hover detail card (hover-card.ts): one per page, centred on the pointer, dressed by the theme's motif. */
 .rhine-hover-card {
   --card-series: var(--theme-accent);
   position: fixed;
@@ -6,20 +6,23 @@
   top: 0;
   z-index: 2147482000;
   box-sizing: border-box;
-  min-width: 210px;
-  max-width: min(340px, calc(100vw - 16px));
   padding: 12px 14px 11px 17px;
   pointer-events: none;
   will-change: transform;
+  transform-origin: 50% 50%;
   color: var(--theme-ink);
   background: var(--theme-paper);
   border: 1px solid color-mix(in srgb, var(--theme-line) 80%, transparent);
-  box-shadow: 0 14px 34px -18px rgb(0 0 0 / 0.45);
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.3);
   font-size: 12px;
   line-height: 1.45;
   font-variant-numeric: tabular-nums;
 }
 .rhine-hover-card[hidden] { display: none; }
+/* The window the faces slide through, and the faces: one shows, the other leaves as a reel. */
+.rhine-hover-window { position: relative; overflow: hidden; }
+.rhine-hover-face { position: absolute; left: 0; top: 0; width: max-content; min-width: 178px; max-width: min(308px, calc(100vw - 48px)); }
+.rhine-hover-face[hidden] { display: none; }
 .rhine-hover-card small {
   display: block;
   color: var(--card-series);

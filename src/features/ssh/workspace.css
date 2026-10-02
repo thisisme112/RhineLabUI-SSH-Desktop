@@ -480,14 +480,15 @@
 .ssh-file-row[data-kind="link"] .ssh-file-glyph { color: var(--terminal-accent); }
 .ssh-file-row[data-kind="directory"] .ssh-file-name { font-weight: 500; }
 .ssh-file-row[data-hidden="true"] .ssh-file-name { opacity: .62; }
-/* Hovering a row lets the rest of the list recede; the row steps forward a little. */
-.ssh-file-row { transition: opacity 150ms, transform 150ms; }
-.ssh-files:not(:has(.ssh-files-menu:not([hidden]))) .ssh-file-rows:hover .ssh-file-row:not(:hover) { opacity: .55; }
-.ssh-files:not(:has(.ssh-files-menu:not([hidden]))) .ssh-file-rows .ssh-file-row:hover { transform: translateX(3px); }
+/* The row under the pointer recedes to half and its name steps back (ObsidianUI Hover Image, as the
+   Unreal build's file list): the hover card centred on the pointer carries it now. */
+.ssh-file-row, .ssh-file-row .ssh-file-name { transition: opacity .5s ease, transform .5s ease; }
+.ssh-files:not(:has(.ssh-files-menu:not([hidden]))) .ssh-file-rows .ssh-file-row:hover { opacity: .5; }
+.ssh-files:not(:has(.ssh-files-menu:not([hidden]))) .ssh-file-rows .ssh-file-row:hover .ssh-file-name { transform: translateX(-6px); }
 .ssh-overview-host { transition: background-color 180ms, opacity 160ms; }
 .ssh-overview:has(.ssh-overview-host:hover) .ssh-overview-host:not(:hover, [data-preview="true"]) { opacity: .55; }
 @media (prefers-reduced-motion: reduce) {
-  .ssh-file-rows .ssh-file-row:hover { transform: none; }
+  .ssh-file-rows .ssh-file-row:hover .ssh-file-name { transform: none; }
 }
 .ssh-files-empty {
   padding: 32px 10px;
