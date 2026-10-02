@@ -387,13 +387,16 @@ export class ArchiveScene {
    * The selected archive on the stage (stage units): where its printed label is, for the label
    * design's leader, and the corners of every visible part's box, which the frames give way to.
    */
-  labelProbe(): { pin: [number, number]; corners: [number, number][] } | null {
+  labelProbe(): { pin: [number, number]; screen: [number, number]; corners: [number, number][]; yaw: number; detail: number } | null {
     if (!this.loaded || !this.labelMesh) return null;
     this.model.updateMatrixWorld(true);
     const width = this.container.clientWidth, height = this.container.clientHeight, v = this.probeVector;
     const project = (): [number, number] => { v.project(this.camera); return [(v.x + 1) * width / 2, (1 - v.y) * height / 2]; };
     this.labelMesh.localToWorld(v.set(0, 0, 0));
     const pin = project();
+    // Low on the face, right of centre: where the session's screen is.
+    this.model.localToWorld(v.set(1.5, .7, .255));
+    const screen = project();
     const corners = this.probeCorners;
     corners.length = 0;
     this.model.traverseVisible(object => {
@@ -406,7 +409,7 @@ export class ArchiveScene {
         corners.push(project());
       }
     });
-    return { pin, corners };
+    return { pin, screen, corners, yaw: THREE.MathUtils.radToDeg(this.rotation), detail: this.detail };
   }
   get sessionRendering() { return { frames: this.renderedFrames, frozen: this.coveredAt > 0 && this.clock - this.coveredAt > 1.2, returning: this.outgoing.filter(item => item.deck).length }; }
   private disposeReturning(item: (typeof this.outgoing)[number]) {

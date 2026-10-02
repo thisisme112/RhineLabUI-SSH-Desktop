@@ -163,12 +163,11 @@
 #stage[data-design="label"].portals-open .portal-card:is(:hover, :focus-visible) { transform: translateY(-8px); background: var(--ink); color: var(--ground); border-color: transparent; }
 #stage[data-design="label"] .portal-card::after { background: var(--signal); height: 6px; }
 
-/* The leader: from the note to the archive's printed label, over everything on the sheet. */
-.label-leader { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+/* The leaders: from a note to a point on the model, over everything on the sheet. */
+.label-leaders { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .label-leader polyline { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; }
 .label-leader .label-node-ink { fill: var(--ink); }
 .label-leader .label-node { fill: var(--signal); }
-.label-sheet:not([data-page="archive"]) .label-leader { visibility: hidden; }
 
 /* Arrival: each piece rises a little into place while it resolves; nothing pops (LabelIn). */
 @keyframes label-arrive { from { opacity: 0; translate: 0 18px; } }

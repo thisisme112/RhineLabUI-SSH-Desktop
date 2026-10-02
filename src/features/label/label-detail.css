@@ -1,0 +1,71 @@
+/*
+ * The detail page as an inspection sheet (the Unreal build's RhineLabelDetail.cpp):
+ * the archive stands on a sheet ruled into zones on the left, two notes are pinned
+ * to the model, the turn is read out in degrees; the document column beyond the
+ * rule starts with the same label the home shows, and is set 1.16 times larger.
+ */
+.label-detail { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .25s, visibility 0s .25s; }
+.label-sheet[data-page="detail"] .label-detail { opacity: 1; visibility: visible; transition: opacity .5s var(--settle) .15s; }
+.label-detail .label-zone { position: absolute; left: 0; top: var(--label-head); }
+.label-detail .label-detail-fig { left: var(--label-band); top: calc(var(--label-head) + var(--label-band)); }
+/* A note on the model: an ink tag with its number in the signal colour (where that reads on ink). */
+.label-tag {
+  position: absolute; left: 0; top: 0; height: 46px; display: flex; align-items: center; gap: 12px; padding: 0 22px 0 16px;
+  --cut: 12px; background: var(--ink); color: var(--ground); font-size: 18px; font-weight: 700; letter-spacing: .5px; white-space: nowrap;
+}
+.label-tag b { font-family: var(--display); font-size: 24px; font-weight: 700; color: var(--theme-signal-on-ink); }
+/* The turn of the model, read out as it is dragged. */
+.label-yaw { position: absolute; left: calc(var(--label-band) + 38px); bottom: 52px; display: grid; gap: 14px; justify-items: start; }
+.label-yaw .label-figure { --px: 132px; }
+.label-viewer {
+  position: absolute; left: calc(var(--label-band) + 380px); bottom: 52px; height: 44px; padding: 0 18px;
+  box-shadow: inset 0 0 0 2px var(--ink); font-size: 17px; font-weight: 700; letter-spacing: .6px; white-space: nowrap;
+}
+.label-viewer:hover { background: var(--ink); color: var(--ground); }
+
+/* Beyond the sheet's rule, the document column on its ground. */
+#stage[data-design="label"] .detail-ui::before {
+  content: ""; position: absolute; left: calc(60.104167% - 40px); right: 0; top: var(--label-head); bottom: 0;
+  background: var(--ground); border-left: 3px solid var(--ink);
+}
+#stage[data-design="label"] :is(.object-caption, .detail-content > :is(.detail-kicker, h2, .detail-title-cn, .detail-rule)) { display: none; }
+/* The column runs to the foot of the stage; only the tab's panel gives way (it scrolls). */
+#stage[data-design="label"] .detail-content {
+  left: 60.104167%; top: calc(var(--label-head) + 50px); width: calc(min(636px, 33.125%) * 1.16);
+  height: calc(100% - var(--label-head) - 86px); max-height: none; overflow: hidden;
+  display: flex; flex-direction: column; color: var(--ink);
+}
+#stage[data-design="label"] .detail-content > * { flex: none; }
+#stage[data-design="label"] .detail-content > :not(.detail-label) { zoom: 1.16; }
+#stage[data-design="label"] .detail-content > .tab-panel { flex: 1 1 auto; height: auto; min-height: 0; }
+
+/* The document's head: the home's label again. */
+.detail-label { display: none; }
+#stage[data-design="label"] .detail-label { display: block; position: relative; height: 262px; --cut: 44px; background: var(--signal); color: var(--on-signal); }
+.detail-label > * { position: absolute; }
+.detail-label > .label-note { left: 30px; top: 24px; font-size: 14px; }
+.detail-label .detail-label-figure { left: 26px; top: 58px; --px: 150px; --slit: var(--signal); }
+.detail-label strong { left: 30px; top: 182px; max-width: calc(100% - 260px); font-size: 34px; font-weight: 700; letter-spacing: .3px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.detail-label-address { left: 30px; top: 228px; font-family: var(--mono); font-size: 16px; white-space: nowrap; }
+.detail-label .label-sigil { right: 30px; top: 26px; width: 76px; height: 76px; }
+.detail-label .label-chip { right: 62px; bottom: 24px; height: 38px; padding: 0 14px; font-size: 17px; letter-spacing: 1px; }
+
+/* The document in the label's inks (RhineChrome::Label): ground, ink and tints of ink. */
+#stage[data-design="label"] .detail-content .metadata { margin: 40px 0 26px; }
+#stage[data-design="label"] .detail-content .metadata dt { font-size: 12px; letter-spacing: .4px; color: rgba(var(--theme-ink-rgb), .62); }
+#stage[data-design="label"] .detail-content .metadata dd { color: var(--ink); }
+#stage[data-design="label"] .detail-content .metadata dd i { background: var(--signal); }
+#stage[data-design="label"] .detail-tabs { gap: 0; border-bottom: 1px solid var(--ink); }
+#stage[data-design="label"] .detail-tabs button { padding: 7px 12px 6px; font-size: 10px; color: rgba(var(--theme-ink-rgb), .62); }
+#stage[data-design="label"] .detail-tabs button span { font-size: 15px; font-weight: 600; color: var(--ink); }
+#stage[data-design="label"] .detail-tabs button.active { background: var(--ink); color: var(--ground); }
+#stage[data-design="label"] .detail-tabs button.active span { color: var(--ground); }
+#stage[data-design="label"] .detail-tabs .tab-indicator { display: none; }
+#stage[data-design="label"] .detail-content .tab-panel { scrollbar-color: var(--ink) transparent; }
+#stage[data-design="label"] .detail-content :is(.panel-label, .log-note, .host-loading) { color: rgba(var(--theme-ink-rgb), .62); }
+#stage[data-design="label"] .detail-content :is(p, pre, .host-raw, .log-row, li) { color: var(--ink); }
+#stage[data-design="label"] .detail-content .solid-button { height: 41px; padding-right: 0; background: var(--ink); color: var(--ground); }
+#stage[data-design="label"] .detail-content .solid-button > span { margin-left: auto; padding-right: 18px; color: rgba(var(--theme-paper-rgb), .62); }
+#stage[data-design="label"] .detail-content .solid-button::after { content: "→"; flex: none; width: 41px; height: 41px; display: grid; place-items: center; background: var(--signal); color: var(--on-signal); font-size: 20px; }
+#stage[data-design="label"] .detail-content .export-button { color: var(--ink); font-weight: 600; }
+#stage[data-design="label"] .detail-content .detail-footnote { color: rgba(var(--theme-ink-rgb), .62); font-size: 10px; }

@@ -79,7 +79,7 @@ import { setSceneThemes } from "../features/theme/theme-material";
 import { playThemeReveal } from "../features/theme/theme-reveal";
 import { showThemeMark } from "../features/theme/theme-mark";
 import { configureHoverCards } from "../shared/hover-card";
-import { LabelSheet, type LabelFile, type LabelPage } from "../features/label/label-sheet";
+import { LabelSheet, labelDocumentHeader, type LabelFile, type LabelPage } from "../features/label/label-sheet";
 import { hostMark, noteHostKey } from "../features/label/host-marks";
 import { setAttr, setData, setInert, setStyle } from "../shared/dom-write";
 import { audioSettingsMarkup } from "../features/settings/audio-settings";
@@ -911,10 +911,13 @@ function renderDetail() {
     ? "点击模型打开终端 · 拖动检查 ↔" : "拖动检查模型 ↔";
   content.classList.toggle("ssh-detail", Boolean(resource));
   content.classList.toggle("ssh-directory", Boolean(directory));
+  // The label design heads every document with the home's label (label-sheet.ts labelDocumentHeader).
+  const labelHead = () => { if (labelSheet) content.insertAdjacentHTML("afterbegin", labelDocumentHeader(labelFile(), escapeHtml)); };
   if (resource && resource.kind !== "host") {
     content.setAttribute("tabindex", "-1");
     if (sshLibrary) sshLibrary.mount(content, selected);
     else content.innerHTML = '<p class="host-loading">正在读取工作区…</p>';
+    labelHead();
     documentDecryption.reset(content, true);
     for (const child of content.children) (child as HTMLElement).dataset.sshReveal = "";
     pendingSshDetailMotion = true;
@@ -933,6 +936,7 @@ function renderDetail() {
       retained: Boolean(sshBank?.forAlias(host.alias)),
       facts: sshBank?.forAlias(host.alias) ? verifiedFacts(sshBank.forAlias(host.alias)!.client) : {},
     }) : hostDirectoryMarkup(hostCards!.bound, hostCards!.loaded);
+    labelHead();
     $("#detail-content").setAttribute("tabindex", "-1");
     // These are already-readable local connection settings, not secret output.
     documentDecryption.reset($("#detail-content"), true);
@@ -952,6 +956,7 @@ function renderDetail() {
   <div id="tab-panel" class="tab-panel" role="tabpanel">${overview()}</div>
   <div class="detail-actions"><button class="solid-button" data-action="bookmark">${saved.has(r.id) ? "− REMOVE FROM SAVED" : "＋ SAVE ARCHIVE"}<span>${saved.has(r.id) ? "已收藏" : "收藏档案"}</span></button><a class="export-button" href="${assetUrl(`archives/RHINE-LAB-${r.id}.txt`)}" download="RHINE-LAB-${r.id}.txt" aria-label="导出 ${r.id} 档案">EXPORT <span>↓</span></a></div>
   <div class="detail-footnote"><a href="${escapeHtml(r.source)}" target="_blank" rel="noopener">设定参考 ↗</a><span>${String(selected + 1).padStart(3, "0")} / ${String(archiveFiles().length).padStart(3, "0")}</span></div>`;
+  labelHead();
   $("#detail-content").setAttribute("tabindex", "-1");
   $('[data-action="bookmark"]').setAttribute("aria-pressed", String(saved.has(r.id)));
   documentDecryption.reset($("#detail-content"), prefs.reduced || !scene || scene.decryptionFrame.phase === "clear");
@@ -1080,6 +1085,8 @@ function patchHostState(card: number) {
   if (kicker) kicker.textContent = label;
   const side = $("#host-state-side");
   if (side) side.textContent = label;
+  const chip = $("#host-state-label");
+  if (chip) chip.textContent = label.replace("SSH · ", "");
   const live = sessionLiveFor(card);
   if (desktopShell) $(".object-caption > small").textContent = sshBank?.forAlias(hostAtCard(card)?.alias ?? "")
     ? "点击模型打开终端 · 拖动检查 ↔" : "拖动检查模型 ↔";
@@ -1556,10 +1563,10 @@ function labelFile(): LabelFile {
   const split = r.id.indexOf("-");
   const prefix = `${r.id.slice(0, split)}—`, code = r.id.slice(split + 1);
   const host = hostAtCard(selected);
-  if (!host) return { prefix, code, name: r.title, address: r.en, state: r.clearance === "RESTRICTED" ? "目录访问" : "可读取", detail: r.category, services: [false, false, false, false], mark: r.id };
+  if (!host) return { prefix, code, name: r.title, address: r.en, state: r.clearance === "RESTRICTED" ? "目录访问" : "可读取", detail: r.category, services: [false, false, false, false], mark: r.id, host: false };
   const live = sessionLiveFor(selected);
   return {
-    prefix, code, name: hostLabel(host), address: hostSubtitle(host),
+    host: true, prefix, code, name: hostLabel(host), address: hostSubtitle(host) || "使用 ssh 配置中的默认值",
     state: hostStateLabel(selected).replace("SSH · ", ""),
     detail: host.profile?.authMode === "password" ? "密码认证" : "密钥认证",
     // The terminal always; files and monitor once a session runs; no tunnels yet.
@@ -1593,7 +1600,7 @@ function updateLabel(time: number) {
     page, time, reduced: prefs.reduced, width: stageWidth, inset,
     file: labelFile(),
     lane: { index: lane, count: archiveColumns.length, name: archiveColumns[lane], position: files.indexOf(selected), files },
-    probe: page !== "detail" ? scene?.labelProbe() ?? null : null,
+    probe: scene?.labelProbe() ?? null,
     selection: `${selected}|${records[selected].id}`,
   });
 }
