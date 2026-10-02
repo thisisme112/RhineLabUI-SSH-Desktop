@@ -13,6 +13,7 @@ import { SshWorkspace, WORKSPACE_NAV, WORKSPACE_SIDE } from "./workspace";
 import { SessionTabs } from "./session-tabs";
 import { terminalAppearance } from "./terminal-appearance";
 import { paintRevision } from "../theme/theme-ui";
+import { sigilCells } from "../label/label-kit";
 import {
   TerminalTools,
   TERMINAL_TOOLS_MARKUP,
@@ -555,6 +556,26 @@ export class SshTerminalPanel {
 
   setTarget(target: string) {
     this.root.querySelector(".ssh-terminal-target")!.textContent = target;
+  }
+  private labelKey = "";
+  /**
+   * The label design's head of the bar (RhineLabelDetail.cpp MakeLabelTerminalTitle): the host's 5 × 5
+   * mark and the session's number as a slit figure, "S—001". Hidden in the classic layout.
+   */
+  setLabel(serial: string, mark: string) {
+    const key = `${serial}|${mark}`;
+    if (key === this.labelKey) return;
+    this.labelKey = key;
+    let label = this.root.querySelector<HTMLElement>(".ssh-terminal-label");
+    if (!label) {
+      label = document.createElement("span");
+      label.className = "ssh-terminal-label";
+      label.setAttribute("aria-hidden", "true");
+      label.innerHTML = '<svg class="label-sigil" viewBox="0 0 5 5"></svg><span class="label-figure" data-slit></span>';
+      this.root.querySelector(".ssh-terminal-bar")!.prepend(label);
+    }
+    label.querySelector("svg")!.innerHTML = sigilCells(mark, undefined, 1);
+    label.querySelector(".label-figure")!.textContent = serial;
   }
   setCloseLabel(text: string) {
     this.root.querySelector(".ssh-terminal-close")!.textContent = text;

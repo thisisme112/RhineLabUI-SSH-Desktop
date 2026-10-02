@@ -148,6 +148,29 @@
 .label-powered b { margin-left: .3em; }
 .label-powered i { width: 44px; height: 9px; margin-left: 14px; background: var(--ink); }
 
+/* The operating terminal is the workspace's own page: the sheet steps aside while it is up. */
+.label-sheet[data-covered="true"] { opacity: 0; visibility: hidden; transition: opacity .2s, visibility 0s .2s; }
+
+/* The terminal's bar in the label design (RhineLabelDetail.cpp MakeLabelTerminalTitle / Close):
+   the host's mark, the session's slit number, the name, the state as a block, an ink 收起 block. */
+.ssh-terminal-label { display: none; }
+#viewport[data-design="label"] .ssh-terminal-label { display: flex; align-items: center; gap: 14px; margin-right: 14px; color: var(--ink); }
+#viewport[data-design="label"] .ssh-terminal-label .label-sigil { width: 30px; height: 30px; }
+#viewport[data-design="label"] .ssh-terminal-label .label-figure { --px: 34px; --slit: var(--ground); }
+#viewport[data-design="label"] .ssh-terminal-target { font-size: 18px; font-weight: 700; letter-spacing: .3px; text-transform: none; color: var(--ink); }
+#viewport[data-design="label"] .ssh-terminal-phase {
+  height: 26px; padding: 0 10px; display: inline-flex; align-items: center; box-shadow: inset 0 0 0 2px var(--ink);
+  font-size: 12px; font-weight: 700; letter-spacing: .8px; color: var(--ink);
+}
+#viewport[data-design="label"] .ssh-terminal-phase[data-phase="interactive"] {
+  box-shadow: none; background: var(--signal); color: var(--on-signal);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+#viewport[data-design="label"] .ssh-terminal-close {
+  height: 44px; padding: 0 18px 0 22px; border: 0; background: var(--ink); color: var(--ground);
+  font-size: 15px; font-weight: 700; letter-spacing: .8px; clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px);
+}
+
 /* The page turn (label-wipe.ts): over the stage and the overview sheet alike. */
 .label-wipe { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 14; pointer-events: none; }
 .label-wipe[hidden] { display: none; }

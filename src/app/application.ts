@@ -1615,6 +1615,14 @@ function updateLabel(time: number) {
   scene?.setLabelLayout(active ? page === "overview" ? "shelf" : page === "archive" ? "home" : "" : "", inset);
   if (!active) { labelShown = false; labelTurnPage = ""; return; }
   if (!labelShown) { labelShown = true; labelSheet.arrive(time); }
+  // The operating terminal is the workspace's own page: the sheet steps aside while it is up.
+  setData(labelSheet.root, "covered", String((scene?.sessionDeckFocus ?? 0) > .05 || Boolean(sshTerminal?.isOpen) || sshTerminalPending));
+  const session = sshBank?.active;
+  if (session?.client.target) {
+    const card = hostCards?.resourceCard("session", session.key);
+    const serial = (card !== undefined ? records[card]?.id : undefined) ?? "S-000";
+    session.panel.setLabel(serial.replace("-", "—"), hostMark(session.descriptor?.target ?? session.client.target));
+  }
   const turn = labelTurn(page, inset);
   if (turn) labelWipe?.begin(turn, time);
   // A turning page runs at the full rate.
