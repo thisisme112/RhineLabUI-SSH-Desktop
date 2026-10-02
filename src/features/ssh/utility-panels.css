@@ -274,8 +274,9 @@ html[data-desktop="true"] .ssh-utility-surface :is(button, input, select, textar
   overflow-y: auto;
   font-size: 12px;
 }
+/* Must outrank `label:not(.ssh-setting-check)` above, or the hidden password rows stay visible. */
 .ssh-workspace-settings [hidden] {
-  display: none;
+  display: none !important;
 }
 .ssh-backup-password {
   margin-bottom: 10px;
