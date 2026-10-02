@@ -1,0 +1,30 @@
+/*
+ * The settings sheets in the label design (the Unreal build's RhineSettings.cpp
+ * on the label): a signal band along the top and a 2 px ink frame, the section's
+ * number as the sheet's giant figure, numbered tabs with the current one reversed.
+ * The 外观 sheet (the settings modal) and the SSH settings surface share it.
+ */
+.settings-figure, .settings-sections b { display: none; }
+#viewport[data-design="label"] :is(.settings-modal, .ssh-workspace-settings) {
+  background: var(--ground); color: var(--ink);
+  border: 2px solid var(--ink); border-top: 8px solid var(--signal); border-radius: 0;
+  box-shadow: none; backdrop-filter: none;
+}
+#viewport[data-design="label"] .settings-figure { display: block; position: absolute; top: 40px; right: 180px; --px: 120px; --slit: var(--ground); pointer-events: none; }
+#viewport[data-design="label"] .settings-sections { gap: 0; padding: 0; margin: 20px 0 16px; border-bottom: 3px solid var(--ink); }
+#viewport[data-design="label"] .settings-sections button {
+  display: flex; align-items: baseline; gap: 8px; min-height: 44px; padding: 10px 18px 0; border: 0; background: none;
+  color: var(--ink); font-size: 18px; font-weight: 700; letter-spacing: .4px;
+}
+#viewport[data-design="label"] .settings-sections button b { display: inline; font-family: var(--mono); font-size: 11px; font-weight: 700; opacity: .62; }
+#viewport[data-design="label"] .settings-sections button[aria-current="page"] { background: var(--ink); color: var(--ground); }
+#viewport[data-design="label"] .settings-sections button[aria-current="page"] b { opacity: 1; color: var(--theme-signal-on-ink); }
+#viewport[data-design="label"] .settings-sections button:not([aria-current="page"]):hover { background: rgba(var(--theme-ink-rgb), .07); }
+#viewport[data-design="label"] .settings-modal .modal-top > span:first-child { font-family: var(--mono); letter-spacing: .14em; color: var(--ink); }
+#viewport[data-design="label"] .settings-modal .modal-top button { height: 36px; padding: 0 14px; border: 0; background: var(--ink); color: var(--ground); }
+#viewport[data-design="label"] .settings-modal h2 { font-size: 34px; font-weight: 700; letter-spacing: .5px; color: var(--ink); }
+#viewport[data-design="label"] .ssh-workspace-settings > header strong { font-size: 34px; font-weight: 700; letter-spacing: .5px; }
+#viewport[data-design="label"] .ssh-workspace-settings > header small { font-family: var(--mono); letter-spacing: .14em; }
+#viewport[data-design="label"] .ssh-workspace-settings [data-close] { height: 36px; padding: 0 14px; border: 0; background: var(--ink); color: var(--ground); font-weight: 700; }
+#viewport[data-design="label"] .ssh-workspace-settings legend { font-size: 18px; font-weight: 700; color: var(--ink); }
+#viewport[data-design="label"] .ssh-workspace-settings fieldset { border: 0; border-top: 3px solid var(--ink); }

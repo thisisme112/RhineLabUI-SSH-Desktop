@@ -12,7 +12,7 @@ import {
 } from "./configuration";
 import type { WorkspaceStore } from "./workspace-store";
 import "./utility-panels.css";
-import { settingsNavigation, type SettingsSection } from "../settings/settings-navigation";
+import { settingsNavigation, settingsSectionNumber, type SettingsSection } from "../settings/settings-navigation";
 
 export class SshSettingsPanel {
   private root = document.createElement("section");
@@ -260,6 +260,7 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
   private selectSection(section: SettingsSection) {
     this.root.querySelectorAll<HTMLElement>('fieldset[data-section]').forEach(field => field.hidden = field.dataset.section !== section);
     this.root.querySelectorAll<HTMLElement>('[data-settings-section]').forEach(button => button.setAttribute('aria-current', button.dataset.settingsSection === section ? 'page' : 'false'));
+    this.root.querySelector('.settings-figure')!.textContent = settingsSectionNumber(section);
     this.root.querySelector<HTMLElement>('.ssh-settings-context')!.hidden = section !== 'connection';
     this.root.querySelector('.ssh-settings-scroll')!.scrollTop = 0;
   }
