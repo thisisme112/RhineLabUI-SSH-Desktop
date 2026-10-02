@@ -15,13 +15,13 @@ import type { Motif } from "./theme-design";
  *   orbit     squares close outward from the origin (the selected card), in rings
  *   plates    a 30 px halftone that drops out in scattered order over a second plate
  *
- * Without a capture (the plain web build, reduced motion) the palette simply
- * cross-fades, as it always has.
+ * Without a capture (the web and Android builds, reduced motion) the interface
+ * and the room fade into the new theme over .45 s instead (Unreal StartThemeBlend).
  */
 export type RevealOptions = {
   motif: Motif;
-  /** Applies the new palette; runs once the capture covers the page. */
-  apply: () => void;
+  /** Applies the new theme: once the capture covers the page (`covered`), or at once without one. */
+  apply: (covered: boolean) => void;
   /** Edge lines and the plates' second colour, as CSS colours. */
   accent: string;
   second: string;
@@ -48,7 +48,7 @@ async function run(o: RevealOptions) {
       if (bytes) image = await createImageBitmap(new Blob([bytes as BlobPart], { type: "image/jpeg" }));
     } catch { image = undefined; }
   }
-  if (!image) { o.apply(); return; }
+  if (!image) { o.apply(false); return; }
 
   const dpr = window.devicePixelRatio || 1;
   const width = innerWidth, height = innerHeight;
@@ -128,22 +128,6 @@ async function run(o: RevealOptions) {
         squares(56, (_x, _y, cx, cy) => Math.floor(Math.hypot(cx - ox, cy - oy) / reach * 9) / 9 * .56, .32, t, false);
         break;
       }
-      case "vector": {
-        const n = 16, h = height / n;
-        for (let i = 0; i < n; i++) {
-          const dir = i % 2 === 0 ? 1 : -1;
-          const e = inOut((t - (i * .028)) / .44);
-          if (e >= 1) continue;
-          const w = width * (1 - e);
-          const x0 = dir === 1 ? 0 : width - w;
-          piece(x0, i * h, x0 + w, (i + 1) * h);
-          if (e > 0) {
-            ctx.fillStyle = o.accent;
-            ctx.fillRect(dir === 1 ? x0 + w - 2 : x0, i * h, 2, h);
-          }
-        }
-        break;
-      }
       default: {
         const hash = (x: number, y: number) => (((Math.imul(x, 73856093) ^ Math.imul(y, 19349663)) >>> 0) % 1000) / 1000;
         squares(30, (x, y) => hash(x, y) * .6, .3, t, true);
@@ -155,7 +139,7 @@ async function run(o: RevealOptions) {
   document.body.appendChild(canvas);
   // The picture covers the page; everything switches under it at once.
   await new Promise(requestAnimationFrame);
-  o.apply();
+  o.apply(true);
   const start = performance.now();
   await new Promise<void>(resolve => {
     const frame = (now: number) => {

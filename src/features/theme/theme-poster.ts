@@ -15,7 +15,8 @@ type Rgb = readonly number[];
  */
 export type PosterState = {
   motif: Motif;
-  colors: { ink: Rgb; accent: Rgb; cyan: Rgb };
+  /** `signal` is the label design's one flat colour (RhineChrome.h LabelSignal). */
+  colors: { ink: Rgb; accent: Rgb; cyan: Rgb; paper: Rgb; signal: Rgb };
   /** The selected record, `H.001`. */
   code: string;
   position: number;
@@ -181,23 +182,6 @@ export class ThemePoster {
         ctx.lineWidth = 1.2; ctx.strokeStyle = reg; ctx.beginPath(); ctx.arc(rx, ry, 12, 0, Math.PI * 2); ctx.stroke();
         box(rx - 20, ry, 40, 1, reg); box(rx, ry - 20, 1, 40, reg);
         text(`RISO / 2 COLOUR   ${index}`, zx, zy - 26, 11, 600, 3, rgba(ink, .45));
-        break;
-      }
-      case "vector": { // high-energy physics: beam guidance lines, reticles, MeV energy level
-        for (let y = 40; y < H; y += 45) box(0, y, W, 1, rgba(cyan, .04));
-        for (let x = 60; x < W; x += 90) box(x, 0, 1, H, rgba(ink, .03));
-        const cx = zx + zw * .5, cy = zy + 65;
-        // Dual accelerator rings
-        ctx.lineWidth = 1.2; ctx.strokeStyle = rgba(cyan, .25); ctx.beginPath(); ctx.arc(cx, cy, 80, 0, Math.PI * 2); ctx.stroke();
-        ctx.lineWidth = 0.8; ctx.strokeStyle = rgba(accent, .35); ctx.beginPath(); ctx.arc(cx, cy, 120, 0, Math.PI * 2); ctx.stroke();
-        // Crosshair reticles
-        box(cx - 140, cy, 280, 1, rgba(cyan, .2));
-        box(cx, cy - 140, 1, 280, rgba(cyan, .2));
-        figure(zx, zy - 12, 160, 700, -4, cyan, .15, 0, 180);
-        box(zx + zw - 290, zy + 15, 270, 48, rgba(ink, .04));
-        box(zx + zw - 290, zy + 15, 4, 48, rgba(cyan, .8));
-        text("CHERENKOV / PARTICLE ACCELERATOR", zx + zw - 278, zy + 22, 11, 600, 2.2, rgba(cyan, .8));
-        text(`BEAMLINE ${index} · 7.42 TeV`, zx + zw - 278, zy + 42, 10, 400, 1.8, rgba(ink, .45));
         break;
       }
     }

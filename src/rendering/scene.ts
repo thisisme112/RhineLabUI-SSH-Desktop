@@ -5,13 +5,14 @@ import * as THREE from "three";
 import { ArchiveVisibility } from "./archive-visibility";
 import { disposeThreeTree } from "./three-resources";
 import { isAndroid } from "../platform/android/android";
-import { PaletteFlip, ThemeWave, type FlipSample } from "../features/theme/theme-motion";
+import { PaletteFlip, type FlipSample } from "../features/theme/theme-motion";
+import { DESIGNS, REFERENCE_ROLES, type ThemeName } from "../features/theme/theme-design";
 const NO_FLIP: FlipSample = { lift: 0, tilt: 0, flash: 0, swap: 0 };
 /** Below a thousandth of a pixel in scene units, radians or colour: a resting frame within it is not redrawn. */
 const PICTURE_EPSILON = 1e-5;
 /** ?always-draw turns the settled-frame skip off, to compare against or rule it out. */
 const ALWAYS_DRAW = typeof location !== "undefined" && new URLSearchParams(location.search).has("always-draw");
-import { themeMaterial, themeEnvironment, setFlashColor } from "../features/theme/theme-material";
+import { themeMaterial, themeEnvironment, setFlashColor, setSceneThemes, sceneThemes, themeDarkness } from "../features/theme/theme-material";
 import { RhythmMotion, rhythmDisplacement, quietBands, type MusicBands, type RhythmStyle } from "../features/archives/archive-play-motion";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { createArchiveLighting, type LightingLook } from "./archive-lighting";
@@ -119,7 +120,6 @@ export class ArchiveScene {
     this.loaded = false;
   }
   uiOnlyParallax = false;
-  private theme = new ThemeWave();
   private subduedIndex = { value: 0 };
   private selectedIndexOnly = false;
   private superPerformance = false;
@@ -147,25 +147,47 @@ export class ArchiveScene {
   private flashAttribute?: THREE.InstancedBufferAttribute;
   private flip = new PaletteFlip();
   private flashWasOn = false;
+  /** A theme change is running: the surfaces hold the old and the new theme until it settles. */
+  private changing = false;
+  private roomStart = -10;
+  private roomInstant = true;
   /**
-   * After a palette change the rows turn over card by card from the selected one
-   * (PaletteFlip): each rises, leans and flashes `color`. `after` waits for the
-   * change-over's own reveal. Reduced motion skips it.
+   * Change the scene to a theme (Unreal SetTheme). The rows turn over card by card
+   * from the selected one and the selected file eases across; under a captured
+   * change-over (`covered`) the room switches at once (OnThemeCaptured), otherwise
+   * it blends over .45 s (StartThemeBlend). `instant` (start-up, reduced motion)
+   * simply applies the theme.
    */
-  flipPalette(color: string, after = .35) {
-    if (this.reduced) return;
-    setFlashColor(color);
-    this.flip.begin(performance.now() / 1000, this.selectedCell, after);
-    this.redrawUntil = this.clock + after + 2;
+  changeTheme(from: ThemeName, to: ThemeName, options: { covered?: boolean; instant?: boolean } = {}) {
+    const now = performance.now() / 1000, design = DESIGNS[to];
+    // The new theme's mark: what each card flashes as it turns.
+    setFlashColor(design.roles?.mark ?? REFERENCE_ROLES[design.dark ? 1 : 0].mark, design.dark);
+    if (options.instant || this.reduced || from === to) {
+      setSceneThemes(to, to);
+      this.changing = false;
+      this.roomInstant = true;
+    } else {
+      setSceneThemes(from, to);
+      this.changing = true;
+      this.flip.begin(now, this.selectedCell);
+      this.roomStart = now;
+      this.roomInstant = Boolean(options.covered);
+    }
+    this.redrawUntil = this.clock + 2;
     this.coveredAt = 0;
   }
-  /** Whether a flip wave is running: the frame budget keeps its full rate for it. */
-  get flipActive() { return this.flip.active(performance.now() / 1000); }
-  get themeAmount() { return this.theme.background(performance.now() / 1000); }
-  setTheme(dark: boolean, immediate = false) {
-    if (dark !== this.requestedDark) { this.redrawUntil = this.clock + 2; this.coveredAt = 0; this.requestedDark = dark; }
-    this.theme.set(dark, performance.now() / 1000, this.selectedCell, immediate);
+  /** Whether a turn-over is running: the frame budget keeps its full rate for it. */
+  get flipActive() { return this.changing && this.flip.active(performance.now() / 1000); }
+  /** How far the room is from the old theme to the new one (1 once it has arrived or when nothing changes). */
+  get themeBlend() {
+    if (!this.changing || this.roomInstant) return 1;
+    const t = Math.min(1, Math.max(0, (performance.now() / 1000 - this.roomStart) / .45));
+    return t * t * (3 - 2 * t);
   }
+  /** How dark the picture is (0 light, 1 dark), easing between two themes of different brightness. */
+  get themeAmount() { return themeDarkness(this.themeBlend); }
+  /** What the scene shows: the theme it is turning to, or settled on. */
+  get theme(): ThemeName { return sceneThemes().to; }
   private playfield = { enabled: false, bands: quietBands(), strength: 1, flatten: 0, target: null as string | null, breathing: true };
   private ambientMotion = true;
   setAmbientMotion(enabled: boolean) { this.ambientMotion = enabled; if (!enabled) this.idleGain = 0; }
@@ -309,7 +331,6 @@ export class ArchiveScene {
   private picture = new Float64Array(32);
   private drawnMatrices = new Float32Array(0);
   private pictureValid = false;
-  private requestedDark = false;
   private archivePreview?: { index: number; cell: ArchiveCell; started: number; x: number; z: number; vx: number; vz: number; targetX: number; targetZ: number };
   onPreviewCommit?: (index: number, cell: ArchiveCell) => void;
   previewArchive(index: number) {
@@ -728,7 +749,8 @@ export class ArchiveScene {
     this.appearance.prepare(model);
     this.appearance.apply(model, 1);
     this.appearance.setClarity(model, this.decryption.clarity);
-    this.appearance.setTheme(model, this.themeAmount);
+    // Shown in the theme the scene is turning to (the viewer and the deck read the surfaces' second slot).
+    this.appearance.setTheme(model, 1);
     const canvas = document.createElement("canvas");
     canvas.width = this.labelCanvas.width;
     canvas.height = this.labelCanvas.height;
@@ -748,7 +770,7 @@ export class ArchiveScene {
     label.position.set(-1.36, 3.04, 0.255);
     label.userData.assemblyPart = "cover";
     label.userData.themeAmount = themeMaterial(label.material, "Printed_Canvas");
-    label.userData.themeAmount.value = this.themeAmount;
+    label.userData.themeAmount.value = 1;
     model.add(label);
     meshes.push(label);
     return {
@@ -1477,8 +1499,15 @@ export class ArchiveScene {
     const step = this.reduced ? 1 : Math.min(elapsed, .25) / 1.1;
     this.presence += Math.sign(this.presenceTarget - this.presence) * Math.min(step, Math.abs(this.presenceTarget - this.presence));
     setStyle(this.renderer.domElement, "opacity", String(THREE.MathUtils.clamp(this.presence / .16, 0, 1)));
-    this.theme.beginFrame();
-    themeEnvironment(this.scene, this.renderer, this.themeAmount);
+    // Every card has turned and the room has arrived: the surfaces hold just the new theme again (Unreal ApplyThemeArchive(To, To)).
+    if (this.changing && this.flip.done(time) && this.themeBlend >= 1) {
+      const to = sceneThemes().to;
+      setSceneThemes(to, to);
+      this.changing = false;
+    }
+    themeEnvironment(this.scene, this.renderer, this.themeBlend);
+    // The selected file, its returning copies and the package ease across together.
+    const single = this.changing ? this.flip.single(time) : 0;
     const blend = 1 - Math.exp(-dt * (this.reduced ? 35 : 2.8));
     this.reveal = cinematic
       ? cinematic.reveal
@@ -1741,7 +1770,7 @@ export class ArchiveScene {
       );
       const quality = ease(o.lift.value / 0.4);
       this.appearance.apply(o.group, quality);
-      this.appearance.setTheme(o.group, this.theme.sample(o.cell, time), indexDim(o.lift.value));
+      this.appearance.setTheme(o.group, single, indexDim(o.lift.value));
       o.clarity = this.reduced ? 0 : o.clarity * Math.exp(-dt * 9);
       this.appearance.setClarity(o.group, o.clarity);
       // At this point the label opacity is below 3% and the interior has
@@ -1784,7 +1813,7 @@ export class ArchiveScene {
         this.pendingPulse = null;
       }
     }
-    this.appearance.setTheme(this.model, this.theme.sample(this.selectedCell, time), indexDim(this.lift.value));
+    this.appearance.setTheme(this.model, single, indexDim(this.lift.value));
     this.model.position.set(
       chosen.x - trackX,
       chosen.y + field(selectedRow, selectedLane) + this.lift.value + hoverLift(this.selectedCell) - this.presentationDrop(this.selectedCell),
@@ -1989,7 +2018,7 @@ export class ArchiveScene {
     const previousCount = this.drawnCells.length;
     this.drawnCells.length = 0;
     this.relayPoints.clear();
-    const flipping = this.flip.active(time);
+    const flipping = this.changing && this.flip.active(time);
     // A wave that has just ended still has to write its last (zero) values once.
     const flashDirty = flipping || this.flashWasOn;
     this.flashWasOn = flipping;
@@ -2011,8 +2040,9 @@ export class ArchiveScene {
       drawn.lane = lane; drawn.row = row;
       this.drawnCells.push(drawn);
       if (this.themeAttribute) {
-        const value = this.theme.sample(cell, time);
-        if (this.themeAttribute.getX(i) !== Math.fround(value)) { this.themeAttribute.setX(i, value); themeDirty = true; }
+        // 0 the old theme, 1 the new: a card changes edge-on part way through its turn.
+        const value = turn.swap;
+        if (this.themeAttribute.getX(i) !== value) { this.themeAttribute.setX(i, value); themeDirty = true; }
       }
       this.flashAttribute?.setX(i, turn.flash);
       const slope = field(row + .5, lane) - field(row - .5, lane);
@@ -2086,7 +2116,7 @@ export class ArchiveScene {
     // With ambient motion off (the desktop shells) a resting array draws the same picture
     // every frame. Nothing moved, no buffer changed and no animation is running: keep the
     // last picture on the canvas instead of running every pass again.
-    const settled = !cinematic && !flipping && !flashDirty && !themeDirty && !this.outgoing.length &&
+    const settled = !cinematic && !this.changing && !flipping && !flashDirty && !themeDirty && !this.outgoing.length &&
       !this.pulses.length && !this.hoverLifts.size && !this.relayLifts.size && !play.enabled &&
       this.idleGain === 0 && time > this.redrawUntil;
     const picture = this.pictureInputs(bokehUniforms.aperture.value, bokehUniforms.focus.value);

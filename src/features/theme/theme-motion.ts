@@ -1,7 +1,4 @@
 export type ThemeCell = { row: number; lane: number };
-/** Numeric like archive-loop's cellNumber: sample() runs for every card every frame. */
-const key = (cell: ThemeCell) => cell.lane * 2 ** 26 + cell.row;
-const ease = (t: number) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
 
 /**
  * The rows turning over after a theme change (the Unreal build's ThemeCellMotion,
@@ -28,6 +25,8 @@ export class PaletteFlip {
   /** Begin a wave at `time` from `origin`; `after` delays it. */
   begin(time: number, origin: ThemeCell, after = 0) { this.start = time + after; this.origin = { ...origin }; }
   active(time: number) { return time >= this.start && time - this.start < FLIP_SPAN; }
+  /** Every card has turned (false before the wave has begun). */
+  done(time: number) { return time - this.start >= FLIP_SPAN; }
   sample(cell: ThemeCell, time: number): FlipSample {
     const t = time - this.start;
     if (t < 0) return BEFORE;
@@ -48,36 +47,5 @@ export class PaletteFlip {
   single(time: number) {
     const t = Math.min(1, Math.max(0, (time - this.start) / SINGLE_TIME));
     return t * t * (3 - 2 * t);
-  }
-}
-
-/** A material wave with a frozen origin and an interruptible per-card starting colour. */
-export class ThemeWave {
-  target = 0;
-  private start = -10;
-  private origin: ThemeCell = { row: 12, lane: 2 };
-  private from = new Map<number, number>();
-  private latest = new Map<number, number>();
-  private backgroundFrom = 0;
-  set(dark: boolean, time: number, origin: ThemeCell, immediate = false) {
-    const target = dark ? 1 : 0;
-    if (target === this.target && !immediate) return;
-    this.backgroundFrom = immediate ? target : this.background(time);
-    this.from = immediate ? new Map() : new Map(this.latest);
-    this.target = target; this.start = immediate ? time - 10 : time;
-    this.origin = { ...origin };
-  }
-  background(time: number) { return this.backgroundFrom + (this.target - this.backgroundFrom) * ease((time - this.start) / .85); }
-  beginFrame() { this.latest.clear(); }
-  sample(cell: ThemeCell, time: number) {
-    // Every card has arrived by 1.18 s (delay ≤ .6, turn .58). From then on each one reads
-    // the target, and an interrupting set() starts from background(), which is the target
-    // too; so nothing needs to be looked up or remembered.
-    if (time - this.start >= 1.2) return this.target;
-    const delay = Math.min(.6, Math.abs(cell.row - this.origin.row) * .034 + Math.abs(cell.lane - this.origin.lane) * .11);
-    const from = this.from.get(key(cell)) ?? this.backgroundFrom;
-    const value = from + (this.target - from) * ease((time - this.start - delay) / .58);
-    this.latest.set(key(cell), value);
-    return value;
   }
 }

@@ -1,3 +1,4 @@
+import type { Motif } from "../features/theme/theme-design";
 import { hasTypingBetween } from "./typing-rhythm";
 import { TYPING_PCM, TYPING_SAMPLE_RATE } from "./typing-samples";
 import { assetUrl } from "./asset-url";
@@ -38,14 +39,17 @@ export type Sound =
  */
 export type Voice = { pitch: number; decay: number; air: number; gain: number; chirp: number; band: number; wave: 0 | 1 | 2; modes: number; double: boolean; click: boolean };
 const PAPER_VOICE: Voice = { pitch: 1, decay: 1, air: 1, gain: 1, chirp: 1, band: 1, wave: 0, modes: 5, double: false, click: false };
-export const VOICES: Record<"shutters" | "tide" | "hazard" | "frames" | "orbit" | "plates" | "vector", Voice> = {
-  shutters: PAPER_VOICE, // the web's warm glass
-  tide: { ...PAPER_VOICE, pitch: .841, decay: 1.35, air: 1.5, gain: .9, band: .8 }, // lower, longer, breathier
-  hazard: { ...PAPER_VOICE, pitch: .72, decay: .6, air: .6, wave: 1, click: true, modes: 3 }, // a relay's clack
-  frames: { ...PAPER_VOICE, pitch: 1.5, decay: .45, air: .3, modes: 1, gain: .85 }, // a clean monitor beep
-  orbit: { ...PAPER_VOICE, pitch: 1.1, decay: 1.1, wave: 2, chirp: 1.08, band: 1.3 }, // an FM telemetry chirp
-  plates: { ...PAPER_VOICE, pitch: .95, decay: .8, air: 1.2, band: .6, double: true }, // a pluck, then its second plate
-  vector: { ...PAPER_VOICE, pitch: 1.38, decay: 0.42, air: 0.35, gain: 0.9, chirp: 1.22, wave: 2, band: 1.5, click: true }, // high-energy piezoelectric pulse
+export const VOICES: Record<Motif, Voice> = {
+  shutters: PAPER_VOICE, // paper: the web's warm glass
+  tide: { ...PAPER_VOICE, pitch: .841, decay: 1.35, air: 1.5, gain: .9, band: .8 }, // night: lower, longer, breathier
+  hazard: { ...PAPER_VOICE, pitch: .72, decay: .6, air: .6, wave: 1, click: true, modes: 3 }, // hazard: a relay's clack
+  frames: { ...PAPER_VOICE, pitch: 1.5, decay: .45, air: .3, modes: 1, gain: .85 }, // clinic: a clean monitor beep
+  orbit: { ...PAPER_VOICE, pitch: 1.1, decay: 1.1, wave: 2, chirp: 1.08, band: 1.3 }, // orbit: an FM telemetry chirp
+  plates: { ...PAPER_VOICE, pitch: .95, decay: .8, air: 1.2, band: .6, double: true }, // print: a pluck, then its second plate
+  transit: { ...PAPER_VOICE, pitch: 1.26, decay: .85, air: .12, gain: .88, modes: 2, double: true }, // transit: the two-note station chime
+  darkroom: { ...PAPER_VOICE, pitch: .9, decay: .38, air: 1.8, band: .7, gain: .9, modes: 1, click: true }, // slate: a dry shutter tick
+  label: { ...PAPER_VOICE, pitch: 1.19, decay: .5, air: .35, gain: .9, modes: 2, click: true }, // reagent: a label printer's short stamp
+  rack: { ...PAPER_VOICE, pitch: 1.42, decay: 1.6, air: .5, gain: .82, modes: 4, chirp: .98 }, // cryo: a cold glass ting off a sample tube
 };
 export type SoundScene = "boot" | "archive" | "detail" | "viewer";
 export type AudioPreferences = {

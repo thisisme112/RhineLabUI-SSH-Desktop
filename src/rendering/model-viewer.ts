@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeTree } from "./three-resources";
-import { themeEnvironment } from "../features/theme/theme-material";
+import { sceneThemes, themeEnvironment } from "../features/theme/theme-material";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { createArchiveLighting } from "./archive-lighting";
 import { damp } from "./motion";
@@ -43,11 +43,13 @@ export class ModelViewer {
   private clearance = 0;
   private entering = false;
   private afterClose?: () => void;
+  private themeBlend = 1;
   private themeAmount = 0;
-  private appliedTheme = Number.NaN;
+  private appliedTheme = "";
   private themedNodes: THREE.Object3D[] = [];
   private statsFrame = 0;
-  setTheme(value: number) { this.themeAmount = value; }
+  /** `blend`: how far the surfaces and the room are from the old theme to the new; `darkness`: how dark the picture is (the terminal deck's finishes). */
+  setTheme(blend: number, darkness: number) { this.themeBlend = blend; this.themeAmount = darkness; }
   readonly root: HTMLElement;
   private canvasHost: HTMLElement;
   private renderer: THREE.WebGLRenderer;
@@ -645,11 +647,13 @@ export class ModelViewer {
 
   update(time: number) {
     if (!this.isOpen) return;
-    if (this.appliedTheme !== this.themeAmount) {
-      themeEnvironment(this.scene, this.renderer, this.themeAmount);
-      for (const child of this.themedNodes) child.userData.themeAmount.value = this.themeAmount;
+    // Two themes of the same brightness differ in neither number: the pair itself is part of the key.
+    const themes = sceneThemes(), key = `${themes.from}>${themes.to}@${this.themeBlend}/${this.themeAmount}`;
+    if (this.appliedTheme !== key) {
+      themeEnvironment(this.scene, this.renderer, this.themeBlend);
+      for (const child of this.themedNodes) child.userData.themeAmount.value = this.themeBlend;
       this.source?.setTheme?.(this.themeAmount);
-      this.appliedTheme = this.themeAmount;
+      this.appliedTheme = key;
     }
     const dt = Math.min(this.lastTime ? time - this.lastTime : 1 / 60, 0.05);
     this.lastTime = time;

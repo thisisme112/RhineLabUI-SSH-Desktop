@@ -74,7 +74,7 @@ import {
 import { TerminalAudio, VOICES } from "../shared/audio";
 import { motifOf } from "../features/theme/theme-design";
 import { ThemePoster } from "../features/theme/theme-poster";
-import { setSurfacePalette } from "../features/theme/theme-material";
+import { setSceneThemes } from "../features/theme/theme-material";
 import { playThemeReveal } from "../features/theme/theme-reveal";
 import { showThemeMark } from "../features/theme/theme-mark";
 import { configureHoverCards } from "../shared/hover-card";
@@ -108,7 +108,8 @@ import { Workbench } from "../platform/wallpaper/workbench";
 let workbench: Workbench | undefined;
 import { ArchivePlayground } from "../platform/wallpaper/archive-playground";
 import { ARRAY_OPENING_END, openingShowsDetail } from "../platform/wallpaper/wallpaper-opening";
-import { currentPalette, paintTheme, paletteRgb, setPalette, signalsOf, themeSettingsMarkup, THEMES, type ThemeName } from "../features/theme/theme-ui";
+import { currentPalette, hexRgb, isTheme, paintTheme, paletteRgb, setPalette, signalsOf, type ThemeName } from "../features/theme/theme-ui";
+import { DESIGNS, legacyTheme } from "../features/theme/theme-design";
 import { settingsNavigation, type SettingsSection } from "../features/settings/settings-navigation";
 let openSettingsSection: (section: SettingsSection) => void = () => {};
 let playground: ArchivePlayground | undefined;
@@ -349,7 +350,10 @@ function readLocal<T>(key: string, fallback: T): T {
   }
 }
 const saved = new Set<string>(readLocal<string[]>("rhine-saved", []));
-const storedPrefs = readLocal<Partial<{ sound: boolean; music: boolean; soundVolume: number; musicVolume: number; reduced: boolean; quality: boolean; rendering: RenderQuality; renderingChosen: boolean; superPerformance: boolean; colorTheme: "light" | "dark"; palette: ThemeName }>>("rhine-settings", {});
+const storedPrefs = readLocal<Partial<{ sound: boolean; music: boolean; soundVolume: number; musicVolume: number; reduced: boolean; quality: boolean; rendering: RenderQuality; renderingChosen: boolean; superPerformance: boolean; colorTheme: "light" | "dark"; palette: string; theme: string }>>("rhine-settings", {});
+// One of the ten themes (theme-design.ts). Before they came from Unreal a palette and a light/dark
+// switch were saved instead: such a pair lands on the nearest theme, and is not written back.
+const storedTheme: ThemeName = isTheme(storedPrefs.theme) ? storedPrefs.theme : legacyTheme(storedPrefs.palette, storedPrefs.colorTheme === "dark");
 const prefs = {
   sound: true,
   music: storedPrefs.sound ?? true,
@@ -364,15 +368,13 @@ const prefs = {
   rendering: isAndroid && storedPrefs.renderingChosen !== true
     ? { ...qualityPresets.mobile }
     : normalizeQuality(storedPrefs.rendering, storedPrefs.quality !== false),
-  colorTheme: storedPrefs.colorTheme === "dark" ? "dark" : "light",
-  // Which pair of endpoints the light/dark interpolation runs between. An
-  // unknown or absent name leaves the shell's own default in place.
-  palette: (THEMES as readonly string[]).includes(storedPrefs.palette ?? "")
-    ? (storedPrefs.palette as ThemeName)
-    : undefined,
+  theme: storedTheme,
+  palette: undefined,
+  // Follows the theme: the terminal, the window caption and the wallpaper still ask for light or dark.
+  colorTheme: (DESIGNS[storedTheme].dark ? "dark" : "light") as "light" | "dark",
 };
-setPalette(prefs.palette);
-paintTheme(prefs.colorTheme === "dark" ? 1 : 0);
+setPalette(prefs.theme);
+paintTheme(DESIGNS[prefs.theme].dark ? 1 : 0);
 const rollingMotion = {
   duration: 460,
   motionBlur: true,
@@ -427,28 +429,46 @@ let musicSuppressed = false;
 function configureAudio() { audio.configure({ ...prefs, music: prefs.music && !musicSuppressed }); }
 configureAudio();
 configureHoverCards({ reduced: () => prefs.reduced, onShow: () => audio.play("hover") });
-setSurfacePalette(prefs.palette ?? "warm");
-audio.setVoice(VOICES[motifOf(prefs.palette)]);
+setSceneThemes(prefs.theme, prefs.theme);
+audio.setVoice(VOICES[motifOf(prefs.theme)]);
 /**
- * The theme change-over: the new theme's sound, then the window as it was
- * leaves in the new motif's pieces while the palette and the 3D surfaces
- * switch underneath at once.
+ * The theme change-over (Unreal SetTheme): the new theme's sound, then the
+ * window as it was leaves in the new motif's pieces while the interface, the
+ * room and the surfaces switch underneath, and the rows turn over card by card.
+ * Without a capture to cover it, the interface and the room fade instead.
  */
-let markedPalette: ThemeName = prefs.palette ?? "warm";
-function changePalette(name: ThemeName, origin: readonly [number, number]) {
-  const motif = motifOf(name);
-  // The corner card (theme-mark.ts) follows once the change-over has cleared the screen.
-  showThemeMark({ stage: $("#stage"), from: markedPalette, to: name, reduced: prefs.reduced, visible: () => mode === "archive" && (scene?.sessionDeckFocus ?? 0) < 0.05 && !document.querySelector(".modal-backdrop:not([hidden])") });
+let markedPalette: ThemeName = prefs.theme;
+/** A theme picked in settings (or by the wallpaper's light/dark property): remembered, then changed over to. */
+function chooseTheme(name: ThemeName, origin: readonly [number, number] = [.5, .5]) {
+  prefs.theme = name;
+  prefs.colorTheme = DESIGNS[name].dark ? "dark" : "light";
+  savePrefs();
+  if (started) { changePalette(name, origin); return; }
+  // Before the opening has run there is nothing to change over from.
   markedPalette = name;
-  audio.setVoice(VOICES[motif]);
+  setPalette(name);
+  if (scene) scene.changeTheme(name, name, { instant: true });
+  else setSceneThemes(name, name);
+  audio.setVoice(VOICES[motifOf(name)]);
+}
+function changePalette(name: ThemeName, origin: readonly [number, number]) {
+  const from = markedPalette;
+  // The corner card (theme-mark.ts) follows once the change-over has cleared the screen.
+  showThemeMark({ stage: $("#stage"), from, to: name, reduced: prefs.reduced, visible: () => mode === "archive" && (scene?.sessionDeckFocus ?? 0) < 0.05 && !document.querySelector(".modal-backdrop:not([hidden])") });
+  markedPalette = name;
+  audio.setVoice(VOICES[motifOf(name)]);
   audio.play("theme");
-  const [light, dark] = signalsOf(name);
-  const signals = prefs.colorTheme === "dark" ? dark : light;
   void playThemeReveal({
-    motif,
-    apply: () => { setPalette(name, true); setSurfacePalette(name); scene?.flipPalette(signals[0]); },
-    accent: signals[0],
-    second: signals[1],
+    motif: motifOf(name),
+    apply: covered => {
+      setPalette(name, !covered && !prefs.reduced);
+      if (scene) scene.changeTheme(from, name, { covered, instant: prefs.reduced });
+      else setSceneThemes(name, name);
+      if (desktopShell) window.rhineDesktop?.theme?.(DESIGNS[name].dark ? "dark" : "light");
+    },
+    // The edges in the new theme's first signal, the riso plate in its accent (RhineThemeScene.cpp MakeThemeReveal).
+    accent: signalsOf(name)[0],
+    second: `rgb(${paletteRgb(name, "accent").join(" ")})`,
     origin,
     reduced: prefs.reduced,
   });
@@ -557,12 +577,10 @@ function savePrefs() {
     bookmarkFeedback?.cancel();
   }
   scene?.setReduced(prefs.reduced);
-  scene?.setTheme(prefs.colorTheme === "dark", prefs.reduced || !started);
   // The window caption is drawn by the OS, so it cannot follow a CSS variable.
   if (desktopShell)
     window.rhineDesktop?.theme?.(prefs.colorTheme === "dark" ? "dark" : "light");
-  document.querySelectorAll<HTMLElement>("[data-color-theme]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.colorTheme === prefs.colorTheme)));
-  document.querySelectorAll<HTMLElement>("button[data-color-palette]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.colorPalette === prefs.palette)));
+  document.querySelectorAll<HTMLElement>("button[data-color-palette]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.colorPalette === prefs.theme)));
   scene?.setSuperPerformance(superPerformanceEnabled());
   viewer?.setSuperPerformance(superPerformanceEnabled());
   scene?.setQuality(effectiveRenderQuality());
@@ -1112,16 +1130,10 @@ document.addEventListener("change", (e) => {
   }
 });
 document.addEventListener("click", (e) => {
-  const themeButton = (e.target as Element).closest<HTMLElement>("[data-color-theme]");
-  if (themeButton) { prefs.colorTheme = themeButton.dataset.colorTheme === "dark" ? "dark" : "light"; savePrefs(); return; }
   const paletteButton = (e.target as Element).closest<HTMLElement>("button[data-color-palette]");
   if (paletteButton) {
-    const name = paletteButton.dataset.colorPalette as ThemeName;
-    if ((THEMES as readonly string[]).includes(name) && name !== prefs.palette) {
-      prefs.palette = name;
-      savePrefs();
-      changePalette(name, [e.clientX / innerWidth, e.clientY / innerHeight]);
-    }
+    const name = paletteButton.dataset.colorPalette;
+    if (isTheme(name) && name !== prefs.theme) chooseTheme(name, [e.clientX / innerWidth, e.clientY / innerHeight]);
     return;
   }
   if ((e.target as Element).closest('[data-action="sound-preview"]')) { audio.play("confirm"); return; }
@@ -1477,7 +1489,7 @@ if (frameBudget) {
 // The far-layer poster (theme-poster.ts): the theme's flat graphic behind the archive and its detail page.
 const posterCanvas = desktopShell ? $<HTMLCanvasElement>("#theme-poster") : undefined;
 const poster = posterCanvas ? new ThemePoster(posterCanvas) : undefined;
-function updatePoster(time: number, amount: number) {
+function updatePoster(time: number) {
   if (!poster || !posterCanvas) return;
   const show = ready && (mode === "archive" || mode === "detail") && !sshSurfaceActive() && !viewer?.isOpen && !portals?.isPageOpen;
   setData(posterCanvas, "on", String(show));
@@ -1487,7 +1499,7 @@ function updatePoster(time: number, amount: number) {
   const files = columnFiles(lane);
   poster.update({
     motif: motifOf(name),
-    colors: { ink: paletteRgb(name, "ink", amount), accent: paletteRgb(name, "accent", amount), cyan: paletteRgb(name, "cyan", amount) },
+    colors: { ink: paletteRgb(name, "ink"), accent: paletteRgb(name, "accent"), cyan: paletteRgb(name, "cyan"), paper: paletteRgb(name, "paper"), signal: hexRgb(DESIGNS[name].signal ?? signalsOf(name)[0]) },
     // The figure reads as the card's own number: X-001 becomes X.001.
     code: records[selected].id.replace("-", "."),
     position: files.indexOf(selected) + 1,
@@ -1528,10 +1540,10 @@ function frame(ms: number) {
   portals?.sync();
   scene?.setPageCovered(Boolean(portals?.isPageOpen));
   const time = ms / 1000;
-  const theme = scene?.themeAmount ?? (prefs.colorTheme === "dark" ? 1 : 0);
+  const theme = scene?.themeAmount ?? (DESIGNS[prefs.theme].dark ? 1 : 0);
   paintTheme(theme);
-  updatePoster(time, theme);
-  viewer?.setTheme(theme);
+  updatePoster(time);
+  viewer?.setTheme(scene?.themeBlend ?? 1, theme);
   playground?.tick(time);
   const cinema =
     mode === "boot" && ready
@@ -1692,7 +1704,7 @@ async function toggleThree() {
     bindScene(next, resumeSelection === selected ? resumeCell : undefined);
     next.revealImmediately();
     scene = next;
-    scene.setTheme(prefs.colorTheme === "dark", true);
+    scene.changeTheme(markedPalette, markedPalette, { instant: true });
     scene.setArchiveCoverage(wallpaperHost()?.properties.archivecoverage?.value === "extra");
     savePrefs();
     scene.setPresentationVisible(true, prefs.reduced);
@@ -1710,7 +1722,7 @@ async function start() {
     if (isWallpaper) await window.rhineWallpaperPropertiesReady;
     if (!isWallpaper || wallpaperHost()?.properties.load3donstartup?.value !== false) {
       scene = new ArchiveScene($("#three-scene"));
-      scene.setTheme(prefs.colorTheme === "dark", true);
+      scene.changeTheme(markedPalette, markedPalette, { instant: true });
       scene.setArchiveCoverage(wallpaperHost()?.properties.archivecoverage?.value === "extra");
     } else {
       threeState = "off";
@@ -1794,7 +1806,8 @@ function syncWallpaperBackground(retry = false) {
 if (isWallpaper) {
   const apply = (properties: WallpaperProperties) => {
     const theme = properties.colortheme?.value;
-    if (theme === "light" || theme === "dark") prefs.colorTheme = theme;
+    // The wallpaper's light and dark are the measured paper and night themes.
+    if ((theme === "light" || theme === "dark") && (theme === "dark" ? "night" : "paper") !== prefs.theme) chooseTheme(theme === "dark" ? "night" : "paper");
     scene?.setArchiveCoverage(properties.archivecoverage?.value === "extra" || wallpaperHost()?.properties.archivecoverage?.value === "extra");
     for (const key of ["sound", "music", "reduced"] as const)
       if (typeof properties[key]?.value === "boolean") prefs[key] = properties[key].value as boolean;

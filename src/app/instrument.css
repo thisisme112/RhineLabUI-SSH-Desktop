@@ -13,10 +13,9 @@ html[data-desktop="true"] {
   --material-sheen: .035;
   --material-angle: 125deg;
 }
-html[data-color-palette="hologram"] { --material-sheen: .10; --material-angle: 115deg; }
-html[data-color-palette="phosphor"] { --material-sheen: 0; }
-html[data-color-palette="amber"] { --material-sheen: .055; --material-angle: 90deg; }
-html[data-color-palette="nova"], html[data-color-palette="voidwave"] { --material-sheen: .075; --material-angle: 165deg; }
+/* The printed themes stay flat; the night ones keep a little of their cyan on the panels. */
+html:is([data-color-palette="transit"], [data-color-palette="reagent"]) { --material-sheen: 0; }
+html:is([data-color-palette="orbit"], [data-color-palette="slate"]) { --material-sheen: .065; --material-angle: 165deg; }
 html[data-color-palette="cryo"] { --material-sheen: .045; --material-angle: 35deg; }
 html[data-color-palette="hazard"] { --material-sheen: .025; }
 html[data-desktop="true"] :is(.ssh-overview-glass, .terminal-modal, .ssh-utility-surface) {
@@ -52,7 +51,7 @@ html[data-desktop="true"] :is(.theme-settings span, .quality-heading h3 span, .q
 html[data-desktop="true"] :is(button, input, select, textarea):focus-visible { outline: 2px solid var(--ui-focus, var(--theme-accent)); outline-offset: 3px; }
 html[data-desktop="true"] :is(button, input, select, textarea):disabled { opacity: .45; cursor: not-allowed; }
 html[data-desktop="true"] .theme-choices button { color: var(--ui-text); background-color: var(--ui-input); }
-html[data-desktop="true"] .theme-choices button[aria-pressed="true"] { color: var(--theme-paper); background-color: var(--theme-ink); }
+html[data-desktop="true"] .theme-settings:not(.theme-gallery) .theme-choices button[aria-pressed="true"] { color: var(--theme-paper); background-color: var(--theme-ink); }
 html[data-desktop="true"] .ssh-utility-surface { max-width: 1120px; margin-inline: auto; padding: 32px; }
 html[data-desktop="true"] .ssh-text-editor { max-width: none; }
 html[data-desktop="true"] .ssh-utility-surface header { min-height: 48px; padding-bottom: 24px; border-color: var(--ui-rule); }
@@ -114,16 +113,16 @@ html[data-desktop="true"] :is(.viewer-primary, .viewer-actions button, .ssh-term
 .theme-gallery { display: block; }
 .theme-gallery .theme-choices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
 .theme-gallery .theme-choices button { position: relative; min-width: 0; padding: 8px; text-align: left; overflow: hidden; }
-.theme-gallery button b { display: block; margin: 10px 2px 4px; font-size: 13px; font-weight: 500; }
-.theme-gallery button small { display: block; margin: 0 2px 4px; font-size: 10px; opacity: .8; white-space: nowrap; }
-.theme-sample {
-  display: block; height: 46px; border: 1px solid color-mix(in srgb, var(--sample-accent) 40%, transparent);
-  background:
-    linear-gradient(90deg, var(--sample-accent) 2px, transparent 2px) 9px 9px / 100% 28px no-repeat,
-    repeating-linear-gradient(0deg, transparent 0 7px, color-mix(in srgb, var(--sample-ink) 45%, transparent) 7px 8px) 18px 9px / 55% 26px no-repeat,
-    radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--sample-accent) 25%, transparent), transparent 80%), var(--sample-paper);
-}
-.theme-gallery button[aria-pressed="true"]::after { content: "●"; position: absolute; right: 12px; top: 12px; color: var(--sample-accent); font-size: 10px; }
+.theme-gallery button b { display: block; margin: 10px 2px 3px; font-size: 13px; font-weight: 600; }
+.theme-gallery button small { display: block; margin: 0 2px 4px; font-size: 9.5px; letter-spacing: .06em; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.theme-gallery button em { display: block; margin: 0 2px 2px; font-size: 10px; font-style: normal; line-height: 1.45; color: var(--theme-muted); }
+/* A card in the theme's own colours (Unreal RhineSettings.cpp): its motif, its number, a bar of its accent. */
+.theme-sample { display: block; height: 54px; background: var(--sample-paper); border-bottom: 3px solid var(--sample-accent); }
+.theme-gallery .theme-choices button > .theme-glyph { position: absolute; left: 16px; top: 16px; width: 20px; height: 20px; color: var(--sample-accent); }
+.theme-number { position: absolute; right: 14px; top: 14px; font-size: 26px; font-weight: 700; line-height: 1; letter-spacing: -.03em; color: var(--sample-ink); }
+.theme-gallery button[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--theme-ink); }
+/* On the sample, above its accent bar, clear of the caption. */
+.theme-gallery button[aria-pressed="true"]::after { content: "当前"; position: absolute; right: 14px; top: 40px; padding: 1px 6px; font-size: 10px; line-height: 1.4; color: var(--theme-paper); background: var(--theme-ink); }
 html[data-color-palette] .theme-gallery button:hover { border-color: var(--theme-accent); }
 html[data-color-palette] :is(.theme-choices button, .ssh-overview button, .ssh-session-tab, .ssh-files-menu button, .ssh-files-bookmarks button) {
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;

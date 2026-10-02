@@ -1,5 +1,4 @@
-import { DESIGNS, motifGlyph, motifOf, type ThemeDesign } from "./theme-design";
-import { LABELS, THEMES, type ThemeName } from "./theme-ui";
+import { DESIGNS, THEMES, motifGlyph, type ThemeName } from "./theme-design";
 
 /**
  * The corner card a theme change leaves behind (the Unreal build's MakeThemeMark,
@@ -49,17 +48,17 @@ export function hideThemeMark() {
 
 function place(o: ThemeMarkOptions) {
   hideThemeMark();
-  const design = (DESIGNS as Record<string, ThemeDesign>)[o.to];
+  const design = DESIGNS[o.to];
   const index = THEMES.indexOf(o.to) + 1;
   const el = document.createElement("aside");
   el.className = "theme-mark";
   el.setAttribute("aria-hidden", "true");
-  el.innerHTML = `<i class="theme-mark-bar"></i><span class="theme-mark-glyph">${motifGlyph(motifOf(o.to))}</span>` +
-    `<div class="theme-mark-text"><small>THEME ${String(index).padStart(2, "0")} / ${THEMES.length} · ${design?.latin ?? o.to.toUpperCase()}</small><strong></strong></div>`;
+  el.innerHTML = `<i class="theme-mark-bar"></i><span class="theme-mark-glyph">${motifGlyph(design.motif)}</span>` +
+    `<div class="theme-mark-text"><small>THEME ${String(index).padStart(2, "0")} / ${String(THEMES.length).padStart(2, "0")} · ${design.latin}</small><strong></strong></div>`;
   // Fixed to the window and appended to the body, so no panel of the stage can stand over it.
   document.body.append(el);
   card = el;
-  flipName(el.querySelector("strong")!, o.from ? LABELS[o.from] : "", LABELS[o.to]);
+  flipName(el.querySelector("strong")!, o.from ? DESIGNS[o.from].label : "", design.label);
   const life = el.animate([
     { opacity: 0, transform: "translateX(-18px)", offset: 0 },
     { opacity: 1, transform: "translateX(0)", offset: ENTER / LIFE },

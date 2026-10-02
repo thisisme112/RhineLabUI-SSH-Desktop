@@ -1,116 +1,128 @@
 /**
- * What a colour palette carries besides colours (ported from the Unreal build's
- * RhineTheme.h, 2026-09-25/26): the figure its change-over, poster, icons and
- * side-column entrance are drawn in (its "motif"), and, for the four themes that
- * came from Unreal, the room and the archive by role.
+ * The themes (the Unreal build's RhineTheme.h / RhineTheme.cpp, 2026-09-25 to
+ * 10-02). Each is one complete mood with a fixed brightness, and it changes
+ * more than colour: the figure its change-over, poster, icons, cues and corner
+ * card are drawn in (its "motif"), the room, and the archive by role.
  *
- * Unreal keeps one brightness per theme; here every palette has a light and a
- * dark end, so a themed scene is a `[light, dark]` pair like the palettes are.
- * The Unreal side stays in RhineTheme.cpp; when a value changes, change both.
+ * `paper` and `night` are the measured web look, light and dark; they keep the
+ * shell's own room and per-surface tables. The Unreal side stays in
+ * RhineTheme.cpp: when a value changes, change both.
  */
-export type Motif = "shutters" | "tide" | "hazard" | "frames" | "orbit" | "plates" | "vector";
+export const THEMES = ["paper", "night", "hazard", "clinic", "orbit", "print", "transit", "slate", "reagent", "cryo"] as const;
+export type ThemeName = (typeof THEMES)[number];
+
+/** The figure a theme draws in; one per theme, named after the change-over it makes. */
+export type Motif = "shutters" | "tide" | "hazard" | "frames" | "orbit" | "plates" | "transit" | "darkroom" | "label" | "rack";
 
 export type SceneEnd = { background: string; fog: string; floor: string };
 export type Roles = { shell: string; cover: string; core: string; metal: string; mark: string; label: string };
 export type Role = keyof Roles;
 
 /**
- * How a theme lights the room, as multiples of what the shell already does at
- * that end (Unreal's Exposure / Cube / Fill are engine units, so they are kept
- * here relative to the two measured looks: paper for the light end, night for the
- * dark one) and the cast the image-based light takes (Unreal's CubeTint).
+ * How a theme lights the room, as multiples of the measured look of its own
+ * brightness (Unreal's Exposure / Cube / Fill are engine units, so they are kept
+ * relative to paper's 1.6 / .9 / .6 for a light theme and night's 1.0 / .65 / .22
+ * for a dark one), and the cast the image-based light takes (Unreal's CubeTint).
  */
 export type Room = { exposure: number; env: number; fill: number; tint?: string };
 
 export type ThemeDesign = {
   motif: Motif;
+  /** The theme's name, `莱茵 · 纸档`. */
+  label: string;
   /** Small caps line of the theme's name card (`RHINE / ARCHIVE`). */
   latin: string;
   caption: string;
-  /** `[light, dark]`. Absent: the scene keeps the shell's own light and dark rooms. */
-  scene?: readonly [SceneEnd, SceneEnd];
-  /** `[light, dark]` lighting. Absent: the shell's own exposure, light and fill. */
-  room?: readonly [Room, Room];
-  /** `[light, dark]` archive colours by role. Absent: the measured per-surface tables. */
-  roles?: readonly [Roles, Roles];
+  dark: boolean;
+  room: Room;
+  /** Absent: the scene keeps the shell's own room for this brightness. */
+  scene?: SceneEnd;
+  /** Absent: the measured per-surface tables. */
+  roles?: Roles;
+  /** The one flat colour the label design sets beside ground and ink (RhineChrome.h LabelSignal); absent: its first signal. */
+  signal?: string;
 };
 
-export const DESIGNS = {
-  warm: { motif: "shutters", latin: "RHINE / ARCHIVE", caption: "暖纸 · 墨色 · 香槟金 — 实验档案" },
-  cool: { motif: "tide", latin: "COOL / SILVER", caption: "冷银 · 石墨 — 精密仪器" },
-  sand: { motif: "plates", latin: "SAND / GILT", caption: "砂金 · 深色金属 — 档案暗房" },
-  cherenkov: {
-    motif: "vector", latin: "CHERENKOV / ACCELERATOR", caption: "切伦科夫蓝 · 紫外电离 — 高能粒子加速器",
-    scene: [
-      { background: "#edf8fa", fog: "#edf8fa", floor: "#dbecef" },
-      { background: "#01090f", fog: "#010c14", floor: "#05131a" },
-    ],
-    room: [{ exposure: 1.02, env: 1.05, fill: 1, tint: "#e0f8ff" }, { exposure: 0.96, env: 0.88, fill: 0.95, tint: "#00e5ff" }],
-    roles: [
-      { shell: "#dbecef", cover: "#eef9fa", core: "#c2dce3", metal: "#93b5bf", mark: "#5b21d6", label: "#f7fdfe" },
-      { shell: "#18323d", cover: "#0f2630", core: "#071720", metal: "#6694a3", mark: "#00f0ff", label: "#dffbff" },
-    ],
-  },
-  phosphor: { motif: "frames", latin: "PHOSPHOR / GREEN", caption: "磷绿 · 黑底 — 复古示波" },
-  hologram: { motif: "orbit", latin: "HOLOGRAM / CYAN", caption: "全息青 · 透明网格" },
-  amber: { motif: "hazard", latin: "AMBER / INSTRUMENT", caption: "琥珀 · 航行仪表" },
-  nova: { motif: "orbit", latin: "NOVA / SPECTRUM", caption: "星紫 · 光谱观测" },
-  cryo: { motif: "tide", latin: "CRYO / CHAMBER", caption: "冰蓝 · 低温舱室" },
-  hazard: { motif: "hazard", latin: "HAZARD / RED", caption: "朱红 · 工业控制" },
-  voidwave: { motif: "orbit", latin: "VOIDWAVE / ORBIT", caption: "深空 · 轨道遥测" },
-  industrial: {
-    motif: "hazard", latin: "INDUSTRIAL / CAUTION", caption: "石墨黑 · 安全黄 — 工业控制",
-    scene: [
-      { background: "#e8e6df", fog: "#e8e6df", floor: "#dcdad2" },
-      { background: "#111214", fog: "#111214", floor: "#1a1b1e" },
-    ],
-    // RhineTheme.cpp hazard: exposure .95, cube .55, fill .2 against night's 1.0 / .65 / .22.
-    room: [{ exposure: 1, env: 1, fill: 1 }, { exposure: 0.95, env: 0.85, fill: 0.91, tint: "#f4efe4" }],
-    roles: [
-      { shell: "#d9d8d2", cover: "#e6e5df", core: "#b8b7b0", metal: "#9a9ea3", mark: "#e0a800", label: "#f3f1ea" },
-      { shell: "#3b3d42", cover: "#2e3035", core: "#1c1d20", metal: "#c8ccd0", mark: "#ffd12a", label: "#e8e4d8" },
-    ],
+const MEASURED: Room = { exposure: 1, env: 1, fill: 1 };
+export const DESIGNS: Record<ThemeName, ThemeDesign> = {
+  paper: { motif: "shutters", label: "莱茵 · 纸档", latin: "RHINE / ARCHIVE", caption: "暖纸 · 墨色 · 香槟金 — 实验档案", dark: false, room: MEASURED, signal: "#20c997" },
+  night: { motif: "tide", label: "莱茵 · 夜间", latin: "RHINE / NIGHT SHIFT", caption: "深青灰 · 象牙白 · 冷青 — 夜间值守", dark: true, room: MEASURED, signal: "#e4f03a" },
+  hazard: {
+    motif: "hazard", label: "工业 · 警戒", latin: "INDUSTRIAL / CAUTION", caption: "石墨黑 · 安全黄 — 工业控制", dark: true, signal: "#ffd400",
+    // exposure .95, cube .55, fill .2 against night's 1.0 / .65 / .22.
+    room: { exposure: .95, env: .846, fill: .909, tint: "#f4efe4" },
+    scene: { background: "#111214", fog: "#111214", floor: "#1a1b1e" },
+    roles: { shell: "#3b3d42", cover: "#2e3035", core: "#1c1d20", metal: "#c8ccd0", mark: "#ffd12a", label: "#e8e4d8" },
   },
   clinic: {
-    motif: "frames", latin: "CLINICAL / STERILE", caption: "冷白 · 纯黑 · 信号橙 — 无菌舱室",
-    scene: [
-      { background: "#f2f4f5", fog: "#f0f3f4", floor: "#e6eaec" },
-      { background: "#0c1216", fog: "#101820", floor: "#141c21" },
-    ],
-    // clinic: 1.55 / .95 / .55 against paper's 1.6 / .9 / .6.
-    room: [{ exposure: 0.97, env: 1.06, fill: 0.92, tint: "#eef3f7" }, { exposure: 1, env: 1, fill: 1 }],
-    roles: [
-      { shell: "#f3f5f6", cover: "#f6f8f9", core: "#dde3e6", metal: "#a9b2b8", mark: "#ff5a1f", label: "#ffffff" },
-      { shell: "#59636a", cover: "#46515a", core: "#1d262c", metal: "#c4ccd2", mark: "#ff7a45", label: "#e6edf1" },
-    ],
+    motif: "frames", label: "医疗 · 无菌", latin: "CLINICAL / STERILE", caption: "冷白 · 纯黑 · 信号橙 — 无菌舱室", dark: false,
+    // 1.55 / .95 / .55 against paper's 1.6 / .9 / .6.
+    room: { exposure: .969, env: 1.056, fill: .917, tint: "#eef3f7" },
+    scene: { background: "#f2f4f5", fog: "#f0f3f4", floor: "#e6eaec" },
+    roles: { shell: "#f3f5f6", cover: "#f6f8f9", core: "#dde3e6", metal: "#a9b2b8", mark: "#ff5a1f", label: "#ffffff" },
   },
   orbit: {
-    motif: "orbit", latin: "ORBITAL / TELEMETRY", caption: "深海军蓝 · 电光蓝 — 轨道遥测",
-    scene: [
-      { background: "#eef0fa", fog: "#eef0fa", floor: "#e0e3f3" },
-      { background: "#080c22", fog: "#080c22", floor: "#0f1536" },
-    ],
-    // orbit: .95 / .6 / .22 against night's 1.0 / .65 / .22.
-    room: [{ exposure: 1, env: 1, fill: 1 }, { exposure: 0.95, env: 0.92, fill: 1, tint: "#dde4ff" }],
-    roles: [
-      { shell: "#d6daf0", cover: "#e4e7f7", core: "#b4bade", metal: "#8890c0", mark: "#3550e0", label: "#f5f6ff" },
-      { shell: "#373f6e", cover: "#283060", core: "#12173a", metal: "#c4cbef", mark: "#5b79ff", label: "#e9ecff" },
-    ],
+    motif: "orbit", label: "轨道 · 遥测", latin: "ORBITAL / TELEMETRY", caption: "深海军蓝 · 电光蓝 — 轨道遥测", dark: true,
+    room: { exposure: .95, env: .923, fill: 1, tint: "#dde4ff" },
+    scene: { background: "#080c22", fog: "#080c22", floor: "#0f1536" },
+    roles: { shell: "#373f6e", cover: "#283060", core: "#12173a", metal: "#c4cbef", mark: "#5b79ff", label: "#e9ecff" },
   },
-  riso: {
-    motif: "plates", latin: "RISO / OVERPRINT", caption: "奶油纸 · 荧光粉 · 印刷蓝 — 套色印刷",
-    scene: [
-      { background: "#f3ebd9", fog: "#f3ebd9", floor: "#e8dfc9" },
-      { background: "#161425", fog: "#161425", floor: "#201d34" },
-    ],
-    // print: 1.55 / .9 / .6 against paper's 1.6 / .9 / .6.
-    room: [{ exposure: 0.97, env: 1, fill: 1, tint: "#fdf0e2" }, { exposure: 1, env: 1, fill: 1 }],
-    roles: [
-      { shell: "#f2e7d3", cover: "#f7eedd", core: "#e8d9c0", metal: "#b5ab9c", mark: "#ff4f9a", label: "#fbf6ec" },
-      { shell: "#4a4560", cover: "#3a3652", core: "#1c1a30", metal: "#cfc6b4", mark: "#ff6fae", label: "#f3ebd9" },
-    ],
+  print: {
+    motif: "plates", label: "复古 · 印刷", latin: "RISO / OVERPRINT", caption: "奶油纸 · 荧光粉 · 印刷蓝 — 套色印刷", dark: false,
+    room: { exposure: .969, env: 1, fill: 1, tint: "#fdf0e2" },
+    scene: { background: "#f3ebd9", fog: "#f3ebd9", floor: "#e8dfc9" },
+    roles: { shell: "#f2e7d3", cover: "#f7eedd", core: "#e8d9c0", metal: "#b5ab9c", mark: "#ff4f9a", label: "#fbf6ec" },
   },
-} as const satisfies Record<string, ThemeDesign>;
+  // A route map: white sheet, near-black type, and a colour per line (TRANSIT_LINES).
+  transit: {
+    motif: "transit", label: "都市 · 线路", latin: "TRANSIT / LINE MAP", caption: "线路白 · 五色干线 · 换乘站 — 城市轨交图", dark: false, signal: "#e63b2e",
+    room: { exposure: .969, env: 1.056, fill: .967, tint: "#fffdf8" },
+    scene: { background: "#f5f4ef", fog: "#f5f4ef", floor: "#eaeae4" },
+    roles: { shell: "#f0efe9", cover: "#f7f6f1", core: "#dcdbd3", metal: "#a5a69f", mark: "#e5312f", label: "#ffffff" },
+  },
+  // A contact sheet at night: frames, sprocket holes, edge codes and a ringed pick, in a developer tool's slate.
+  slate: {
+    motif: "darkroom", label: "石板 · 夜间", latin: "SLATE / NIGHT SHEET", caption: "石板蓝灰 · 天青焦点 · 状态绿 — 开发者夜间印样", dark: true,
+    room: { exposure: 1.25, env: 1.154, fill: 1.591, tint: "#eef4ff" },
+    scene: { background: "#0b1222", fog: "#0f172a", floor: "#192134" },
+    roles: { shell: "#2a3650", cover: "#232e45", core: "#131c30", metal: "#aebbd3", mark: "#4ade80", label: "#f8fafc" },
+  },
+  // The theme the label design was drawn for: cool white stock, ink, a lemon block and mint.
+  reagent: {
+    motif: "label", label: "试剂 · 标签", latin: "REAGENT / LABEL", caption: "冷白 · 墨黑 · 柠檬色块 · 薄荷 — 试剂标签", dark: false, signal: "#e4f03a",
+    room: { exposure: .969, env: 1.056, fill: .967, tint: "#f1f7f3" },
+    scene: { background: "#eceee9", fog: "#eceee9", floor: "#e0e4de" },
+    roles: { shell: "#eef0ec", cover: "#f6f8f5", core: "#d8ddd8", metal: "#a2a9a4", mark: "#12b886", label: "#ffffff" },
+  },
+  // The label's cold store: spruce black, frost type, a mint signal and lime; a 96-well plate.
+  cryo: {
+    motif: "rack", label: "冷库 · 夜间", latin: "CRYO / NIGHT STOCK", caption: "云杉黑 · 霜白 · 薄荷信号 · 青柠 — 冷库孔板", dark: true, signal: "#3debb0",
+    room: { exposure: 1, env: 1, fill: 1.136, tint: "#e4fff4" },
+    scene: { background: "#08100e", fog: "#0b1311", floor: "#111c19" },
+    roles: { shell: "#2a3a34", cover: "#22322c", core: "#121d19", metal: "#a9bdb4", mark: "#3debb0", label: "#e7f0eb" },
+  },
+};
+
+/** Transit is the one theme with more than two inks: a route map has a colour per line. */
+export const TRANSIT_LINES = ["#0072ce", "#e5312f", "#00a44a", "#f5a800", "#7a3ea8"] as const;
+
+/**
+ * Where a palette name saved before the themes came from Unreal (a palette plus
+ * a light/dark switch) lands now: `[when it was light, when it was dark]`.
+ */
+const LEGACY: Record<string, readonly [ThemeName, ThemeName]> = {
+  warm: ["paper", "night"], industrial: ["hazard", "hazard"], clinic: ["clinic", "clinic"], orbit: ["orbit", "orbit"], riso: ["print", "print"],
+  cool: ["clinic", "slate"], sand: ["print", "hazard"], cherenkov: ["clinic", "slate"], phosphor: ["reagent", "cryo"],
+  hologram: ["clinic", "slate"], amber: ["print", "hazard"], nova: ["print", "orbit"], cryo: ["clinic", "slate"],
+  hazard: ["transit", "hazard"], voidwave: ["orbit", "orbit"],
+};
+export function legacyTheme(palette: string | undefined, dark: boolean): ThemeName {
+  const pair = LEGACY[palette ?? "warm"] ?? LEGACY.warm;
+  return pair[dark ? 1 : 0];
+}
+export function isTheme(name: unknown): name is ThemeName {
+  return (THEMES as readonly unknown[]).includes(name);
+}
 
 /** The measured web paper and night role colours the role tables are relative to (Unreal `paper` / `night`). */
 export const REFERENCE_ROLES: readonly [Roles, Roles] = [
@@ -128,7 +140,7 @@ export function roleOf(surface: string): Role {
 }
 
 export function motifOf(name: string | undefined): Motif {
-  return (DESIGNS as Record<string, ThemeDesign>)[name ?? ""]?.motif ?? "shutters";
+  return isTheme(name) ? DESIGNS[name].motif : "shutters";
 }
 
 // ── Glyphs ──────────────────────────────────────────────────────────────────
@@ -139,6 +151,7 @@ export function motifGlyph(motif: Motif): string {
   const line = (points: number[][], width = 1.7) =>
     `<polyline points="${points.map(([x, y]) => `${u(x)},${u(y)}`).join(" ")}" fill="none" stroke="currentColor" stroke-width="${width}" stroke-linejoin="round"/>`;
   const box = (x: number, y: number, w: number, h: number) => `<rect x="${u(x)}" y="${u(y)}" width="${u(w)}" height="${u(h)}" fill="currentColor"/>`;
+  const ring = (x: number, y: number, r: number, width: number) => `<circle cx="${u(x)}" cy="${u(y)}" r="${u(r)}" fill="none" stroke="currentColor" stroke-width="${width}"/>`;
   let body = "";
   switch (motif) {
     case "shutters":
@@ -163,11 +176,21 @@ export function motifGlyph(motif: Motif): string {
     case "plates":
       body += line([[.17, .22], [.68, .22], [.68, .73], [.17, .73], [.17, .22]]) + line([[.32, .28], [.83, .28], [.83, .79], [.32, .79], [.32, .28]]);
       break;
-    case "vector":
-      body += line(Array.from({ length: 25 }, (_, i) => { const a = 2 * Math.PI * i / 24; return [.5 + .36 * Math.cos(a), .5 + .36 * Math.sin(a)]; }), 1.4) +
-        line([[.5, .08], [.5, .24]], 2) + line([[.5, .76], [.5, .92]], 2) +
-        line([[.08, .5], [.24, .5]], 2) + line([[.76, .5], [.92, .5]], 2) +
-        box(.44, .44, .12, .12);
+    case "transit": // one route with a 45 degree bend and a station at each end
+      body += line([[.1, .72], [.4, .72], [.6, .52], [.9, .52]], 4.2) + ring(.1, .72, .11, 1.9) + ring(.9, .52, .11, 1.9);
+      break;
+    case "darkroom": // a frame of film and its sprocket holes
+      body += line([[.1, .3], [.9, .3], [.9, .7], [.1, .7], [.1, .3]], 2.2);
+      for (let i = 0; i < 4; i++) body += box(.16 + i * .2, .11, .1, .09) + box(.16 + i * .2, .8, .1, .09);
+      break;
+    case "label": // a host mark in miniature: a 3x3 of solid cells
+      [1, 1, 0, 1, 0, 1, 0, 1, 1].forEach((on, i) => { if (on) body += box(.08 + (i % 3) * .29, .08 + Math.floor(i / 3) * .29, .26, .26); });
+      break;
+    case "rack": // six wells of a plate, filled
+      for (let i = 0; i < 6; i++) {
+        const x = .2 + Math.floor(i / 2) * .3, y = .32 + (i % 2) * .36;
+        body += ring(x, y, .13, 1.45) + box(x - .07, y - .07, .14, .14);
+      }
       break;
   }
   return `<svg class="theme-glyph" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${body}</svg>`;
@@ -241,13 +264,25 @@ export function themeIcon(name: IconName, motif: Motif, className = "ssh-theme-i
     case "orbit": // an outline over a faint ring
       body = `<circle cx="8" cy="8" r="8" fill="none" stroke="var(--theme-cyan)" stroke-opacity=".45" stroke-width="${stroke}"/>` + outline();
       break;
-    case "vector": // high-energy hairline with pulse nodes
-      body = outline(Math.max(1, stroke * .8)) +
-        `<circle cx="8" cy="8" r="1.3" fill="var(--theme-cyan)"/>` +
-        `<circle cx="13" cy="3" r="1" fill="var(--theme-accent)"/>`;
+    case "transit": // a bolder line, and a route-coloured bar under it like a line on a map
+      body = outline(stroke * 1.4) + rect([0, .93, 1, 1], 'fill="var(--theme-signal-1)"');
+      break;
+    case "darkroom": // a fine outline, and the crop marks a contact sheet is marked with in grease pencil
+      body = outline(Math.max(1, stroke * .9)) +
+        poly([[-.04, .16], [-.04, -.04], [.16, -.04]], `stroke="var(--theme-accent)" stroke-width="${stroke * 1.2}"`) +
+        poly([[1.04, .84], [1.04, 1.04], [.84, 1.04]], `stroke="var(--theme-accent)" stroke-width="${stroke * 1.2}"`);
+      break;
+    case "rack": // a fine outline with one well in the corner, filled in the second ink
+      body = outline(Math.max(1, stroke * .9)) +
+        `<circle cx="${p(.86)}" cy="${p(.14)}" r="${p(.12)}" fill="none" stroke="var(--theme-signal-1)" stroke-width="${stroke}"/>` +
+        rect([.81, .09, .91, .19], 'fill="var(--theme-signal-1)"');
+      break;
+    case "label": // a heavy outline with a solid lemon tab at its head, a reagent label's colour code
+      body = rect([0, 0, .3, .3], 'fill="#e4f03a"') + outline(stroke * 1.6);
       break;
     default:
       body = outline();
   }
-  return `<svg class="${className}" viewBox="0 0 16 16" aria-hidden="true" focusable="false">${body}</svg>`;
+  // The darkroom's crop marks sit just outside the icon.
+  return `<svg class="${className}" viewBox="0 0 16 16" aria-hidden="true" focusable="false"${motif === "darkroom" ? ' overflow="visible"' : ""}>${body}</svg>`;
 }
