@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const roots = [
+  "@fontsource/barlow-condensed",
   "@fontsource/jetbrains-mono",
   "@fontsource/ibm-plex-mono",
   "codemirror",
@@ -37,7 +38,7 @@ for (const name of roots.sort()) visit(name);
 fs.mkdirSync("licenses", { recursive: true });
 fs.writeFileSync(
   "licenses/SSH-UI-NOTICES.txt",
-  "Rhine Lab SSH UI — third-party licenses\n\nBundled terminal fonts retain their upstream names and SIL Open Font License.\nOnly Latin regular and bold webfont subsets are shipped. CodeMirror and xterm dependencies are bundled into the SSH renderer.\n\n" +
+  "Rhine Lab SSH UI — third-party licenses\n\nBundled webfonts (the terminal faces and the label design's Barlow Condensed) retain their upstream names and SIL Open Font License.\nOnly Latin webfont subsets are shipped. CodeMirror and xterm dependencies are bundled into the SSH renderer.\n\n" +
     sections.join("\n"),
 );
 console.log(`SSH UI notices: ${sections.length} packages`);

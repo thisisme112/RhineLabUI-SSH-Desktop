@@ -61,6 +61,10 @@ const SIGNALS: Record<ThemeName, readonly string[]> = {
 export function signalsOf(name: ThemeName): readonly string[] {
   return SIGNALS[name];
 }
+/** The label design's one flat colour (RhineChrome.h LabelSignal): the theme's own, else its first signal. */
+export function labelSignal(name: ThemeName): string {
+  return DESIGNS[name].signal ?? SIGNALS[name][0];
+}
 
 /** A theme's token as `[r, g, b]`, for canvases that paint outside CSS. */
 export function paletteRgb(name: ThemeName, token: Token): number[] {
@@ -131,6 +135,11 @@ export function paintTheme(amount: number) {
     root.style.setProperty('--ui-focus', `rgb(${readable(targets.accent, targets.ink, surfaces, 3).join(', ')})`);
   }
   signalsOf(current).forEach((hex, i) => (targets[`signal-${i}`] = rgb(hex)));
+  // The label design's three inks (Unreal RhineLabel::Ink): ground, ink and one flat signal colour, and
+  // what is printed on the signal: the darker of the two inks, unless the signal itself is dark.
+  targets.signal = rgb(labelSignal(current));
+  const [darker, lighter] = luminance(targets.paper) < luminance(targets.ink) ? [targets.paper, targets.ink] : [targets.ink, targets.paper];
+  targets["on-signal"] = luminance(targets.signal) > .2 ? darker : lighter;
   for (const [name, target] of Object.entries(targets)) {
     const from = paletteFrom?.[name];
     painted[name] = target.map((value, i) => Math.round(from ? from[i] + (value - from[i]) * mix : value));

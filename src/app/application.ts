@@ -35,6 +35,7 @@ export const modalContext = {
   get superPerformanceEnabled() { return superPerformanceEnabled; },
   get effectiveRenderQuality() { return effectiveRenderQuality; },
   get motionSettingsMarkup() { return motionSettingsMarkup; },
+  get labelCapable() { return Boolean(labelSheet); },
 };
 import * as modalController from "../features/settings/modal-controller";
 import { createRollingClock } from "../shared/rolling-clock";
@@ -78,11 +79,13 @@ import { setSceneThemes } from "../features/theme/theme-material";
 import { playThemeReveal } from "../features/theme/theme-reveal";
 import { showThemeMark } from "../features/theme/theme-mark";
 import { configureHoverCards } from "../shared/hover-card";
+import { LabelSheet, type LabelFile, type LabelPage } from "../features/label/label-sheet";
+import { hostMark, noteHostKey } from "../features/label/host-marks";
 import { setAttr, setData, setInert, setStyle } from "../shared/dom-write";
 import { audioSettingsMarkup } from "../features/settings/audio-settings";
 import { StartupGate } from "../features/boot/startup";
 import { isWallpaper, wallpaperHost, wallpaperFrame, type WallpaperProperties } from "../platform/wallpaper/wallpaper";
-import { isDesktop, desktopWindowParked } from "../platform/desktop/desktop";
+import { isDesktop, desktopWindowParked, windowControlsHeight } from "../platform/desktop/desktop";
 import { isAndroid } from "../platform/android/android";
 import { FrameBudget, ResolutionGovernor, ANDROID_RATES, DESKTOP_RATES } from "../rendering/frame-budget";
 import { hostLabel, hostSubtitle, SshHostCards } from "../features/ssh/host-cards";
@@ -294,7 +297,24 @@ $("#stage").innerHTML = `
 `;
 // Built once above and never replaced: the frame loop keeps these instead of querying each frame.
 const stageEl = $("#stage"), archiveUiEl = $("#archive-ui"), systemNavEl = $(".system-nav"),
-  detailContentEl = $("#detail-content"), threeSceneEl = $("#three-scene");
+  detailContentEl = $("#detail-content"), threeSceneEl = $("#three-scene"), viewportEl = $("#viewport");
+/**
+ * The label design (features/label): the desktop shells' default, laid over the same stage. Phones and
+ * narrow windows keep the classic layout, which was drawn for them; so does the opening film.
+ */
+const labelSheet = desktopShell && !isAndroid ? new LabelSheet(stageEl, {
+  primary: () => {
+    if (mode === "detail") goBack();
+    else { sshOverview?.toggleCollapsed(); audio.play("ui-tick"); }
+  },
+  search: () => { if (sshOverview) sshOverview.focusSearch(); else openModal("search"); },
+  settings: () => openModal("settings"),
+  portals: () => portals?.toggle(),
+  read: () => openFile(),
+  select: index => select(index),
+  step: direction => stepFile(direction),
+  column: direction => stepColumn(direction),
+}, demoSsh) : undefined;
 
 $("#boot-background").insertAdjacentHTML(
   "beforeend",
@@ -350,7 +370,7 @@ function readLocal<T>(key: string, fallback: T): T {
   }
 }
 const saved = new Set<string>(readLocal<string[]>("rhine-saved", []));
-const storedPrefs = readLocal<Partial<{ sound: boolean; music: boolean; soundVolume: number; musicVolume: number; reduced: boolean; quality: boolean; rendering: RenderQuality; renderingChosen: boolean; superPerformance: boolean; colorTheme: "light" | "dark"; palette: string; theme: string }>>("rhine-settings", {});
+const storedPrefs = readLocal<Partial<{ sound: boolean; music: boolean; soundVolume: number; musicVolume: number; reduced: boolean; quality: boolean; rendering: RenderQuality; renderingChosen: boolean; superPerformance: boolean; colorTheme: "light" | "dark"; palette: string; theme: string; design: string }>>("rhine-settings", {});
 // One of the ten themes (theme-design.ts). Before they came from Unreal a palette and a light/dark
 // switch were saved instead: such a pair lands on the nearest theme, and is not written back.
 const storedTheme: ThemeName = isTheme(storedPrefs.theme) ? storedPrefs.theme : legacyTheme(storedPrefs.palette, storedPrefs.colorTheme === "dark");
@@ -372,6 +392,8 @@ const prefs = {
   palette: undefined,
   // Follows the theme: the terminal, the window caption and the wallpaper still ask for light or dark.
   colorTheme: (DESIGNS[storedTheme].dark ? "dark" : "light") as "light" | "dark",
+  // The label design (features/label) is the default; the classic layout stays one setting away.
+  design: (storedPrefs.design === "classic" ? "classic" : "label") as "label" | "classic",
 };
 setPalette(prefs.theme);
 paintTheme(DESIGNS[prefs.theme].dark ? 1 : 0);
@@ -597,6 +619,8 @@ function savePrefs() {
 }
 let previousLayout = "";
 let resizeTimer = 0;
+/** The stage in its own units (1080 tall on a desktop layout), as fit() last set it. */
+let stageWidth = 1920, stageScale = 1;
 /**
  * Re-measure the WebGL targets. A phone's soft keyboard slides in over a few
  * frames and each of them changes the viewport: reallocating the composer's
@@ -620,6 +644,8 @@ function fit() {
   stage.style.height = `${height}px`;
   stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
   stage.dataset.layout = kind;
+  stageWidth = width;
+  stageScale = scale;
   stage.dataset.touch = String(coarse);
   viewport.dataset.mobileBoot = String(mode === "boot" && (coarse || viewport.clientWidth < 1100));
   stage.style.setProperty("--stage-scale", String(scale));
@@ -709,7 +735,7 @@ function setMode(next: Mode) {
     pendingDetailFocus = false;
     tabTransition.cancel();
     detailTransition.hide(prefs.reduced || next === "boot");
-    if (!modal && next === "archive") $(".read-file").focus({ preventScroll: true });
+    if (!modal && next === "archive") (labelActive() ? labelSheet!.root.querySelector<HTMLElement>(".label-read")! : $(".read-file")).focus({ preventScroll: true });
   }
   $("#detail-ui").inert = next !== "detail" || Boolean(modal);
   scene?.setMode(next === "boot" ? "hidden" : next);
@@ -1137,6 +1163,13 @@ document.addEventListener("click", (e) => {
     return;
   }
   if ((e.target as Element).closest('[data-action="sound-preview"]')) { audio.play("confirm"); return; }
+  const designButton = (e.target as Element).closest<HTMLElement>("button[data-design-choice]");
+  if (designButton) {
+    const design = designButton.dataset.designChoice === "classic" ? "classic" : "label";
+    if (design !== prefs.design) { prefs.design = design; savePrefs(); audio.play("confirm"); }
+    document.querySelectorAll<HTMLElement>("button[data-design-choice]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.designChoice === design)));
+    return;
+  }
   if (!started) return;
   if (modalClosing) return;
   const el = (e.target as Element).closest<HTMLElement>("button");
@@ -1509,6 +1542,59 @@ function updatePoster(time: number) {
     reduced: prefs.reduced,
   });
 }
+/** Whether the label design is on screen: its preference, a desktop layout, and not during the opening film. */
+function labelActive() {
+  return Boolean(labelSheet) && prefs.design !== "classic" && ready && mode !== "boot" && stageEl.dataset.layout === "desktop";
+}
+let labelShown = false, labelMarksAt = 0;
+function labelPage(): LabelPage {
+  return mode === "detail" ? "detail" : sshOverview && !sshOverview.isCollapsed ? "overview" : "archive";
+}
+/** The selected file as the label's field prints it. */
+function labelFile(): LabelFile {
+  const r = records[selected];
+  const split = r.id.indexOf("-");
+  const prefix = `${r.id.slice(0, split)}—`, code = r.id.slice(split + 1);
+  const host = hostAtCard(selected);
+  if (!host) return { prefix, code, name: r.title, address: r.en, state: r.clearance === "RESTRICTED" ? "目录访问" : "可读取", detail: r.category, services: [false, false, false, false], mark: r.id };
+  const live = sessionLiveFor(selected);
+  return {
+    prefix, code, name: hostLabel(host), address: hostSubtitle(host),
+    state: hostStateLabel(selected).replace("SSH · ", ""),
+    detail: host.profile?.authMode === "password" ? "密码认证" : "密钥认证",
+    // The terminal always; files and monitor once a session runs; no tunnels yet.
+    services: [true, live, live, false],
+    mark: hostMark(host.alias),
+  };
+}
+function updateLabel(time: number) {
+  if (!labelSheet) return;
+  const active = labelActive();
+  setData(stageEl, "design", active ? "label" : "classic");
+  setData(viewportEl, "design", active ? "label" : "classic");
+  const page = labelPage();
+  const inset = windowControlsHeight() / stageScale;
+  scene?.setLabelLayout(active ? page === "overview" ? "shelf" : page === "archive" ? "home" : "" : "", inset);
+  if (!active) { labelShown = false; return; }
+  if (!labelShown) { labelShown = true; labelSheet.arrive(time); }
+  // Once a second: a session that has verified its host's key gives that host its mark.
+  if (time - labelMarksAt > 1) {
+    labelMarksAt = time;
+    for (const host of hostCards?.bound ?? []) {
+      const fingerprint = sshBank?.forAlias(host.alias)?.client.status().facts.hostKeyFingerprint?.value;
+      if (fingerprint) noteHostKey(host.alias, fingerprint);
+    }
+  }
+  const { lane } = fileLocation(selected);
+  const files = columnFiles(lane);
+  labelSheet.update({
+    page, time, reduced: prefs.reduced, width: stageWidth, inset,
+    file: labelFile(),
+    lane: { index: lane, count: archiveColumns.length, name: archiveColumns[lane], position: files.indexOf(selected), files },
+    probe: page !== "detail" ? scene?.labelProbe() ?? null : null,
+    selection: `${selected}|${records[selected].id}`,
+  });
+}
 // A phone that cannot hold its budget renders smaller instead of stuttering (frame-budget.ts ResolutionGovernor).
 const governor = frameBudget && isAndroid ? new ResolutionGovernor() : undefined;
 let governedAt = 0;
@@ -1563,6 +1649,7 @@ function frame(ms: number) {
   sshAfterFrame?.();
   sshOverview?.setVisible(mode === "archive" && ready, Boolean(modal) || sshSurfaceActive());
   if (desktopShell) syncArchiveChrome();
+  updateLabel(time);
   if (pendingSshDetailMotion && mode === "detail" && (!scene || scene.detailVisibility >= .1)) {
     pendingSshDetailMotion = false;
     sshDetailMotion?.reveal($("#detail-content"), prefs.reduced);

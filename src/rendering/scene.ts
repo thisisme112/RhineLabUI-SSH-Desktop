@@ -12,6 +12,11 @@ const NO_FLIP: FlipSample = { lift: 0, tilt: 0, flash: 0, swap: 0 };
 const PICTURE_EPSILON = 1e-5;
 /** ?always-draw turns the settled-frame skip off, to compare against or rule it out. */
 const ALWAYS_DRAW = typeof location !== "undefined" && new URLSearchParams(location.search).has("always-draw");
+/** How far the label sheet moves the array on the stage, right and down (Unreal LabelShift). */
+const LABEL_SHIFT = { x: 640, y: 30 };
+/** The overview's shelf: how much farther the camera stands, and where the raised archive's middle sits
+ *  (right of the window's centre, above the stage's centre) (Unreal LabelShelf). */
+const LABEL_SHELF = { zoom: 2.2, x: -170, y: 250 };
 import { themeMaterial, themeEnvironment, setFlashColor, setSceneThemes, sceneThemes, themeDarkness } from "../features/theme/theme-material";
 import { RhythmMotion, rhythmDisplacement, quietBands, type MusicBands, type RhythmStyle } from "../features/archives/archive-play-motion";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -359,6 +364,44 @@ export class ArchiveScene {
   setPageCovered(covered: boolean) {
     this.pageCovered = covered;
     if (!covered) this.pageCoveredAt = 0;
+  }
+  /** The label design: the array framed beside the home's field ("home"), in the overview's shelf ("shelf"), or as it was. */
+  private labelLayout: "home" | "shelf" | "" = "";
+  /** The window caption's height over the stage, in stage units: the shelf sits under it. */
+  private labelInset = 0;
+  /** Where the selected file rests above its row: higher on the label home, where it stands up to the frame (Unreal HomeRestLift). */
+  private restLift = .4;
+  setLabelLayout(layout: "home" | "shelf" | "", inset = 0) {
+    this.labelLayout = layout;
+    this.labelInset = inset;
+    this.restLift = layout === "home" ? 1.12 : .4;
+  }
+  private probeVector = new THREE.Vector3();
+  private probeCorners: [number, number][] = [];
+  /**
+   * The selected archive on the stage (stage units): where its printed label is, for the label
+   * design's leader, and the corners of every visible part's box, which the frames give way to.
+   */
+  labelProbe(): { pin: [number, number]; corners: [number, number][] } | null {
+    if (!this.loaded || !this.labelMesh) return null;
+    this.model.updateMatrixWorld(true);
+    const width = this.container.clientWidth, height = this.container.clientHeight, v = this.probeVector;
+    const project = (): [number, number] => { v.project(this.camera); return [(v.x + 1) * width / 2, (1 - v.y) * height / 2]; };
+    this.labelMesh.localToWorld(v.set(0, 0, 0));
+    const pin = project();
+    const corners = this.probeCorners;
+    corners.length = 0;
+    this.model.traverseVisible(object => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry) return;
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+      const box = mesh.geometry.boundingBox!;
+      for (let i = 0; i < 8; i++) {
+        v.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).applyMatrix4(mesh.matrixWorld);
+        corners.push(project());
+      }
+    });
+    return { pin, corners };
   }
   get sessionRendering() { return { frames: this.renderedFrames, frozen: this.coveredAt > 0 && this.clock - this.coveredAt > 1.2, returning: this.outgoing.filter(item => item.deck).length }; }
   private disposeReturning(item: (typeof this.outgoing)[number]) {
@@ -1324,7 +1367,7 @@ export class ArchiveScene {
         this.hoverLifts.delete(cellKey(this.selectedCell));
         this.manualExtraction = true;
         this.archivePull.start(e.clientX, e.clientY,
-          this.projectDragMotion(new THREE.Vector3(0, 1, 0)), this.lift.value, INSPECTION_LIFT);
+          this.projectDragMotion(new THREE.Vector3(0, 1, 0)), this.lift.value, INSPECTION_LIFT, this.restLift);
       }
       this.setHover(null);
       canvas.setPointerCapture(e.pointerId);
@@ -1716,24 +1759,25 @@ export class ArchiveScene {
                     Math.abs(o.cell.row - selectedRow) < 5,
                 )
               ? 0
-              : this.coastCell ? 0 : 0.4 * this.targetReveal * (1 - this.flatMix),
+              : this.coastCell ? 0 : this.restLift * this.targetReveal * (1 - this.flatMix),
           this.reduced
             ? 35
             : this.deferSelectionPulse &&
                 !this.targetDetail &&
-                this.lift.value < 0.4
+                this.lift.value < this.restLift
               ? 7.6
               : 4.2,
           dt,
         );
       }
     }
-    if (!this.archivePull.active && this.lift.value <= .401) this.manualExtraction = false;
+    if (!this.archivePull.active && this.lift.value <= this.restLift + .001) this.manualExtraction = false;
+    // The camera only leaves for the detail above where the selected file rests.
     const cameraTarget = this.manualExtraction && !this.targetDetail ? 0 : this.targetDetail
-      ? ease((this.lift.value - 0.8) / 2.4)
+      ? ease((this.lift.value - Math.max(.8, this.restLift)) / 2.4)
       : this.returnY !== null
         ? this.detail
-        : ease((this.lift.value - 0.4) / (INSPECTION_LIFT - 0.4));
+        : ease((this.lift.value - this.restLift) / (INSPECTION_LIFT - this.restLift));
     this.detail = cinematic
       ? cinematic.zoom
       : THREE.MathUtils.lerp(this.detail, cameraTarget, blend);
@@ -1968,6 +2012,23 @@ export class ArchiveScene {
       cameraAim.lerp(detailAim, detail);
     }
     let cameraSpan = cinematic ? openingSpan(THREE.MathUtils.lerp(span, 5.9, detail)) : framing.span;
+    if (!cinematic && this.labelLayout && !framing.portrait) {
+      // The label sheet (RhineLabelHome.cpp) covers the stage's left: the array is framed in the window beside
+      // it. Over the overview the camera stands farther off and the raised archive stands in the shelf's
+      // window, its top just across the frame. Stage units (1080 tall): right, and down.
+      const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), viewDirection).normalize();
+      const up = new THREE.Vector3().crossVectors(viewDirection, right).normalize();
+      const stageWidth = 1080 * this.container.clientWidth / Math.max(1, this.container.clientHeight);
+      const away = (1 - detail) * (1 - this.sessionDeckFocus);
+      if (this.labelLayout === "shelf") {
+        cameraSpan *= 1 + (LABEL_SHELF.zoom - 1) * away;
+        cameraAim.addScaledVector(right, -cameraSpan * ((512 + stageWidth - 64) / 2 - stageWidth / 2 + LABEL_SHELF.x) / 1080 * away);
+        cameraAim.addScaledVector(up, -cameraSpan * (LABEL_SHELF.y - this.labelInset) / 1080 * away);
+      } else {
+        cameraAim.addScaledVector(right, -cameraSpan * LABEL_SHIFT.x / 1080 * away);
+        cameraAim.addScaledVector(up, cameraSpan * LABEL_SHIFT.y / 1080 * away);
+      }
+    }
     if (!cinematic && this.deck && this.sessionDeckFocus > 0) {
       const screenSpan = this.sessionScreenSpan();
       this.model.updateMatrixWorld(true);

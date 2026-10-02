@@ -1,0 +1,181 @@
+@import "@fontsource/barlow-condensed/latin-600.css";
+@import "@fontsource/barlow-condensed/latin-700.css";
+@import "@fontsource/barlow-condensed/latin-800.css";
+@import "@fontsource/jetbrains-mono/latin-400.css";
+@import "@fontsource/jetbrains-mono/latin-700.css";
+
+/*
+ * The label design (the Unreal build's RhineLabel.h): ground, ink and one flat
+ * signal colour; condensed figures set by their capital height; blocks with a
+ * corner cut at 45 degrees; 3 px and 2 px ink rules. Stage units throughout:
+ * the stage is 1080 tall, so these numbers are the Unreal ones.
+ */
+#stage[data-design="label"] {
+  --ground: var(--theme-paper);
+  --ink: var(--theme-ink);
+  --signal: var(--theme-signal);
+  --on-signal: var(--theme-on-signal);
+  --faint: rgba(var(--theme-ink-rgb), .18);
+  --display: "Barlow Condensed", "MiSans", "Microsoft YaHei", sans-serif;
+  --mono: "JetBrains Mono", "MiSans", Consolas, monospace;
+  --settle: cubic-bezier(.16, 1, .3, 1);
+  --glide: cubic-bezier(.65, 0, .35, 1);
+  /* Windows keeps its caption buttons over the top of the window; label-sheet.ts sets how much in stage units. */
+  --label-inset: 0px;
+  --label-top: 72px;
+  --label-head: calc(var(--label-inset) + var(--label-top));
+  --label-foot: 136px;
+  --label-field: 704px;
+  --label-spine: 64px;
+  --label-band: 26px;
+}
+
+/* The classic chrome steps aside; the 3D array, the poster and the surfaces stay. */
+#stage[data-design="label"] :is(.brand, .system-nav, #archive-ui, .powered, .system-footer, .scene-atmosphere, .portal-launcher) { display: none !important; }
+#stage[data-design="label"] .back-button { display: none; }
+/* The top strip's 01 opens the overview; the stowed overview's own tab is not needed. */
+#viewport[data-design="label"] .ssh-overview-restore { display: none !important; }
+
+.label-sheet { display: none; }
+#stage[data-design="label"] .label-sheet { display: block; position: absolute; inset: 0; z-index: 8; pointer-events: none; color: var(--ink); font-family: "MiSans", "Microsoft YaHei", system-ui, sans-serif; }
+.label-sheet button { pointer-events: auto; font: inherit; color: inherit; }
+.label-sheet :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+/* Type. */
+.label-note { font-family: var(--mono); font-size: 15px; letter-spacing: .16em; line-height: 1; white-space: nowrap; }
+.label-figure {
+  --px: 100px;
+  position: relative; display: block; width: max-content;
+  font-family: var(--display); font-weight: 700; font-size: var(--px); line-height: 1; letter-spacing: 0; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  /* Set by the capital height, so it can sit on a rule: no line gap above or below. */
+  text-box: trim-both cap alphabetic;
+}
+/* The slit: a bridge across the figure at a fixed height, in the colour of what the figure stands on. */
+.label-figure[data-slit]::after {
+  content: ""; position: absolute; left: calc(var(--px) * -.03); right: calc(var(--px) * -.03);
+  top: 60%; height: max(2px, calc(var(--px) * .028)); background: var(--slit, var(--ground));
+}
+.label-sigil { display: block; fill: currentColor; shape-rendering: crispEdges; }
+
+/* Blocks. */
+.label-cut-tr { clip-path: polygon(0 0, calc(100% - var(--cut, 14px)) 0, 100% var(--cut, 14px), 100% 100%, 0 100%); }
+.label-cut-tl { clip-path: polygon(var(--cut, 14px) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut, 14px)); }
+.label-cut-br { clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut, 14px)), calc(100% - var(--cut, 14px)) 100%, 0 100%); }
+
+/* ── The top strip ─────────────────────────────────────────────────────────── */
+.label-top { position: absolute; left: 0; right: 0; top: 0; height: var(--label-head); transition: transform .5s var(--settle); }
+.label-top-ground { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.label-top-ground .label-ground { fill: var(--ground); }
+.label-top-ground .label-rule { fill: var(--ink); }
+.label-top-row { position: absolute; left: 0; right: 0; top: var(--label-inset); height: var(--label-top); display: flex; align-items: center; padding-left: 64px; }
+.label-brand { font-size: 24px; font-weight: 700; letter-spacing: .5px; white-space: nowrap; }
+.label-brand span { margin-left: 12px; font-weight: 300; letter-spacing: 2.9px; }
+.label-system { margin-left: 40px; opacity: .6; }
+.label-nav { margin-left: auto; display: flex; height: 100%; }
+.label-nav button { height: 100%; display: flex; align-items: center; gap: 8px; margin-left: 36px; font-size: 20px; font-weight: 600; white-space: nowrap; -webkit-app-region: no-drag; }
+.label-nav button b { font-family: var(--display); font-size: 22px; font-weight: 700; }
+.label-nav button:hover { text-decoration: underline 3px; text-underline-offset: 8px; }
+.label-clock { height: 100%; display: flex; align-items: center; margin-left: 40px; padding: 0 64px 0 36px; border-left: 3px solid var(--ink); font-family: var(--mono); font-size: 18px; min-width: 92px; box-sizing: content-box; }
+
+/* ── The home: field, spine, window, foot ─────────────────────────────────── */
+.label-home > * { transition: transform .5s var(--settle), opacity .5s var(--settle); }
+.label-sheet:not([data-page="archive"]) .label-home > * { transition-timing-function: cubic-bezier(.55, 0, .8, .2); }
+.label-field-reveal { position: absolute; left: 0; top: var(--label-head); width: var(--label-field); bottom: var(--label-foot); }
+.label-field { position: absolute; inset: 0; --cut: 64px; background: var(--signal); color: var(--on-signal); pointer-events: auto; }
+.label-sheet:not([data-page="archive"]) .label-field-reveal, .label-sheet:not([data-page="archive"]) .label-spine { transform: translateX(calc(-1 * (var(--label-field) + var(--label-spine)))); }
+.label-field > * { position: absolute; }
+.label-field-kicker { left: 56px; top: 40px; }
+.label-field-prefix { left: 56px; top: 86px; --px: 46px; }
+.label-field-figure { left: 52px; top: 134px; --slit: var(--signal); }
+.label-field-name { left: 56px; top: 462px; width: calc(var(--label-field) - 112px - 120px); height: 84px; display: flex; align-items: flex-end; font-size: 64px; font-weight: 700; letter-spacing: .6px; line-height: 1.1; white-space: nowrap; overflow: hidden; }
+.label-field-name span { overflow: hidden; text-overflow: ellipsis; }
+.label-field-address { left: 56px; top: 560px; font-family: var(--mono); font-size: 21px; white-space: nowrap; }
+.label-field-chips { left: 56px; top: 608px; display: flex; gap: 12px; }
+.label-chip { height: 44px; display: flex; align-items: center; padding: 0 18px; font-size: 19px; font-weight: 700; letter-spacing: 1.4px; white-space: nowrap; }
+.label-chip[data-solid] { --cut: 10px; background: var(--on-signal); color: var(--signal); }
+.label-chip:not([data-solid]) { box-shadow: inset 0 0 0 3px var(--on-signal); }
+.label-field-services { left: 56px; top: 676px; display: flex; align-items: center; gap: 12px; }
+.label-picto .label-picto-tile { fill: var(--on-signal); }
+.label-picto .label-picto-frame { fill: none; }
+.label-picto .label-picto-mark { fill: var(--signal); }
+.label-picto:not([data-on]) .label-picto-tile { fill: none; }
+.label-picto:not([data-on]) .label-picto-frame, .label-picto:not([data-on]) .label-picto-mark { fill: var(--on-signal); opacity: .45; }
+.label-services-note { margin-left: 8px; display: grid; gap: 5px; }
+.label-services-note .label-note { font-size: 12px; letter-spacing: .14em; }
+.label-services-note span:last-child { font-size: 13px; font-weight: 600; letter-spacing: 1.2px; }
+.label-field-sigil { right: 56px; top: 470px; width: 92px; height: 92px; }
+.label-field-slashes { left: 56px; right: 150px; bottom: 30px; height: 16px; fill: currentColor; }
+.label-field-slashes svg { display: block; fill: currentColor; }
+
+.label-spine { position: absolute; left: var(--label-field); top: var(--label-head); width: var(--label-spine); bottom: var(--label-foot); background: var(--ink); color: var(--ground); }
+.label-spine .label-chevrons { position: absolute; left: 17px; top: 24px; fill: currentColor; }
+.label-spine-text { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); font-size: 14px; letter-spacing: .2em; }
+
+.label-window { position: absolute; left: calc(var(--label-field) + var(--label-spine)); right: 0; top: var(--label-head); bottom: var(--label-foot); overflow: hidden; }
+.label-sheet:not([data-page="archive"]) .label-window { opacity: 0; transition-duration: .2s; }
+.label-zone { position: absolute; left: 0; top: 0; overflow: visible; }
+.label-zone .label-ground { fill: var(--ground); }
+.label-zone .label-rule, .label-zone .label-tick { fill: var(--ink); }
+.label-zone text { fill: var(--ink); font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .04em; dominant-baseline: central; text-anchor: middle; }
+.label-fig { position: absolute; left: var(--label-band); top: var(--label-band); background: var(--ground); padding: 14px 22px 14px 28px; }
+.label-selected { position: absolute; left: 74px; top: 470px; width: 400px; height: 196px; --cut: 24px; background: var(--ground); padding: 20px 26px 0; }
+.label-selected-zone { margin-top: 16px; --px: 88px; --slit: var(--ground); }
+.label-selected p { margin: 16px 0 0; font-size: 20px; font-weight: 600; letter-spacing: .6px; white-space: nowrap; }
+.label-read { position: absolute; right: 0; bottom: 0; display: flex; pointer-events: auto; transition: transform .6s var(--settle); }
+.label-read-text { --cut: 44px; height: 144px; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 0 44px 0 60px; background: var(--ink); color: var(--ground); text-align: left; }
+.label-read-text b { font-size: 46px; font-weight: 700; letter-spacing: 1px; line-height: 1; }
+.label-read-go { width: 144px; height: 144px; display: grid; place-items: center; background: var(--signal); color: var(--on-signal); font-size: 72px; font-weight: 300; line-height: 1; }
+.label-read:hover .label-read-go { background: var(--ink); color: var(--signal); }
+
+.label-foot { position: absolute; left: 0; right: 0; bottom: 0; height: var(--label-foot); background: var(--ground); border-top: 3px solid var(--ink); display: flex; align-items: center; padding: 0 64px; }
+.label-sheet:not([data-page="archive"]) .label-foot { transform: translateY(100%); }
+.label-foot-count { display: flex; align-items: flex-end; min-width: 110px; }
+.label-foot-count .label-figure { --px: 112px; }
+.label-foot-total { margin: 0 0 0 14px; font-family: var(--display); font-size: 40px; font-weight: 700; line-height: .72; opacity: .55; white-space: nowrap; }
+.label-ruler { display: flex; gap: 10px; margin-left: 56px; }
+.label-ruler button { width: 72px; height: 72px; display: grid; place-items: center; box-shadow: inset 0 0 0 3px var(--ink); font-family: var(--display); font-size: 30px; font-weight: 700; }
+.label-ruler button[aria-pressed="true"] { --cut: 14px; box-shadow: none; background: var(--ink); color: var(--ground); }
+.label-ruler button[hidden] { display: none; }
+.label-ruler button:not([aria-pressed="true"]):hover { background: var(--faint); }
+.label-keys { display: flex; align-items: center; margin-left: 56px; font-size: 18px; font-weight: 600; white-space: nowrap; }
+.label-key { min-width: 40px; height: 40px; padding: 0 9px; display: grid; place-items: center; box-shadow: inset 0 0 0 2px var(--ink); font-size: 19px; font-weight: 700; }
+.label-key + .label-key { margin-left: 10px; }
+.label-key:hover { background: var(--ink); color: var(--ground); }
+.label-keys span { margin: 0 34px 0 12px; }
+.label-keys span:last-child { margin-right: 0; }
+.label-powered { margin-left: auto; display: flex; align-items: center; font-size: 22px; letter-spacing: .4px; white-space: nowrap; }
+.label-powered b { margin-left: .3em; }
+.label-powered i { width: 44px; height: 9px; margin-left: 14px; background: var(--ink); }
+
+/* The portals fold out of the top strip's 04, under it at the right. */
+#stage[data-design="label"] .portal-drawer { left: auto; right: 64px; top: calc(var(--label-head) + 24px); z-index: 9; }
+#stage[data-design="label"] .portal-card { background: var(--ground); border: 0; box-shadow: inset 0 0 0 3px var(--ink); transform: translate(calc((2 - var(--i)) * 216px), -24px) scale(.88); }
+#stage[data-design="label"].portals-open .portal-card { transform: none; }
+#stage[data-design="label"].portals-open .portal-card:is(:hover, :focus-visible) { transform: translateY(-8px); background: var(--ink); color: var(--ground); border-color: transparent; }
+#stage[data-design="label"] .portal-card::after { background: var(--signal); height: 6px; }
+
+/* The leader: from the note to the archive's printed label, over everything on the sheet. */
+.label-leader { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.label-leader polyline { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; }
+.label-leader .label-node-ink { fill: var(--ink); }
+.label-leader .label-node { fill: var(--signal); }
+.label-sheet:not([data-page="archive"]) .label-leader { visibility: hidden; }
+
+/* Arrival: each piece rises a little into place while it resolves; nothing pops (LabelIn). */
+@keyframes label-arrive { from { opacity: 0; translate: 0 18px; } }
+@keyframes label-reveal { from { clip-path: inset(0 0 100% 0); } }
+@keyframes label-drop { from { translate: 0 calc(-1 * var(--label-head)); } }
+@keyframes label-rise { from { translate: 0 var(--label-foot); } }
+@keyframes label-grow { from { scale: 1 0; } }
+@keyframes label-slide { from { translate: 480px 0; } }
+@keyframes label-fade { from { opacity: 0; } }
+.label-sheet[data-arriving] [data-arrive] { animation: label-arrive .5s var(--settle) calc(var(--d) * 1s - .5s) both; }
+.label-sheet[data-arriving] .label-field-reveal { animation: label-reveal .7s var(--settle) .45s both; }
+.label-sheet[data-arriving] .label-top { animation: label-drop .6s var(--settle) .2s both; }
+.label-sheet[data-arriving] .label-foot { animation: label-rise .6s var(--settle) .3s both; }
+.label-sheet[data-arriving] .label-spine { transform-origin: 50% 100%; animation: label-grow .6s var(--settle) .65s both; }
+.label-sheet[data-arriving] .label-read { animation: label-slide .6s var(--settle) 1.5s both; }
+.label-sheet[data-arriving] .label-zone { animation: label-fade .4s var(--settle) 1s both; }
+.label-sheet[data-arriving] .label-field-figure { animation: label-fade .3s var(--settle) .7s both; }
+#stage.reduce-motion .label-sheet *, #stage.reduce-motion .label-sheet { animation: none !important; transition: none !important; }

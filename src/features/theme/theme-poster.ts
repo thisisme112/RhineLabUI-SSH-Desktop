@@ -33,9 +33,8 @@ const rgba = (c: Rgb, a: number) => `rgba(${c[0]},${c[1]},${c[2]},${clamp(a)})`;
 const LINES: Rgb[] = TRANSIT_LINES.map(hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)));
 const CHANGE_TIME = .6;
 /**
- * The label design's figures (Unreal RhineFont::Display, Barlow Condensed 800). Until
- * the web ships Barlow, a condensed system face stands in: Bahnschrift's condensed
- * instance on Windows, Roboto Condensed on Android.
+ * The label design's figures (Unreal RhineFont::Display, Barlow Condensed 800), which
+ * features/label/label.css ships; a condensed system face stands in until it loads.
  */
 const DISPLAY = `"Barlow Condensed", Bahnschrift, "Arial Narrow", "Roboto Condensed", sans-serif-condensed, sans-serif`;
 /** Its small figures and notes (RhineFont::Terminal): the terminal's JetBrains Mono, else the system mono. */

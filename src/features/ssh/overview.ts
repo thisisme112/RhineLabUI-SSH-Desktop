@@ -280,6 +280,12 @@ export class SshOverview {
   toggleCollapsed() {
     this.setCollapsed(!this.collapsed);
   }
+  /** The label design's 02 检索: the hosts page, open, with its search field focused. */
+  focusSearch() {
+    this.setCollapsed(false);
+    this.showPage("hosts");
+    requestAnimationFrame(() => this.root.querySelector<HTMLInputElement>(".ssh-overview-search input")?.focus({ preventScroll: true }));
+  }
   get isCollapsed() {
     return this.collapsed;
   }

@@ -32,8 +32,11 @@ export const desktopWindowParked = () => parked;
  * Linux desktop builds keep their native caption, and web builds have none.
  */
 const WINDOW_CONTROLS_WIDTH = 138;
-if (isDesktop && window.rhineDesktop?.platform === "win32")
+const frameless = isDesktop && window.rhineDesktop?.platform === "win32";
+if (frameless)
   document.documentElement.style.setProperty(
     "--window-controls-width",
     `${WINDOW_CONTROLS_WIDTH}px`,
   );
+/** The caption buttons' height in DIPs (`CHROME_HEIGHT` in electron/main.cjs); 0 where the window keeps a native caption. */
+export const windowControlsHeight = () => frameless ? 40 : 0;

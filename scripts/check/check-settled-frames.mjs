@@ -122,7 +122,9 @@ async function theme(name, debugPort) {
     await send("Emulation.setFocusEmulationEnabled", { enabled: true });
     await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false });
     await send("Page.addScriptToEvaluateOnNewDocument", {
-      source: `localStorage.setItem('rhine-settings', JSON.stringify({sound:false,music:false,reduced:false,colorTheme:'${name}'})); localStorage.setItem('rhine-ssh-overview-collapsed','1');`,
+      // The label design's clock sits in its top strip: it ticks between the two pictures, so it is not compared.
+      source: `localStorage.setItem('rhine-settings', JSON.stringify({sound:false,music:false,reduced:false,colorTheme:'${name}'})); localStorage.setItem('rhine-ssh-overview-collapsed','1');
+        document.addEventListener('DOMContentLoaded', () => document.head.append(Object.assign(document.createElement('style'), { textContent: '.label-clock { visibility: hidden !important; }' })));`,
     });
     await send("Page.navigate", { url: `http://127.0.0.1:${port}/?scene=archive&frame-budget` });
     for (let i = 0; i < 300 && !(await evaluate("!!window.rhine?.stats().ready && window.rhine.stats().mode === 'archive'").catch(() => false)); i++) await sleep(200);

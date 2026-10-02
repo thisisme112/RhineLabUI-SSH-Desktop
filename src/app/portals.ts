@@ -93,6 +93,9 @@ export class SpatialPortals {
 
   get isPageOpen() { return this.page > 0; }
 
+  /** The label design's 04 空间入口 opens and folds the cards from the top strip. */
+  toggle() { this.setOpen(!this.open); }
+
   /** Esc: the page first, then the drawer. */
   escape() {
     if (this.page) { this.show(0); return true; }
