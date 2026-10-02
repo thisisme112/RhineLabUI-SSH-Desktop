@@ -140,6 +140,9 @@ export function paintTheme(amount: number) {
   targets.signal = rgb(labelSignal(current));
   const [darker, lighter] = luminance(targets.paper) < luminance(targets.ink) ? [targets.paper, targets.ink] : [targets.ink, targets.paper];
   targets["on-signal"] = luminance(targets.signal) > .2 ? darker : lighter;
+  // The signal where it is printed on ink, if it reads there (3:1), else the ground (RhineLabel::SignalOn).
+  const contrast = (a: number[], b: number[]) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
+  targets["signal-on-ink"] = contrast(targets.signal, targets.ink) >= 3 ? targets.signal : targets.paper;
   for (const [name, target] of Object.entries(targets)) {
     const from = paletteFrom?.[name];
     painted[name] = target.map((value, i) => Math.round(from ? from[i] + (value - from[i]) * mix : value));

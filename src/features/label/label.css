@@ -10,7 +10,8 @@
  * corner cut at 45 degrees; 3 px and 2 px ink rules. Stage units throughout:
  * the stage is 1080 tall, so these numbers are the Unreal ones.
  */
-#stage[data-design="label"] {
+/* On the viewport, which holds both the stage and the overview sheet: one set of lengths for both. */
+#viewport[data-design="label"] {
   --ground: var(--theme-paper);
   --ink: var(--theme-ink);
   --signal: var(--theme-signal);
@@ -20,10 +21,9 @@
   --mono: "JetBrains Mono", "MiSans", Consolas, monospace;
   --settle: cubic-bezier(.16, 1, .3, 1);
   --glide: cubic-bezier(.65, 0, .35, 1);
-  /* Windows keeps its caption buttons over the top of the window; label-sheet.ts sets how much in stage units. */
-  --label-inset: 0px;
+  /* Windows keeps its caption buttons over the top of the window; label-sheet.ts sets how much in stage units, inline. */
   --label-top: 72px;
-  --label-head: calc(var(--label-inset) + var(--label-top));
+  --label-head: calc(var(--label-inset, 0px) + var(--label-top));
   --label-foot: 136px;
   --label-field: 704px;
   --label-spine: 64px;
@@ -68,7 +68,7 @@
 .label-top-ground { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .label-top-ground .label-ground { fill: var(--ground); }
 .label-top-ground .label-rule { fill: var(--ink); }
-.label-top-row { position: absolute; left: 0; right: 0; top: var(--label-inset); height: var(--label-top); display: flex; align-items: center; padding-left: 64px; }
+.label-top-row { position: absolute; left: 0; right: 0; top: var(--label-inset, 0px); height: var(--label-top); display: flex; align-items: center; padding-left: 64px; }
 .label-brand { font-size: 24px; font-weight: 700; letter-spacing: .5px; white-space: nowrap; }
 .label-brand span { margin-left: 12px; font-weight: 300; letter-spacing: 2.9px; }
 .label-system { margin-left: 40px; opacity: .6; }
@@ -147,6 +147,14 @@
 .label-powered { margin-left: auto; display: flex; align-items: center; font-size: 22px; letter-spacing: .4px; white-space: nowrap; }
 .label-powered b { margin-left: .3em; }
 .label-powered i { width: 44px; height: 9px; margin-left: 14px; background: var(--ink); }
+
+/* ── The overview's ground (the sheet itself is label-overview.css) ────────── */
+.label-overview { position: absolute; inset: 0; opacity: 0; visibility: hidden; transform: translateY(28px); transition: opacity .25s, transform .25s, visibility 0s .25s; }
+.label-sheet[data-page="overview"] .label-overview { opacity: 1; visibility: visible; transform: none; transition: opacity .5s var(--settle), transform .5s var(--settle); }
+.label-overview-ground { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.label-overview-ground .label-ground { fill: var(--ground); }
+.label-overview-ground .label-rule { fill: var(--ink); }
+.label-overview .label-overview-fig { left: 512px; top: calc(var(--label-head) + 32px); padding: 12px 20px; font-size: 14px; }
 
 /* The portals fold out of the top strip's 04, under it at the right. */
 #stage[data-design="label"] .portal-drawer { left: auto; right: 64px; top: calc(var(--label-head) + 24px); z-index: 9; }

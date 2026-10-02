@@ -17,6 +17,10 @@
 .ssh-overview [hidden] {
   display: none;
 }
+/* The label design's parts (features/label/label-overview.css) are not in the classic sheet. */
+.ssh-overview :is(.ssh-overview-side, .ssh-overview-add-block, .ssh-overview-search kbd, .ssh-overview-columns > span:nth-child(-n+2), .ssh-overview-host-no, .ssh-overview-host-sigil, .ssh-overview-host-meters, .ssh-overview-host-go) {
+  display: none;
+}
 .ssh-overview-glass {
   width: min(1320px, 74vw);
   height: min(780px, 76vh);

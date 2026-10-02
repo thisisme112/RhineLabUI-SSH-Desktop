@@ -1,0 +1,171 @@
+/*
+ * 主机总览 as a label (the Unreal build's RhineLabelOverview.cpp): the page is a
+ * timetable of hosts. The host count is its one giant figure; a window above the
+ * table looks onto the archive, where the host under the pointer rises out of its
+ * row. The ground round the window is drawn by label-sheet.ts in the stage, so the
+ * raised archive can cut it; this sheet only carries type and controls.
+ * Stage units: the sheet is scaled like the stage.
+ */
+#viewport[data-design="label"] .ssh-overview {
+  --side: 512px;
+  --margin: 64px;
+  --page-top: var(--label-head);
+  --table-top: calc(var(--page-top) + 232px);
+  inset: 0 auto auto 0;
+  width: calc(100% / var(--scale, 1));
+  height: calc(100% / var(--scale, 1));
+  transform: scale(var(--scale, 1));
+  transform-origin: 0 0;
+  display: block;
+  padding: 0;
+  color: var(--ink);
+  font-family: "MiSans", "Microsoft YaHei", system-ui, sans-serif;
+}
+#viewport[data-design="label"] .ssh-overview-glass {
+  position: absolute; inset: 0; width: auto; height: auto; display: block;
+  background: none; backdrop-filter: none; border: 0; box-shadow: none;
+  pointer-events: none;
+  transform: none !important; opacity: 1; visibility: visible;
+  transition: opacity .5s var(--settle), transform .5s var(--settle);
+}
+/* The page comes up as one sheet: a short rise while it resolves. */
+#viewport[data-design="label"] .ssh-overview[data-collapsed="true"] .ssh-overview-glass {
+  transform: translateY(28px) !important; opacity: 0; visibility: hidden;
+  transition: opacity .25s, transform .25s, visibility 0s .25s;
+}
+/* The side column's 添加主机 replaces the dashed row under the list. */
+#viewport[data-design="label"] .ssh-overview-add { display: none !important; }
+#viewport[data-design="label"] .ssh-overview-glass::before,
+#viewport[data-design="label"] :is(.ssh-overview-heading, .ssh-overview-summary, .ssh-overview-add, .ssh-overview-host-name b, .ssh-overview-host-state i, .ssh-overview-host-load, .ssh-overview-search > span:nth-child(3), .ssh-overview-nav > button:not([data-overview-page])) { display: none; }
+
+/* ── The side column: how many hosts ─────────────────────────────────────── */
+#viewport[data-design="label"] .ssh-overview-side { display: block; position: absolute; left: 0; top: var(--page-top); width: var(--side); bottom: 0; }
+#viewport[data-design="label"] .ssh-overview-side > .label-note { position: absolute; left: 64px; top: 32px; }
+#viewport[data-design="label"] .ssh-overview-count { position: absolute; left: 58px; top: 70px; --px: 375px; --slit: var(--ground); }
+#viewport[data-design="label"] .ssh-overview-group-count { position: absolute; left: 64px; top: 372px; font-size: 30px; font-weight: 700; letter-spacing: .6px; white-space: nowrap; }
+#viewport[data-design="label"] .ssh-overview-stats { position: absolute; left: 64px; top: 440px; width: 384px; margin: 0; border-bottom: 3px solid var(--ink); }
+#viewport[data-design="label"] .ssh-overview-stats div { height: 79px; border-top: 3px solid var(--ink); display: flex; align-items: center; }
+#viewport[data-design="label"] .ssh-overview-stats dt { width: 110px; --px: 64px; }
+#viewport[data-design="label"] .ssh-overview-stats dd { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: .6px; }
+#viewport[data-design="label"] .ssh-overview-add-block {
+  display: flex; position: absolute; left: 64px; bottom: 64px; width: 384px; height: 112px; padding: 0 28px;
+  align-items: center; justify-content: space-between; pointer-events: auto;
+  --cut: 28px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  background: var(--signal); color: var(--on-signal); font-size: 32px; font-weight: 700; letter-spacing: 1px;
+}
+#viewport[data-design="label"] .ssh-overview-add-block span { font-size: 44px; font-weight: 300; }
+#viewport[data-design="label"] .ssh-overview-add-block:hover { background: var(--ink); color: var(--signal); }
+/* Live sessions, when there are any, under the counts. */
+#viewport[data-design="label"] .ssh-session-tabs { position: absolute; left: 64px; top: calc(var(--page-top) + 696px); width: 384px; max-height: 72px; overflow: auto; pointer-events: auto; margin: 0; padding: 0; }
+
+/* ── The table under the window ────────────────────────────────────────────── */
+#viewport[data-design="label"] .ssh-overview-nav {
+  position: absolute; left: var(--side); right: var(--margin); top: calc(var(--table-top) + 22px); height: 56px;
+  display: flex; gap: 0; padding: 0; border: 0; border-bottom: 3px solid var(--ink); box-sizing: content-box;
+  pointer-events: auto; counter-reset: tab;
+}
+#viewport[data-design="label"] .ssh-overview-nav::before { content: ""; position: absolute; left: 0; right: 0; top: -22px; height: 3px; background: var(--ink); }
+#viewport[data-design="label"] .ssh-overview-nav button {
+  counter-increment: tab; height: 56px; padding: 0 24px; margin: 0; border: 0; display: flex; align-items: center; gap: 12px;
+  font-size: 22px; font-weight: 600; letter-spacing: .4px; color: var(--ink); white-space: nowrap;
+}
+#viewport[data-design="label"] .ssh-overview-nav button::before { content: counter(tab, decimal-leading-zero); font-family: var(--display); font-size: 23px; font-weight: 700; opacity: .55; }
+#viewport[data-design="label"] .ssh-overview-nav button[aria-current="page"] {
+  --cut: 16px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  background: var(--ink); color: var(--ground);
+}
+#viewport[data-design="label"] .ssh-overview-nav button[aria-current="page"]::before { opacity: 1; color: var(--theme-signal-on-ink); }
+#viewport[data-design="label"] .ssh-overview-nav button:not([aria-current="page"]):hover { background: rgba(var(--theme-ink-rgb), .07); }
+#viewport[data-design="label"] .ssh-overview-content {
+  position: absolute; left: var(--side); right: var(--margin); top: calc(var(--table-top) + 81px); bottom: calc(var(--margin) + 44px);
+  display: flex; pointer-events: auto;
+}
+#viewport[data-design="label"] .ssh-overview-search { height: 64px; padding: 0; gap: 0; border-bottom: 3px solid var(--ink); box-sizing: content-box; flex: none; }
+#viewport[data-design="label"] .ssh-overview-search > span:first-child { margin-right: 18px; font-size: 30px; }
+#viewport[data-design="label"] .ssh-overview-search input { font-size: 24px; padding: 8px 0; border: 0; color: var(--ink); outline: none; }
+#viewport[data-design="label"] .ssh-overview-search input::placeholder { color: rgba(var(--theme-ink-rgb), .45); }
+#viewport[data-design="label"] .ssh-overview-search kbd { display: grid; place-items: center; width: 40px; height: 40px; box-shadow: inset 0 0 0 2px var(--ink); font: 700 19px "MiSans", sans-serif; }
+#viewport[data-design="label"] .ssh-overview-groups { flex: none; height: 36px; padding: 8px 0 0; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
+#viewport[data-design="label"] .ssh-overview-groups button { min-height: 36px; padding: 0 14px; border: 0; box-shadow: inset 0 0 0 2px var(--ink); font-size: 16px; font-weight: 700; letter-spacing: .6px; color: var(--ink); }
+#viewport[data-design="label"] .ssh-overview-groups button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+#viewport[data-design="label"] .ssh-overview-group-chip > button:first-child { box-shadow: inset 2px 2px 0 var(--ink), inset 0 -2px 0 var(--ink); }
+#viewport[data-design="label"] .ssh-overview-group-chip > button:last-child { box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); }
+#viewport[data-design="label"] .ssh-overview-columns { position: relative; display: block; flex: none; height: 24px; margin-top: 8px; padding: 0; }
+#viewport[data-design="label"] .ssh-overview-columns span { position: absolute; top: 4px; display: block; font-family: var(--mono); font-size: 13px; letter-spacing: .16em; color: rgba(var(--theme-ink-rgb), .6); white-space: nowrap; }
+#viewport[data-design="label"] .ssh-overview-columns span:nth-child(1) { left: 20px; }
+#viewport[data-design="label"] .ssh-overview-columns span:nth-child(2) { left: 150px; }
+#viewport[data-design="label"] .ssh-overview-columns span:nth-child(3) { left: 214px; }
+#viewport[data-design="label"] .ssh-overview-columns span:nth-child(4) { left: 47%; }
+#viewport[data-design="label"] .ssh-overview-columns span:nth-child(5) { left: 62%; }
+#viewport[data-design="label"] .ssh-overview-scroll { padding: 0 0 12px; scrollbar-color: var(--ink) transparent; }
+#viewport[data-design="label"] .ssh-overview-group { height: 34px; margin: 0; padding: 0 0 6px 20px; box-sizing: border-box; align-items: flex-end; font-size: 15px; font-weight: 700; letter-spacing: 1.2px; color: rgba(var(--theme-ink-rgb), .6); }
+#viewport[data-design="label"] .ssh-overview-group::after { display: none; }
+#viewport[data-design="label"] .ssh-overview-group small { font: inherit; color: inherit; }
+#viewport[data-design="label"] .ssh-overview-group small::before { content: "· "; }
+
+/* A host row: 84 tall, ruled in ink; the raised host's row printed in reverse, the block wiping in from the left. */
+#viewport[data-design="label"] .ssh-overview-host { height: 85px; border-top: 1px solid var(--ink); content-visibility: visible; opacity: 1 !important; isolation: isolate; }
+#viewport[data-design="label"] .ssh-overview-host::before { inset: 0; width: auto; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; z-index: -1; transition: transform .5s var(--settle); }
+#viewport[data-design="label"] .ssh-overview-host[data-focus="true"]::before { transform: scaleX(1); }
+#viewport[data-design="label"] .ssh-overview-host:is(:hover, [data-preview="true"]):not([data-focus="true"]) { background: rgba(var(--theme-ink-rgb), .07); }
+#viewport[data-design="label"] .ssh-overview-host[data-focus="true"] { color: var(--ground); }
+#viewport[data-design="label"] .ssh-overview .ssh-overview-connect { position: relative; display: block; height: 84px; min-height: 0; padding: 0; color: inherit; }
+#viewport[data-design="label"] .ssh-overview-host-no { display: block; position: absolute; left: 20px; top: 22px; --px: 56px; --slit: var(--ground); transition: color .3s; }
+#viewport[data-design="label"] .ssh-overview-host[data-focus="true"] .ssh-overview-host-no { --slit: var(--ink); }
+#viewport[data-design="label"] .ssh-overview-host-sigil { display: block; position: absolute; left: 150px; top: 22px; width: 40px; height: 40px; }
+#viewport[data-design="label"] .ssh-overview-host-name { position: absolute; left: 214px; top: 12px; right: 55%; display: block; }
+#viewport[data-design="label"] .ssh-overview-host-name > span { display: block; transition: transform .3s var(--settle); }
+#viewport[data-design="label"] .ssh-overview-host:is(:hover, [data-preview="true"]) .ssh-overview-host-name > span { transform: translateX(10px); }
+#viewport[data-design="label"] .ssh-overview-host-name strong { font-size: 27px; font-weight: 700; letter-spacing: .3px; line-height: 36px; color: inherit; }
+#viewport[data-design="label"] .ssh-overview-host-name small { margin-top: 2px; font-family: var(--mono); font-size: 15px; color: inherit; opacity: .72; }
+#viewport[data-design="label"] .ssh-overview-host-state {
+  position: absolute; left: 47%; top: 23px; height: 38px; padding: 0 14px; display: flex; align-items: center;
+  box-shadow: inset 0 0 0 3px currentColor; color: inherit; font-size: 17px; font-weight: 700; letter-spacing: 1px;
+}
+#viewport[data-design="label"] .ssh-overview-host[data-connected="true"] .ssh-overview-host-state {
+  --cut: 10px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+  box-shadow: none; background: var(--signal); color: var(--on-signal);
+}
+#viewport[data-design="label"] .ssh-overview-host[data-pending="true"] .ssh-overview-host-state { box-shadow: none; background: var(--ink); color: var(--ground); }
+#viewport[data-design="label"] .ssh-overview-host[data-focus="true"][data-pending="true"] .ssh-overview-host-state { background: var(--ground); color: var(--ink); }
+#viewport[data-design="label"] .ssh-overview-host-meters { display: grid; gap: 7px; position: absolute; left: 62%; top: 18px; opacity: .45; }
+#viewport[data-design="label"] .ssh-overview-host[data-sampled="true"] .ssh-overview-host-meters { opacity: 1; }
+#viewport[data-design="label"] .ssh-overview-host-meters > span { display: flex; align-items: center; height: 11px; }
+#viewport[data-design="label"] .ssh-overview-host-meters i { width: 40px; font-style: normal; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+#viewport[data-design="label"] .ssh-overview-host-meters b { width: 48px; margin-left: 12px; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+/* Twenty cells (SRhineCells): an unlit cell keeps a faint tint, `--lit` of them are solid. */
+.label-cells { position: relative; display: block; width: 237px; height: 8px; }
+.label-cells::before, .label-cells::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; background: repeating-linear-gradient(90deg, currentColor 0 9px, transparent 9px 12px); }
+.label-cells::before { right: 0; opacity: .18; }
+.label-cells::after { width: calc(var(--lit, 0) * 12px); }
+#viewport[data-design="label"] .ssh-overview-host-go {
+  display: grid; place-items: center; position: absolute; right: 16px; top: 16px; width: 52px; height: 52px;
+  box-shadow: inset 0 0 0 3px currentColor; font-size: 28px;
+}
+#viewport[data-design="label"] .ssh-overview-host[data-focus="true"] .ssh-overview-host-go {
+  --cut: 12px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  box-shadow: none; background: var(--signal); color: var(--on-signal);
+}
+/* The row's actions come up under the pointer, on a block of the row's own ground. */
+#viewport[data-design="label"] .ssh-overview-host-actions {
+  right: 92px; top: 23px; height: 38px; padding: 0; gap: 0; transform: none;
+  background: var(--ground); border: 0; box-shadow: none; color: var(--ink);
+}
+#viewport[data-design="label"] .ssh-overview-host[data-focus="true"] .ssh-overview-host-actions { background: var(--ink); color: var(--ground); }
+#viewport[data-design="label"] .ssh-overview-host:is(:hover, :focus-within) .ssh-overview-host-actions { transform: none; }
+#viewport[data-design="label"] .ssh-overview-host:not(:hover, :focus-within) .ssh-overview-host-actions { opacity: 0; pointer-events: none; }
+#viewport[data-design="label"] .ssh-overview-host-actions button { min-height: 38px; padding: 0 10px; border: 0; background: none; color: inherit; font-size: 16px; font-weight: 700; letter-spacing: .6px; }
+#viewport[data-design="label"] .ssh-overview-host-actions button:hover { text-decoration: underline 2px; text-underline-offset: 6px; }
+#viewport[data-design="label"] .ssh-overview-host-actions :is(button[data-armed], .danger:hover) { color: #d9603b; }
+#viewport[data-design="label"] .ssh-overview-host-actions > i { display: none; }
+
+#viewport[data-design="label"] .ssh-overview-empty { padding: 28px 20px; font-size: 20px; font-weight: 600; color: var(--ink); }
+#viewport[data-design="label"] .ssh-overview-secondary { flex: 1; min-height: 0; overflow: auto; padding-top: 16px; }
+
+#viewport[data-design="label"] .ssh-overview-footer {
+  position: absolute; left: var(--side); right: var(--margin); bottom: var(--margin); height: 44px; box-sizing: border-box;
+  display: flex; align-items: flex-end; justify-content: space-between; padding: 0; margin: 0;
+  border-top: 3px solid var(--ink); background: none; pointer-events: auto; color: var(--ink);
+}
+#viewport[data-design="label"] .ssh-overview-footer > span:first-child { font-family: var(--mono); font-size: 14px; letter-spacing: .16em; }
+#viewport[data-design="label"] .ssh-overview-footer .ssh-overview-selection { font-size: 15px; font-weight: 600; letter-spacing: .8px; color: var(--ink); }

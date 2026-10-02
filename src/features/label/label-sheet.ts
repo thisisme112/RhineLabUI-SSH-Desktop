@@ -1,4 +1,5 @@
 import "./label.css";
+import "./label-overview.css";
 import { setAttr, setData, setStyle } from "../../shared/dom-write";
 import {
   BAND, DECODE, FIELD, FOOT, SPINE, TOP,
@@ -113,6 +114,10 @@ export class LabelSheet {
           <div class="label-powered" ${arrive(2.0)}>POWERED BY <b>RHINE LAB</b><i></i></div>
         </footer>
       </div>
+      <div class="label-overview" aria-hidden="true">
+        <svg class="label-overview-ground"><defs><clipPath id="label-overview-hole"><path clip-rule="evenodd"/></clipPath></defs><g clip-path="url(#label-overview-hole)"><path class="label-ground" data-overview="around"/><path class="label-rule" data-overview="rule"/></g><path class="label-ground" data-overview="table"/></svg>
+        <span class="label-fig label-note label-overview-fig">FIG. 02 — 货架 · 悬停一行，它的档案升起</span>
+      </div>
       <header class="label-top">
         <svg class="label-top-ground" aria-hidden="true"><defs><clipPath id="label-top-hole"><path clip-rule="evenodd"/></clipPath></defs><g clip-path="url(#label-top-hole)"><path class="label-ground"/><path class="label-rule"/></g></svg>
         <div class="label-top-row">
@@ -134,7 +139,8 @@ export class LabelSheet {
       state: q(".label-chip[data-solid]"), detail: q(".label-chip:not([data-solid])"), sigil: q(".label-field-sigil"), slashes: q(".label-field-slashes"),
       spine: q(".label-spine-text"), zoneFigure: q(".label-selected-zone"), count: q('[data-figure="count"]'), total: q(".label-foot-total"),
       primary: q('[data-label-action="primary"]'), clock: q(".label-clock"), topGround: q(".label-top-ground"), zone: q(".label-zone"),
-      topHole: q("#label-top-hole path"), zoneHole: q("#label-zone-hole path"), leader: q(".label-leader"),
+      topHole: q("#label-top-hole path"), zoneHole: q("#label-zone-hole path"), overviewHole: q("#label-overview-hole path"),
+      overviewGround: q(".label-overview-ground"), leader: q(".label-leader"),
       leaderLine: q(".label-leader polyline"), nodeInk: q(".label-node-ink"), node: q(".label-node"),
     };
     this.ruler = [...this.root.querySelectorAll<HTMLButtonElement>(".label-ruler button")];
@@ -248,6 +254,7 @@ export class LabelSheet {
       this.hull = hole;
       const everything = "M-99999,-99999H99999V99999H-99999Z";
       this.els.topHole.setAttribute("d", everything + hole);
+      this.els.overviewHole.setAttribute("d", everything + hole);
       this.els.zoneHole.setAttribute("d", everything + outlinePath(hull, FIELD + SPINE, head));
     }
     const pin = frame.page === "archive" ? frame.probe?.pin : undefined;
@@ -284,8 +291,8 @@ export class LabelSheet {
   private layout(width: number, inset: number) {
     this.width = width;
     this.inset = inset;
-    // On the stage, so every length derived from it there (the strip, the portals under it) agrees.
-    setStyle(this.stage, "--label-inset", `${inset}px`);
+    // On the viewport, so every length derived from it agrees: the strip, the portals, the overview sheet.
+    setStyle(this.stage.parentElement ?? this.stage, "--label-inset", `${inset}px`);
     this.fitFigures();
     const head = this.head(), { width: w, height: h } = this.windowSize(width);
     const top = this.els.topGround as SVGElement;
@@ -313,6 +320,14 @@ export class LabelSheet {
     }
     set("ticks", ticks);
     zoneSvg.querySelector('[data-zone="marks"]')!.innerHTML = marks;
+    // The overview's ground (RhineLabelOverview.cpp): the side column, the band above the shelf's window
+    // with the window's top rule, and the right margin give way to the raised archive; the table does not.
+    const overview = this.els.overviewGround as SVGElement, side = 512, margin = 64, shelf = head + 232;
+    overview.setAttribute("viewBox", `0 0 ${width} 1080`);
+    const draw = (key: string, d: string) => overview.querySelector(`[data-overview="${key}"]`)!.setAttribute("d", d);
+    draw("around", `M0,${head}H${side}V1080H0Z M${side},${head}H${width - margin}V${head + 29}H${side}Z M${width - margin},${head}H${width}V${shelf}H${width - margin}Z`);
+    draw("rule", `M${side},${head + 29}H${width - margin}V${head + 32}H${side}Z`);
+    draw("table", `M${side},${shelf}H${width}V1080H${side}Z`);
     this.els.slashes.innerHTML = slashes(FIELD - 56 - 150);
     this.hull = "\u0000";
     this.pin = "";

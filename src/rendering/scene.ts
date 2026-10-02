@@ -15,8 +15,9 @@ const ALWAYS_DRAW = typeof location !== "undefined" && new URLSearchParams(locat
 /** How far the label sheet moves the array on the stage, right and down (Unreal LabelShift). */
 const LABEL_SHIFT = { x: 640, y: 30 };
 /** The overview's shelf: how much farther the camera stands, and where the raised archive's middle sits
- *  (right of the window's centre, above the stage's centre) (Unreal LabelShelf). */
-const LABEL_SHELF = { zoom: 2.2, x: -170, y: 250 };
+ *  (right of the window's centre, above the stage's centre) (Unreal LabelShelf 2.2, -170, 250). The web's
+ *  model is aimed lower on the card than Unreal's, so it sits 100 higher for its top to cross the frame. */
+const LABEL_SHELF = { zoom: 2.2, x: -170, y: 350 };
 import { themeMaterial, themeEnvironment, setFlashColor, setSceneThemes, sceneThemes, themeDarkness } from "../features/theme/theme-material";
 import { RhythmMotion, rhythmDisplacement, quietBands, type MusicBands, type RhythmStyle } from "../features/archives/archive-play-motion";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -369,12 +370,16 @@ export class ArchiveScene {
   private labelLayout: "home" | "shelf" | "" = "";
   /** The window caption's height over the stage, in stage units: the shelf sits under it. */
   private labelInset = 0;
-  /** Where the selected file rests above its row: higher on the label home, where it stands up to the frame (Unreal HomeRestLift). */
+  /**
+   * Where the selected file rests above its row: higher on the label home, where it stands up to the
+   * frame (Unreal HomeRestLift), and clear of the rows behind the overview, where it stands in the
+   * shelf's window (Unreal adds a rise of 150 to the lift of 40 there).
+   */
   private restLift = .4;
   setLabelLayout(layout: "home" | "shelf" | "", inset = 0) {
     this.labelLayout = layout;
     this.labelInset = inset;
-    this.restLift = layout === "home" ? 1.12 : .4;
+    this.restLift = layout === "home" ? 1.12 : layout === "shelf" ? 1.9 : .4;
   }
   private probeVector = new THREE.Vector3();
   private probeCorners: [number, number][] = [];
@@ -2021,6 +2026,8 @@ export class ArchiveScene {
       const stageWidth = 1080 * this.container.clientWidth / Math.max(1, this.container.clientHeight);
       const away = (1 - detail) * (1 - this.sessionDeckFocus);
       if (this.labelLayout === "shelf") {
+        // Aimed at the raised archive's middle (Unreal aims the overview at the selected column), then moved into the window.
+        cameraAim.lerp(this.model.position.clone().add(new THREE.Vector3(0, 1.85, 0)), away);
         cameraSpan *= 1 + (LABEL_SHELF.zoom - 1) * away;
         cameraAim.addScaledVector(right, -cameraSpan * ((512 + stageWidth - 64) / 2 - stageWidth / 2 + LABEL_SHELF.x) / 1080 * away);
         cameraAim.addScaledVector(up, -cameraSpan * (LABEL_SHELF.y - this.labelInset) / 1080 * away);

@@ -1587,6 +1587,8 @@ function updateLabel(time: number) {
   }
   const { lane } = fileLocation(selected);
   const files = columnFiles(lane);
+  // The overview prints the raised host's row in reverse.
+  sshOverview?.setFocus(page === "overview" ? hostAtCard(selected)?.alias ?? null : null);
   labelSheet.update({
     page, time, reduced: prefs.reduced, width: stageWidth, inset,
     file: labelFile(),

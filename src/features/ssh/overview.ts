@@ -15,6 +15,8 @@ import type { SshHostEntry } from "./client";
 import { escapeHtml } from "../../shared/html";
 import { setClass, setInert } from "../../shared/dom-write";
 import { MAX_HOST_GROUPS, UNGROUPED } from "./host-groups";
+import { hostMark } from "../label/host-marks";
+import { sigilCells } from "../label/label-kit";
 import "./overview.css";
 
 type Page = "hosts" | "command" | "history" | "files" | "keys" | "editor" | "shortcut";
@@ -92,7 +94,9 @@ export class SshOverview {
     this.root.setAttribute("aria-label", "SSH 主机总览");
     this.root.innerHTML = `<div class="ssh-overview-glass"><header class="ssh-overview-heading"><div><span>RHINE LAB / NETWORK OPERATIONS</span><h1>主机总览<small>HOST OVERVIEW</small></h1></div><div class="ssh-overview-heading-actions"><button type="button" data-overview-action="collapse" aria-expanded="true" title="收起总览，让出三维档案阵列 · Ctrl+Shift+H"><span>收起</span> ⇱</button><button type="button" data-overview-action="settings">设置 ⚙</button></div></header>
       <div class="ssh-overview-summary" aria-live="off"></div><nav class="ssh-overview-nav" aria-label="主机管理"><button type="button" data-overview-page="hosts" aria-current="page">主机</button><button type="button" data-overview-page="command">命令</button><button type="button" data-overview-page="files">目录收藏</button><button type="button" data-overview-page="history">历史</button><button type="button" data-overview-page="keys">密钥库</button><button type="button" data-overview-action="add">添加主机 ＋</button></nav>
-      <div class="ssh-overview-content"><div class="ssh-overview-hosts"><div class="ssh-overview-search"><span>⌕</span><input type="search" aria-label="搜索主机总览" placeholder="检索名称、地址、用户或档案编号" autocomplete="off"><span>悬停定位 · 单击打开</span></div><div class="ssh-overview-groups" role="group" aria-label="主机分组"></div><div class="ssh-overview-columns"><span>HOST / 主机档案</span><span>SESSION / 连接状态</span><span>LOAD / 实时占用</span></div><div class="ssh-overview-scroll"><div class="ssh-overview-host-list"></div><button type="button" class="ssh-overview-add" data-overview-action="add"><b>＋</b><span>添加主机<small>填写地址和用户，保存后成为档案阵列里的一张档案</small></span></button></div><p class="ssh-overview-empty" role="status"></p></div><div class="ssh-overview-secondary" hidden></div></div>
+      <aside class="ssh-overview-side" aria-hidden="true"><span class="label-note">HOSTS / 主机</span><span class="ssh-overview-count label-figure" data-slit>00</span><strong class="ssh-overview-group-count"></strong><dl class="ssh-overview-stats"><div><dt class="label-figure">00</dt><dd>个连接</dd></div><div><dt class="label-figure">00</dt><dd>待认证</dd></div><div><dt class="label-figure">00</dt><dd>项传输</dd></div></dl></aside>
+      <button type="button" class="ssh-overview-add-block" data-overview-action="add">添加主机<span aria-hidden="true">＋</span></button>
+      <div class="ssh-overview-content"><div class="ssh-overview-hosts"><div class="ssh-overview-search"><span>⌕</span><input type="search" aria-label="搜索主机总览" placeholder="检索名称、地址、用户或档案编号" autocomplete="off"><span>悬停定位 · 单击打开</span><kbd aria-hidden="true">/</kbd></div><div class="ssh-overview-groups" role="group" aria-label="主机分组"></div><div class="ssh-overview-columns"><span>NO.</span><span>ID</span><span>HOST / 主机档案</span><span>SESSION / 连接状态</span><span>LOAD / 实时占用</span></div><div class="ssh-overview-scroll"><div class="ssh-overview-host-list"></div><button type="button" class="ssh-overview-add" data-overview-action="add"><b>＋</b><span>添加主机<small>填写地址和用户，保存后成为档案阵列里的一张档案</small></span></button></div><p class="ssh-overview-empty" role="status"></p></div><div class="ssh-overview-secondary" hidden></div></div>
       <footer class="ssh-overview-footer"><span>LOCAL ARCHIVES <i>●</i></span><span class="ssh-overview-selection">等待选择主机</span></footer></div>
       <button type="button" class="ssh-overview-restore" data-overview-action="collapse" aria-expanded="false" title="展开主机总览 · Ctrl+Shift+H"><span>▲ 主机总览</span><small></small><kbd>Ctrl+Shift+H</kbd></button>`;
     this.content = this.root.querySelector(".ssh-overview-content")!;
@@ -337,6 +341,14 @@ export class SshOverview {
       : null
     )?.focus({ preventScroll: true });
   }
+  private focused = "";
+  /** The host whose archive stands raised: the label design prints its row in reverse. */
+  setFocus(alias: string | null) {
+    if ((alias ?? "") === this.focused) return;
+    this.rows.get(this.focused)?.removeAttribute("data-focus");
+    this.focused = alias ?? "";
+    this.rows.get(this.focused)?.setAttribute("data-focus", "true");
+  }
   focusSession() {
     if (!this.root.inert)
       this.tabs.root
@@ -362,8 +374,24 @@ export class SshOverview {
     // with the sheet about how many hosts and connections are live.
     const hosts = this.cards.bound.length;
     const live = sessions.filter((s) => s.client.active).length;
+    const pending = sessions.filter((s) => s.client.pendingPrompt || s.services.state?.prompt).length;
+    const transfers = sessions.flatMap((s) => s.services.state?.jobs || []).filter((job) => ["queued", "scanning", "transferring", "committing", "conflict"].includes(job.state)).length;
     this.root.querySelector(".ssh-overview-summary")!.textContent =
-      `${String(hosts).padStart(2, "0")} 台主机　/　${live} 个连接　/　${sessions.filter((s) => s.client.pendingPrompt || s.services.state?.prompt).length} 待认证　/　${sessions.flatMap((s) => s.services.state?.jobs || []).filter((job) => ["queued", "scanning", "transferring", "committing", "conflict"].includes(job.state)).length} 项传输`;
+      `${String(hosts).padStart(2, "0")} 台主机　/　${live} 个连接　/　${pending} 待认证　/　${transfers} 项传输`;
+    // The label design's side column (RhineLabelOverview.cpp): the host count is the page's one giant figure.
+    const pad = (value: number) => String(value).padStart(2, "0");
+    const side = this.root.querySelector<HTMLElement>(".ssh-overview-side")!;
+    const texts: [string, string][] = [
+      [".ssh-overview-count", pad(hosts)],
+      [".ssh-overview-group-count", `台主机 · ${this.cards.groups.groups.length} 组`],
+      [".ssh-overview-stats div:nth-child(1) dt", pad(live)],
+      [".ssh-overview-stats div:nth-child(2) dt", pad(pending)],
+      [".ssh-overview-stats div:nth-child(3) dt", pad(transfers)],
+    ];
+    for (const [selector, value] of texts) {
+      const node = side.querySelector(selector)!;
+      if (node.textContent !== value) node.textContent = value;
+    }
     this.restore.querySelector("small")!.textContent =
       `${String(hosts).padStart(2, "0")} 台主机 · ${String(live).padStart(2, "0")} 个连接`;
     this.tabs.update(
@@ -619,8 +647,9 @@ export class SshOverview {
       row.className = "ssh-overview-host";
       row.dataset.hostAlias = host.alias;
       row.innerHTML =
-        '<button type="button" class="ssh-overview-connect" data-overview-action="connect"><span class="ssh-overview-host-name"><b></b><span><strong></strong><small></small></span></span><span class="ssh-overview-host-state"><i></i><em></em></span><span class="ssh-overview-host-load"></span></button><div class="ssh-overview-host-actions" role="group" aria-label="主机操作"><button type="button" class="primary" data-overview-action="reconnect" title="结束当前连接并重新连接"><span>连接</span> ↻</button><button type="button" data-overview-action="disconnect" title="断开连接，保留记录">断开</button><button type="button" data-overview-action="duplicate" title="复制为新主机（不含已保存的口令）">复制</button><button type="button" class="danger" data-overview-action="remove" title="从主机档案中移除（再点一次确认）">删除</button><i aria-hidden="true"></i><button type="button" data-overview-action="inspect" title="查看这台主机的详情">详情</button><button type="button" data-overview-action="new" title="另开一个会话">＋</button><button type="button" data-overview-action="edit">编辑</button></div>';
+        '<button type="button" class="ssh-overview-connect" data-overview-action="connect"><span class="ssh-overview-host-no label-figure" data-slit aria-hidden="true"></span><svg class="ssh-overview-host-sigil label-sigil" viewBox="0 0 5 5" aria-hidden="true"></svg><span class="ssh-overview-host-name"><b></b><span><strong></strong><small></small></span></span><span class="ssh-overview-host-state"><i></i><em></em></span><span class="ssh-overview-host-load"></span><span class="ssh-overview-host-meters" aria-hidden="true"><span><i>CPU</i><span class="label-cells"></span><b>—</b></span><span><i>MEM</i><span class="label-cells"></span><b>—</b></span><span><i>GPU</i><span class="label-cells"></span><b>—</b></span></span><span class="ssh-overview-host-go" aria-hidden="true">→</span></button><div class="ssh-overview-host-actions" role="group" aria-label="主机操作"><button type="button" class="primary" data-overview-action="reconnect" title="结束当前连接并重新连接"><span>连接</span> ↻</button><button type="button" data-overview-action="disconnect" title="断开连接，保留记录">断开</button><button type="button" data-overview-action="duplicate" title="复制为新主机（不含已保存的口令）">复制</button><button type="button" class="danger" data-overview-action="remove" title="从主机档案中移除（再点一次确认）">删除</button><i aria-hidden="true"></i><button type="button" data-overview-action="inspect" title="查看这台主机的详情">详情</button><button type="button" data-overview-action="new" title="另开一个会话">＋</button><button type="button" data-overview-action="edit">编辑</button></div>';
       this.rows.set(host.alias, row);
+      if (host.alias === this.focused) row.dataset.focus = "true";
     }
     const session = this.bank.forAlias(host.alias),
       state = session?.services.state;
@@ -655,8 +684,27 @@ export class SshOverview {
       ? Math.max(sample.cpu?.usage ?? 0, sample.memory?.total ? (sample.memory.used / sample.memory.total) * 100 : 0)
       : 0;
     row.style.setProperty("--load", String(Math.min(1, Math.max(0, usage / 100))));
+    // The label design's three meters (RhineLabelOverview.cpp Meter): twenty cells each, from the latest sample.
+    const share = (value: number | null | undefined) => value == null || !Number.isFinite(value) ? -1 : Math.min(1, Math.max(0, value));
+    const meters = [
+      share(sample?.cpu?.usage != null ? sample.cpu.usage / 100 : null),
+      share(sample?.memory?.total ? sample.memory.used / sample.memory.total : null),
+      share(gpuValues.length ? Math.max(...gpuValues) / 100 : null),
+    ];
+    row.querySelectorAll<HTMLElement>(".ssh-overview-host-meters > span").forEach((meter, i) => {
+      const value = meters[i], lit = value <= 0 ? "0" : String(Math.min(20, Math.max(1, Math.round(value * 20))));
+      if (meter.style.getPropertyValue("--lit") !== lit) meter.style.setProperty("--lit", lit);
+      const text = value < 0 ? "—" : `${Math.round(value * 100)}%`;
+      const label = meter.lastElementChild!;
+      if (label.textContent !== text) label.textContent = text;
+    });
+    row.dataset.sampled = String(Boolean(sample));
+    const id = records[this.cards.cardOf(host.alias)!].id;
+    const mark = hostMark(host.alias), sigil = row.querySelector<SVGElement>(".ssh-overview-host-sigil")!;
+    if (sigil.dataset.mark !== mark) { sigil.dataset.mark = mark; sigil.innerHTML = sigilCells(mark, undefined, 1); }
     const values = [
-      ["b", records[this.cards.cardOf(host.alias)!].id],
+      [".ssh-overview-host-no", id.slice(id.indexOf("-") + 1)],
+      ["b", id],
       ["strong", hostLabel(host)],
       ["small", hostSubtitle(host)],
       [".ssh-overview-host-state em", session ? sessionState(session) : "未连接"],
