@@ -6,7 +6,7 @@ import { ArchiveVisibility } from "./archive-visibility";
 import { disposeThreeTree } from "./three-resources";
 import { isAndroid } from "../platform/android/android";
 import { PaletteFlip, ThemeWave, type FlipSample } from "../features/theme/theme-motion";
-const NO_FLIP: FlipSample = { lift: 0, tilt: 0, flash: 0 };
+const NO_FLIP: FlipSample = { lift: 0, tilt: 0, flash: 0, swap: 0 };
 /** Below a thousandth of a pixel in scene units, radians or colour: a resting frame within it is not redrawn. */
 const PICTURE_EPSILON = 1e-5;
 /** ?always-draw turns the settled-frame skip off, to compare against or rule it out. */
