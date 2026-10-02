@@ -53,9 +53,11 @@ export default defineConfig(({ mode, command }) => ({
       configResolved(config: { root: string; build: { outDir: string } }) { outDir = resolve(config.root, config.build.outDir); },
       closeBundle() { for (const model of models) rmSync(resolve(outDir, model.key), { force: true }); },
     };
-  })()] : []), ...(["desktop", "android"].includes(mode) ? [{
+  })()] : []), ...(mode !== "wallpaper" ? [{
+    // The web build carries the SSH demo, so it bundles xterm and CodeMirror too; the
+    // wallpaper does not. Beside public/licenses, so the offline cache keeps it as well.
     name: "ssh-ui-licenses", apply: "build" as const,
-    buildStart() { this.emitFile({ type: "asset", fileName: "SSH-UI-NOTICES.txt", source: readFileSync("licenses/SSH-UI-NOTICES.txt", "utf8") }); },
+    buildStart() { this.emitFile({ type: "asset", fileName: "licenses/SSH-UI-NOTICES.txt", source: readFileSync("licenses/SSH-UI-NOTICES.txt", "utf8") }); },
   }] : []), ...(!["desktop", "android"].includes(mode) ? [{
     // Vite emits ?url assets while building the graph, before Rollup removes
     // the unused desktop import. Resolve this insert to an empty module first
