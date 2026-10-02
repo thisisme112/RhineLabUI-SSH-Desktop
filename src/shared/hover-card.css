@@ -105,3 +105,18 @@
 }
 .rhine-hover-card[data-motif="plates"] dt { color: #6a73a8; }
 .rhine-hover-card[data-motif="plates"] small { color: #d9477c; }
+
+/* Transit: solid, an ink hairline, a route bar in the series colour down the left edge with a station on it. */
+.rhine-hover-card[data-motif="transit"] { background: var(--theme-panel); border-color: var(--theme-ink); padding-left: 19px; }
+.rhine-hover-card[data-motif="transit"] .rhine-hover-mark { inset: 0 auto 0 0; width: 5px; background: var(--card-series); }
+.rhine-hover-card[data-motif="transit"] .rhine-hover-mark::after {
+  content: ""; position: absolute; top: 11px; left: -3px; box-sizing: border-box; width: 11px; height: 11px;
+  border: 2.5px solid var(--theme-ink); background: var(--theme-panel);
+}
+
+/* Slate: a row of sprocket holes along the top edge. Reagent and cryo keep the plain card. */
+.rhine-hover-card[data-motif="darkroom"] { padding-top: 15px; }
+.rhine-hover-card[data-motif="darkroom"] .rhine-hover-mark {
+  top: 3px; left: 8px; right: 8px; height: 5px;
+  background: repeating-linear-gradient(90deg, rgba(var(--theme-cyan-rgb), .6) 0 6px, transparent 6px 12px);
+}
