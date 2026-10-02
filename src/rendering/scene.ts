@@ -7,6 +7,10 @@ import { disposeThreeTree } from "./three-resources";
 import { isAndroid } from "../platform/android/android";
 import { PaletteFlip, ThemeWave, type FlipSample } from "../features/theme/theme-motion";
 const NO_FLIP: FlipSample = { lift: 0, tilt: 0, flash: 0 };
+/** Below a thousandth of a pixel in scene units, radians or colour: a resting frame within it is not redrawn. */
+const PICTURE_EPSILON = 1e-5;
+/** ?always-draw turns the settled-frame skip off, to compare against or rule it out. */
+const ALWAYS_DRAW = typeof location !== "undefined" && new URLSearchParams(location.search).has("always-draw");
 import { themeMaterial, themeEnvironment, setFlashColor } from "../features/theme/theme-material";
 import { RhythmMotion, rhythmDisplacement, quietBands, type MusicBands, type RhythmStyle } from "../features/archives/archive-play-motion";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -70,6 +74,9 @@ export interface SessionDeck {
   update(dt: number, time: number, reduced: boolean, opening: number, theme: number): void;
   snapshot(): { group: THREE.Group; update(opening: number): void; dispose(): void };
   dispose(): void;
+  /** Changes whenever the deck looks different without moving (its screen or its backlight),
+   *  so a settled scene knows it must draw again. */
+  readonly pictureRevision?: number;
 }
 
 export type SessionDeckState = "off" | "packed" | "open";
@@ -296,6 +303,12 @@ export class ArchiveScene {
   private coveredAt = 0;
   private redrawUntil = 0;
   private renderedFrames = 0;
+  /** Frames actually drawn; a settled frame keeps the previous picture instead (showsPicture). */
+  private composedFrames = 0;
+  /** The inputs and card matrices of the last drawn frame. */
+  private picture = new Float64Array(32);
+  private drawnMatrices = new Float32Array(0);
+  private pictureValid = false;
   private requestedDark = false;
   private archivePreview?: { index: number; cell: ArchiveCell; started: number; x: number; z: number; vx: number; vz: number; targetX: number; targetZ: number };
   onPreviewCommit?: (index: number, cell: ArchiveCell) => void;
@@ -478,6 +491,7 @@ export class ArchiveScene {
       "webglcontextrestored",
       () => {
         this.contextLost = false;
+        this.pictureValid = false;
       },
       { signal: this.inputEvents.signal },
     );
@@ -2068,10 +2082,54 @@ export class ArchiveScene {
       100;
     // A zero aperture blurs nothing (the terminal deck fully open): skip the pass and its depth render.
     this.bokeh.enabled = this.quality.depthOfField > 0 && bokehUniforms.aperture.value > 0;
-    this.renderer.info.reset();
     if (this.contextLost) return;
+    // With ambient motion off (the desktop shells) a resting array draws the same picture
+    // every frame. Nothing moved, no buffer changed and no animation is running: keep the
+    // last picture on the canvas instead of running every pass again.
+    const settled = !cinematic && !flipping && !flashDirty && !themeDirty && !this.outgoing.length &&
+      !this.pulses.length && !this.hoverLifts.size && !this.relayLifts.size && !play.enabled &&
+      this.idleGain === 0 && time > this.redrawUntil;
+    const picture = this.pictureInputs(bokehUniforms.aperture.value, bokehUniforms.focus.value);
+    if (settled && !ALWAYS_DRAW && this.showsPicture(picture)) return;
+    this.rememberPicture(picture);
+    this.composedFrames++;
+    this.renderer.info.reset();
     if (this.superPerformance) this.renderer.render(this.scene, this.camera);
     else this.composer.render();
+  }
+  /** What the picture depends on beyond the instance buffers: camera, the selected file, theme, decryption, textures. */
+  private pictureInputs(aperture: number, focus: number) {
+    const c = this.camera, m = this.model;
+    return [
+      c.position.x, c.position.y, c.position.z, c.quaternion.x, c.quaternion.y, c.quaternion.z, c.quaternion.w, c.fov,
+      m.position.x, m.position.y, m.position.z, m.quaternion.x, m.quaternion.y, m.quaternion.z, m.quaternion.w,
+      this.themeAmount, this.renderer.toneMappingExposure, this.detail, this.openBlend, this.reveal, this.rotation,
+      this.lift.value, this.decryption.clarity, this.subduedIndex.value, aperture, focus, this.drawnCells.length,
+      this.labelTexture?.version ?? -1, this.deck ? this.deck.group.visible ? 1 : 0 : -1, this.deck?.pictureRevision ?? -1,
+    ];
+  }
+  /**
+   * Whether the canvas already shows this frame's picture: every input and every card
+   * matrix within PICTURE_EPSILON of what was last drawn. The damped motions approach
+   * their targets for many seconds in steps far below a pixel; what was drawn, not
+   * the previous frame, is the reference, so such steps cannot add up unseen.
+   */
+  private showsPicture(inputs: number[]) {
+    if (!this.pictureValid || !this.instanceMatrix) return false;
+    for (let i = 0; i < inputs.length; i++) if (Math.abs(this.picture[i] - inputs[i]) > PICTURE_EPSILON) return false;
+    const now = this.instanceMatrix.array, drawn = this.drawnMatrices, length = this.drawnCells.length * 16;
+    if (drawn.length < length) return false;
+    for (let i = 0; i < length; i++) if (Math.abs(now[i] - drawn[i]) > PICTURE_EPSILON) return false;
+    return true;
+  }
+  /** Draw the next frame even if nothing it depends on seems to have changed. */
+  redraw() { this.pictureValid = false; }
+  private rememberPicture(inputs: number[]) {
+    this.picture.set(inputs);
+    const length = this.drawnCells.length * 16;
+    if (this.drawnMatrices.length < length) this.drawnMatrices = new Float32Array(this.instanceMatrix?.array.length ?? length);
+    if (this.instanceMatrix) this.drawnMatrices.set(this.instanceMatrix.array.subarray(0, length));
+    this.pictureValid = true;
   }
   projectCard(x: number, y: number) {
     this.model.updateMatrixWorld(true);
@@ -2112,6 +2170,7 @@ export class ArchiveScene {
       return [Math.round((p.x + 1) * this.container.clientWidth / 2), Math.round((1 - p.y) * this.container.clientHeight / 2)];
     };
     return {
+      composedFrames: this.composedFrames,
       sessionDeck: { available: Boolean(this.deck), state: this.deckState, progress: this.openBlend,
 
         focus: this.sessionDeckFocus, ready: this.sessionDeckReady, screen: this.projectSessionScreen(),

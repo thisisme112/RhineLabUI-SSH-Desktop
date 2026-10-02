@@ -1880,6 +1880,8 @@ Object.assign(window, {
     // guards the document against events from outside itself, so a check cannot
     // reach the settings button in the shell behind it.
     settings: () => openModal("settings"),
+    // A resting scene keeps its last picture (scene.ts showsPicture); checks compare it with a fresh one.
+    redraw: () => scene?.redraw(),
     stats: () => ({
       ...scene?.getStats(),
       threeState,

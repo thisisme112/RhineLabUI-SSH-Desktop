@@ -40,6 +40,7 @@
   "check:android-terminal": "node scripts/check/check-android-terminal.mjs",
   "check:frame-budget": "node --experimental-strip-types --test scripts/check/check-frame-budget.mjs && node scripts/check/check-frame-budget-page.mjs",
   "measure:frame-cost": "node scripts/check/measure-frame-cost.mjs",
+  "check:settled-frames": "node scripts/check/check-settled-frames.mjs",
   "check:theme-sync": "node scripts/check/check-terminal-deck.mjs --theme-sync --out .artifacts/checks/theme-sync",
   "check:theme-motion": "node --experimental-strip-types --test scripts/check/check-theme-motion.mjs",
   "check:android-layout": "node scripts/capture/capture-phone-layout.mjs --check",

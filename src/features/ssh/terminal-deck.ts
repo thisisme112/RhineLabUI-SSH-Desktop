@@ -51,6 +51,11 @@ export class TerminalDeck {
   private disposed = false;
   private preview: { key: string; title: string; lines: string[] } | null = null;
   private lastPaint = -Infinity;
+  private backlight = -1;
+  private failedLight = false;
+  private lightRevision = 0;
+  /** scene.ts SessionDeck: bumps with a repainted screen or a changed backlight. */
+  get pictureRevision() { return this.texture.version + this.lightRevision; }
 
   static async load(
     client: SshClient,
@@ -242,7 +247,9 @@ export class TerminalDeck {
     // exactly like the cursor blink the screen already does. The formula lives
     // in terminal-deck-parts.ts so the Unreal port is diffed against it.
     const failed = own && phase === "failed";
-    this.finishes.setBacklight(deckBacklight(own ? phase : "idle", reduced, time), failed);
+    const level = deckBacklight(own ? phase : "idle", reduced, time);
+    if (level !== this.backlight || failed !== this.failedLight) { this.backlight = level; this.failedLight = failed; this.lightRevision++; }
+    this.finishes.setBacklight(level, failed);
     // What the card shows before the shell arrives is the list of milestones it
     // has reached, so a new milestone — not a new log line — is what repaints.
     const key = `${this.host}:${this.preview?.key}:${this.client.generation}:${phase}:${status?.timeline.length ?? 0}:${own ? (this.client.pendingPrompt?.id ?? "") : ""}:${own ? this.terminal.screenRevision : 0}:${this.terminal.screenTheme.background}:${Math.round(opening * 100)}:${own && phase === "interactive" && !reduced ? Math.floor(time * 1.6) : 0}`;

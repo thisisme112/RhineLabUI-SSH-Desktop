@@ -84,6 +84,7 @@
     "check:android-terminal": "node scripts/lib/run-check.mjs check:android-terminal",
     "check:frame-budget": "node scripts/lib/run-check.mjs check:frame-budget",
     "measure:frame-cost": "node scripts/lib/run-check.mjs measure:frame-cost",
+    "check:settled-frames": "node scripts/lib/run-check.mjs check:settled-frames",
     "check:theme-sync": "node scripts/lib/run-check.mjs check:theme-sync",
     "check:theme-motion": "node scripts/lib/run-check.mjs check:theme-motion",
     "check:android-layout": "node scripts/lib/run-check.mjs check:android-layout",
