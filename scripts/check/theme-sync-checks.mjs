@@ -50,7 +50,8 @@ export async function checkThemeSync({ evaluate, until, check, shot, send, sleep
   await shot("theme-sync-clinic-mark");
   const during = await state();
   await check("a theme change leaves its corner card", `${during.mark !== null}`);
-  await check("the card carries the theme number and Latin name", `${/THEME 12 \/ 14 · CLINICAL \/ STERILE/.test(during.mark?.text ?? "")}`);
+  // The count follows THEMES.length (theme-mark.ts), which changes as themes are added or retired.
+  await check("the card carries the theme number and Latin name", `${/THEME \d{2} \/ \d{2} · CLINICAL \/ STERILE/.test(during.mark?.text ?? "")}`);
   await check("the card carries the motif glyph", `${during.mark?.glyph === true}`);
   await check("the card's name turns over to the new theme", `${during.mark?.name === "医疗"}`);
   await check("the palette itself changed", `${during.palette === "clinic"}`);
