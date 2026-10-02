@@ -1,5 +1,5 @@
 import { getPlatformBridge } from "../../platform/bridge.ts";
-import type { Motif } from "./theme-design";
+import { TRANSIT_LINES, type Motif } from "./theme-design";
 
 /**
  * The theme change-over (the Unreal build's RhineThemeReveal.h): the window as
@@ -14,6 +14,10 @@ import type { Motif } from "./theme-design";
  *   frames    64 px squares close towards their centres from the middle out
  *   orbit     squares close outward from the origin (the selected card), in rings
  *   plates    a 30 px halftone that drops out in scattered order over a second plate
+ *   transit   eight bands leave from alternating ends, a station and a train of one line's colour at each edge
+ *   darkroom  contact-sheet frames a hairline apart, each shuttered top to bottom behind a signal edge
+ *   label     twelve columns cut through the middle, the halves parting to head and foot from the left
+ *   rack      a 96-well plate drawn up column by column
  *
  * Without a capture (the web and Android builds, reduced motion) the interface
  * and the room fade into the new theme over .45 s instead (Unreal StartThemeBlend).
@@ -128,6 +132,56 @@ async function run(o: RevealOptions) {
         squares(56, (_x, _y, cx, cy) => Math.floor(Math.hypot(cx - ox, cy - oy) / reach * 9) / 9 * .56, .32, t, false);
         break;
       }
+      case "transit": {
+        const n = 8, h = height / n;
+        for (let i = 0; i < n; i++) {
+          const right = i % 2 === 0; // even bands leave to the right, odd to the left
+          const e = inOut((t - i * .04) / .42);
+          if (e >= 1) continue;
+          const edge = right ? width * e : width * (1 - e);
+          if (right) piece(edge, i * h - .5, width, (i + 1) * h); else piece(0, i * h - .5, edge, (i + 1) * h);
+          if (e <= 0) continue;
+          // The closing edge is a station; a train of one line's colour trails it over the new frame.
+          const train = Math.min(width * .3, 260), yc = (i + .5) * h;
+          const back = right ? Math.max(0, edge - train) : edge;
+          const length = right ? edge - back : Math.min(width, edge + train) - edge;
+          ctx.fillStyle = TRANSIT_LINES[i % TRANSIT_LINES.length]; ctx.globalAlpha = 1 - e * .5;
+          ctx.fillRect(back, yc - 6, length, 12);
+          ctx.fillRect(edge - 9, yc - 9, 18, 18);
+          ctx.globalAlpha = 1;
+        }
+        break;
+      }
+      case "darkroom": {
+        // 3:2 frames, eight across, parting by a hairline as the change-over starts.
+        const cw = width / 8, ch = cw * 2 / 3, ny = Math.ceil(height / ch);
+        const gutter = 3 * Math.min(1, t * 12);
+        for (let y = 0; y < ny; y++) for (let x = 0; x < 8; x++) {
+          const e = inOut((t - (x + y * .6) * .034) / .34);
+          if (e >= 1) continue;
+          const x0 = x * cw, y0 = y * ch, x1 = x0 + cw, y1 = Math.min(y0 + ch, height);
+          const top = y0 + (y1 - y0) * e;
+          piece(x0 + gutter, top + (e <= 0 ? gutter : 0), x1 - gutter, y1 - gutter);
+          if (e > 0) { ctx.fillStyle = o.accent; ctx.globalAlpha = 1 - e * .6; ctx.fillRect(x0 + gutter, top - 1, cw - 2 * gutter, 2); ctx.globalAlpha = 1; }
+        }
+        break;
+      }
+      case "label": {
+        const n = 12, w = width / n;
+        for (let i = 0; i < n; i++) {
+          const e = inOut((t - i * .04) / .4);
+          if (e >= 1) continue;
+          const half = height / 2 * (1 - e);
+          piece(i * w, 0, (i + 1) * w + .5, half);
+          piece(i * w, height - half, (i + 1) * w + .5, height);
+          if (e > 0) { ctx.fillStyle = o.second; ctx.fillRect(i * w, half - 4, w, 4); ctx.fillRect(i * w, height - half, w, 4); }
+        }
+        break;
+      }
+      case "rack":
+        squares(width / 12, (x, y) => x * .045 + y * .008, .26, t, false);
+        break;
+      case "plates":
       default: {
         const hash = (x: number, y: number) => (((Math.imul(x, 73856093) ^ Math.imul(y, 19349663)) >>> 0) % 1000) / 1000;
         squares(30, (x, y) => hash(x, y) * .6, .3, t, true);
