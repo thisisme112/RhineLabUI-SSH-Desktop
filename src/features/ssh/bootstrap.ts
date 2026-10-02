@@ -654,7 +654,7 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
      * deck comes forward at operating size. Created lazily and re-created if
      * the scene was reloaded (a disposed scene takes its deck with it).
      */
-    const { TerminalDeck, TERMINAL_INSPECTION_PARTS } = await import("./terminal-deck");
+    const { TerminalDeck, TERMINAL_INSPECTION_PARTS, terminalModelAvailable } = await import("./terminal-deck");
     let deck: Awaited<ReturnType<typeof TerminalDeck.load>> | null = null;
     let deckOwner: ArchiveScene | null = null;
     let deckLoading: ArchiveScene | null = null;
@@ -686,7 +686,8 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
     };
     const ensureDeck = () => {
       const owner = shell.scene;
-      if (!owner || deckBroken === owner || deckLoading === owner || (deckOwner === owner && owner.hasSessionDeck)) return;
+      // The web demo ships without the model: no deck, rather than a load that fails.
+      if (!terminalModelAvailable || !owner || deckBroken === owner || deckLoading === owner || (deckOwner === owner && owner.hasSessionDeck)) return;
       deckLoading = owner;
       void TerminalDeck.load(client, panel, () => owner.createAssemblyModel()).then(created => {
         if (shell.scene !== owner) { created.dispose(); return; }

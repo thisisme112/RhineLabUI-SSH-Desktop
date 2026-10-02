@@ -10,8 +10,12 @@ export type DeckInsert = {
   setTheme(amount: number): void; setBacklight(level: number, failed: boolean): void;
 };
 
+/** False in web and wallpaper builds: vite.config.ts "desktop-only-terminal-asset" leaves the model out of them. */
+export const terminalModelAvailable = terminalAsset !== "";
+
 /** Blender owns the geometry and named layers; the renderer owns live state. */
 export async function buildDeckInsert(): Promise<DeckInsert> {
+  if (!terminalModelAvailable) throw new Error("此版本不含终端模型");
   const { scene: group } = await new GLTFLoader().loadAsync(terminalAsset);
   const parts = new Map<string, THREE.Group>();
   const materials = new Set<THREE.MeshStandardMaterial>();

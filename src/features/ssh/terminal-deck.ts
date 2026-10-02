@@ -5,6 +5,7 @@ import type { SshTerminalPanel } from "./terminal";
 import { paintTerminalBuffer, TERMINAL_FONT } from "./terminal-screen";
 import { buildDeckInsert, DECK_PARTS, SCREEN, deckBacklight, deckPose, type DeckInsert } from "./terminal-deck-parts";
 import type { ModelSource, InspectionPart } from "../../rendering/model-viewer";
+export { terminalModelAvailable } from "./terminal-deck-parts";
 
 export const TERMINAL_INSPECTION_PARTS: readonly InspectionPart[] = [
   { id: "fasteners", label: "紧固件", en: "FASTENERS" },
