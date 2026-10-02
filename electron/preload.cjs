@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld("rhineDesktop", {
   /** Report which of the two captions to use; the OS draws it, not us. */
   theme: (value) => ipcRenderer.send("shell:theme", value),
   capture: () => ipcRenderer.invoke("shell:capture"),
+  /** Minimised or hidden, which the page cannot see for itself. Channel mirrored in main.cjs createWindow(). */
+  onWindowState: subscribe("shell:window-state"),
   services: {
     snapshot: (sessionId) => ipcRenderer.invoke("services:snapshot", { sessionId }),
     answer: (request) => ipcRenderer.invoke("services:answer", request),

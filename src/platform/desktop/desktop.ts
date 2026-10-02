@@ -11,6 +11,15 @@ export const isDesktop = import.meta.env.MODE === "desktop";
 if (isDesktop) document.documentElement.dataset.desktop = "true";
 
 /**
+ * Whether the window is minimised or hidden. electron/main.cjs keeps background
+ * throttling off, so `document.hidden` never says so; the shell reports it and
+ * the frame loop skips the scene while it holds (application.ts frame()).
+ */
+let parked = false;
+if (isDesktop) window.rhineDesktop?.onWindowState?.(state => { parked = state.minimized || !state.visible; });
+export const desktopWindowParked = () => parked;
+
+/**
  * How much of the top-right corner Windows keeps for minimise / maximise / close.
  *
  * `titleBarOverlay` accepts a colour and a height but no width — the OS decides

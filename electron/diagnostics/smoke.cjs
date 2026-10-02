@@ -720,6 +720,23 @@ async function runSmoke(win) {
       "window.rhineSshUi?.closeHosts(); true",
     );
   }
+  // backgroundThrottling is off (main.cjs), so the page never sees itself hidden:
+  // a minimised window has to be told, and must then stop drawing the scene.
+  const frames = () => win.webContents.executeJavaScript("window.rhineSshUi?.rendering?.frames ?? -1");
+  const parking = {};
+  {
+    const live = await frames();
+    await wait(1000);
+    parking.live = (await frames()) - live;
+    win.minimize();
+    await wait(600);
+    const parked = await frames();
+    await wait(3000);
+    parking.parked = (await frames()) - parked;
+    win.showInactive();
+    await wait(1200);
+    parking.resumed = (await frames()) - parked - parking.parked;
+  }
 
   const checks = {
     // Dev mode deliberately loads from the Vite server instead of file://.
@@ -766,6 +783,9 @@ async function runSmoke(win) {
       );
     })(),
     "the renderer reports its theme to the window": after.themeReported === true,
+    "the scene draws in an unfocused window": parking.live > 0,
+    "a minimised window stops drawing the scene": parking.parked === 0,
+    "a restored window draws again": parking.resumed > 0,
     "the frameless window has a drag region the caption's height":
       !runtimeContext.FRAMELESS ||
       (after.dragRegion?.region === "drag" &&
@@ -792,6 +812,7 @@ async function runSmoke(win) {
           failed,
           before,
           after,
+          parking,
           // The caption is invisible to capturePage and Electron has no getter
           // for it, so the applied palette is reported here or not at all.
           chrome: {
@@ -812,6 +833,7 @@ async function runSmoke(win) {
     failed,
     before,
     after,
+    parking,
     shots: [shotBefore, shotBoot, shotAfter],
     problems: onlyBenign,
   });

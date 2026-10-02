@@ -24,6 +24,8 @@ export type PlatformBridge = {
   theme?: (value: "light" | "dark") => void;
   /** The window as it is now (JPEG), for the theme change-over. */
   capture?: () => Promise<Uint8Array | null>;
+  /** Desktop only: the window was minimised, hidden or brought back. */
+  onWindowState?: (listener: (state: { minimized: boolean; visible: boolean }) => void) => () => void;
   versions: { electron: string; chrome: string; node: string };
   session?: DesktopSessionBridge | DesktopSessionsBridge;
   services?: ServicesBridge;

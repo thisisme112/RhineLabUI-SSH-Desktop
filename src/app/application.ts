@@ -81,7 +81,7 @@ import { configureHoverCards } from "../shared/hover-card";
 import { audioSettingsMarkup } from "../features/settings/audio-settings";
 import { StartupGate } from "../features/boot/startup";
 import { isWallpaper, wallpaperHost, wallpaperFrame, type WallpaperProperties } from "../platform/wallpaper/wallpaper";
-import { isDesktop } from "../platform/desktop/desktop";
+import { isDesktop, desktopWindowParked } from "../platform/desktop/desktop";
 import { isAndroid } from "../platform/android/android";
 import { FrameBudget, ResolutionGovernor, ANDROID_RATES, DESKTOP_RATES } from "../rendering/frame-budget";
 import { hostLabel, hostSubtitle, SshHostCards } from "../features/ssh/host-cards";
@@ -1517,7 +1517,7 @@ function budgetAdmit(ms: number) {
 }
 function frame(ms: number) {
   if (!wallpaperFrame(ms)) { requestAnimationFrame(frame); return; }
-  if (document.hidden) { requestAnimationFrame(frame); return; }
+  if (document.hidden || desktopWindowParked()) { requestAnimationFrame(frame); return; }
   if (!budgetAdmit(ms)) { requestAnimationFrame(frame); return; }
   governResolution(ms);
   workbench?.tick();

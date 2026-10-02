@@ -375,6 +375,12 @@ function createWindow() {
   });
   trustedWindows.add(win.webContents.id);
   const contentsId = win.webContents.id;
+  // With backgroundThrottling off a minimised page still calls itself visible
+  // (and still gets a frame a second), so the renderer is told and stops drawing.
+  // The channel name is mirrored in preload.cjs.
+  const reportWindowState = () => send(win.webContents, "shell:window-state", { minimized: win.isMinimized(), visible: win.isVisible() });
+  for (const name of ["minimize", "restore", "maximize", "hide", "show"]) win.on(name, reportWindowState);
+  win.webContents.on("did-finish-load", reportWindowState);
   win.on("close", event => {
     if (quitApproved || SMOKE || SESSION_SMOKE || !sessions?.active(contentsId).length) return;
     event.preventDefault();
