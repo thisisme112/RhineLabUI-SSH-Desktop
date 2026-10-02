@@ -2,6 +2,7 @@ import "./label.css";
 import "./label-overview.css";
 import "./label-detail.css";
 import "./label-settings.css";
+import "./label-forms.css";
 import { setAttr, setData, setStyle } from "../../shared/dom-write";
 import {
   BAND, DECODE, FIELD, FOOT, SPINE, TOP,
