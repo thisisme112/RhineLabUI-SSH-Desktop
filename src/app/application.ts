@@ -78,6 +78,7 @@ import { setSurfacePalette } from "../features/theme/theme-material";
 import { playThemeReveal } from "../features/theme/theme-reveal";
 import { showThemeMark } from "../features/theme/theme-mark";
 import { configureHoverCards } from "../shared/hover-card";
+import { setAttr, setData, setInert, setStyle } from "../shared/dom-write";
 import { audioSettingsMarkup } from "../features/settings/audio-settings";
 import { StartupGate } from "../features/boot/startup";
 import { isWallpaper, wallpaperHost, wallpaperFrame, type WallpaperProperties } from "../platform/wallpaper/wallpaper";
@@ -290,6 +291,9 @@ $("#stage").innerHTML = `
   <div id="modal-root"></div><div id="toast" class="toast" role="status"></div>
   <div id="loading" class="loading"><div class="loading-mark">${logo}</div><span>CONNECTING TO INTERNAL DATABASE</span><i></i></div>
 `;
+// Built once above and never replaced: the frame loop keeps these instead of querying each frame.
+const stageEl = $("#stage"), archiveUiEl = $("#archive-ui"), systemNavEl = $(".system-nav"),
+  detailContentEl = $("#detail-content"), threeSceneEl = $("#three-scene");
 
 $("#boot-background").insertAdjacentHTML(
   "beforeend",
@@ -641,12 +645,12 @@ const fileTicks = [...$("#file-ticks").querySelectorAll<HTMLButtonElement>("butt
 
 function syncArchiveChrome(collapsed = sshOverview?.isCollapsed ?? false) {
   const expanded = desktopShell && !collapsed && mode === "archive";
-  $("#stage").dataset.sshOverviewExpanded = String(expanded);
+  setData(stageEl, "sshOverviewExpanded", String(expanded));
   const hidden = mode !== "archive" || Boolean(workbench?.enabled) || expanded;
   const blocked = Boolean(modal) || sshSurfaceActive();
-  $("#archive-ui").inert = hidden || blocked;
-  $("#archive-ui").setAttribute("aria-hidden", String(hidden));
-  $(".system-nav").inert = mode === "boot" || blocked || expanded;
+  setInert(archiveUiEl, hidden || blocked);
+  setAttr(archiveUiEl, "aria-hidden", String(hidden));
+  setInert(systemNavEl, mode === "boot" || blocked || expanded);
 }
 
 function setMode(next: Mode) {
@@ -1476,7 +1480,7 @@ const poster = posterCanvas ? new ThemePoster(posterCanvas) : undefined;
 function updatePoster(time: number, amount: number) {
   if (!poster || !posterCanvas) return;
   const show = ready && (mode === "archive" || mode === "detail") && !sshSurfaceActive() && !viewer?.isOpen && !portals?.isPageOpen;
-  posterCanvas.dataset.on = String(show);
+  setData(posterCanvas, "on", String(show));
   if (!show) return;
   const name = currentPalette();
   const { lane } = fileLocation(selected);
@@ -1556,16 +1560,15 @@ function frame(ms: number) {
   playground?.position();
   if (scene && mode === "detail") {
     documentDecryption.update(time, scene.decryptionFrame, prefs.reduced);
-    $("#detail-content").style.opacity = String(scene.detailVisibility * (1 - scene.sessionDeckFocus));
-    $("#detail-content").style.translate =
-      `0 ${(1 - scene.detailVisibility) * 18}px`;
-    $("#detail-content").inert = scene.detailVisibility < 0.1 || scene.sessionDeckFocus > .05 || sshSurfaceActive();
+    setStyle(detailContentEl, "opacity", String(scene.detailVisibility * (1 - scene.sessionDeckFocus)));
+    setStyle(detailContentEl, "translate", `0 ${(1 - scene.detailVisibility) * 18}px`);
+    setInert(detailContentEl, scene.detailVisibility < 0.1 || scene.sessionDeckFocus > .05 || sshSurfaceActive());
     if (pendingDetailFocus && scene.detailVisibility >= 0.1 && scene.sessionDeckFocus < .01 && !modal && !viewer?.isOpen && !sshSurfaceActive() && !sshTerminalPending) {
-      $("#detail-content").focus({ preventScroll: true });
+      detailContentEl.focus({ preventScroll: true });
       pendingDetailFocus = false;
     }
   }
-  $("#stage").style.setProperty("--detail-shade", String(mode === "boot" ? 0 : scene?.detailVisibility ?? 0));
+  setStyle(stageEl, "--detail-shade", String(mode === "boot" ? 0 : scene?.detailVisibility ?? 0));
   const currentScene = scene;
   if (currentScene) inspectionOverlay.render(currentScene.decryptionFrame,
     (x, y) => currentScene.projectCard(x, y), Boolean(cinema));
@@ -1579,9 +1582,11 @@ function frame(ms: number) {
     fps = (frameCount * 1000) / (ms - frameStart);
     frameStart = ms;
     frameCount = 0;
-    $("#three-scene").dataset.fps = String(Math.round(fps));
-    if (frameBudget) $("#three-scene").dataset.budget = frameBudget.tier;
-    $("#three-scene").dataset.renderStats = JSON.stringify(scene?.getStats() ?? { loaded: false, drawCalls: 0, triangles: 0 });
+    setData(threeSceneEl, "fps", String(Math.round(fps)));
+    if (frameBudget) setData(threeSceneEl, "budget", frameBudget.tier);
+    // getStats() walks the model and projects points; only automation and ?render-stats read the result.
+    if (navigator.webdriver || reviewParams.has("render-stats"))
+      setData(threeSceneEl, "renderStats", JSON.stringify(scene?.getStats() ?? { loaded: false, drawCalls: 0, triangles: 0 }));
   }
   requestAnimationFrame(frame);
 }

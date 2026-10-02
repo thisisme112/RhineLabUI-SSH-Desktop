@@ -4,6 +4,7 @@ import {
   SCAN_CORNERS,
   type DecryptionFrame,
 } from "../features/archives/decryption";
+import { setAttr } from "../shared/dom-write";
 
 export function inspectionSegments(frame: DecryptionFrame) {
   const point = (t: number): [number, number] => [
@@ -22,14 +23,21 @@ export class InspectionOverlay {
   private point =
     this.root.querySelector<SVGCircleElement>("#inspection-point")!;
   private label = document.querySelector<HTMLElement>("#inspection-text")!;
+  private host = document.querySelector<HTMLElement>("#three-scene")!;
+  /** Whether the last frame showed any mark. Starts true so the first frame writes the state. */
+  private shown = true;
 
   render(
     frame: DecryptionFrame,
     project: (x: number, y: number) => number[],
     showLabel: boolean,
   ) {
-    const host = document.querySelector<HTMLElement>("#three-scene")!;
-    this.root.setAttribute("viewBox", `0 0 ${host.clientWidth} ${host.clientHeight}`);
+    const shown = frame.intervals.length > 0 || frame.markers > 0 || frame.point > 0 || (showLabel && frame.label > 0);
+    // This runs every frame. Outside the scan nothing shows, and the hidden state the last
+    // frame wrote still stands: skip the projections, the size read and every write.
+    if (!shown && !this.shown) return;
+    this.shown = shown;
+    setAttr(this.root, "viewBox", `0 0 ${this.host.clientWidth} ${this.host.clientHeight}`);
     this.root.style.opacity =
       frame.intervals.length || frame.markers > 0 || frame.point > 0
         ? "1"

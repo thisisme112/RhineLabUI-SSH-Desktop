@@ -12,6 +12,7 @@ import type { WorkspaceLayout, WorkspaceStore } from "./workspace-store";
 import { SshWorkspace, WORKSPACE_NAV, WORKSPACE_SIDE } from "./workspace";
 import { SessionTabs } from "./session-tabs";
 import { terminalAppearance } from "./terminal-appearance";
+import { paintRevision } from "../theme/theme-ui";
 import {
   TerminalTools,
   TERMINAL_TOOLS_MARKUP,
@@ -120,6 +121,8 @@ export class SshTerminalPanel {
   private generation = -1;
   private reduced = false;
   private themeSignature = "";
+  /** The theme-ui paintRevision the signature was read at. */
+  private themeRevision = -1;
   private hasShell = false;
   private projectionHost: HTMLElement;
   private viewport: HTMLElement;
@@ -323,10 +326,16 @@ export class SshTerminalPanel {
   get isUsable() { return this.open && !this.root.closest("[inert],[hidden]") && (this.workspace?.terminalVisible ?? true); }
 
   setAppearance(dark: boolean, reduced: boolean) {
-    const style = getComputedStyle(document.documentElement);
-    const signature = ["paper", "ink", "accent", "cyan"]
-      .map(name => style.getPropertyValue(`--theme-${name}`))
-      .join("/");
+    // Called every frame (bootstrap.ts sshFrame). The theme properties only change when
+    // paintTheme rewrites them, so the computed style is read only after it has.
+    let signature = this.themeSignature;
+    if (paintRevision !== this.themeRevision) {
+      this.themeRevision = paintRevision;
+      const style = getComputedStyle(document.documentElement);
+      signature = ["paper", "ink", "accent", "cyan"]
+        .map(name => style.getPropertyValue(`--theme-${name}`))
+        .join("/");
+    }
     if (this.root.dataset.dark === String(dark) && reduced === this.reduced && signature === this.themeSignature) return;
     if (dark !== this.dark || signature !== this.themeSignature) {
       this.dark = dark;

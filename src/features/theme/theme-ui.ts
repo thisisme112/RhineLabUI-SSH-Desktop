@@ -191,6 +191,8 @@ let paletteStart = 0;
 let paletteFrom: Record<string, number[]> | undefined;
 const painted: Record<string, number[]> = {};
 export let themeAmount = 0;
+/** Counts the times paintTheme rewrote the `--theme-*` properties, so a per-frame reader can skip getComputedStyle until it changes. */
+export let paintRevision = 0;
 function rgb(hex: string) { return [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)); }
 function luminance(color: number[]) {
   return color.map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; })
@@ -219,6 +221,7 @@ export function setPalette(name: ThemeName | undefined, reduced = true) {
 export function paintTheme(amount: number) {
   if (!paletteFrom && Math.abs(amount - previous) < .0001) return;
   previous = themeAmount = amount;
+  paintRevision++;
   const root = document.documentElement;
   root.dataset.darkSurface = String(amount > .0001);
   const progress = Math.min(1, (performance.now() - paletteStart) / 360);

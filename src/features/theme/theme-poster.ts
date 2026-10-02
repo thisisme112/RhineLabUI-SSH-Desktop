@@ -38,20 +38,28 @@ export class ThemePoster {
   private changeStart = -10;
   private drawnAt = -10;
   private family = "";
+  /** The canvas's CSS size, kept by a ResizeObserver: reading it off the element each frame forced a layout. */
+  private cssWidth = 0;
+  private cssHeight = 0;
 
   constructor(readonly canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d");
+    new ResizeObserver(([entry]) => {
+      this.cssWidth = Math.round(entry.contentRect.width);
+      this.cssHeight = Math.round(entry.contentRect.height);
+    }).observe(canvas);
   }
 
   update(state: PosterState) {
     const ctx = this.ctx;
-    if (!ctx || this.canvas.offsetParent === null && getComputedStyle(this.canvas).display === "none") return;
+    // Not laid out yet, or not rendered at all (an observed 0 × 0).
+    if (!ctx || !this.cssWidth || !this.cssHeight) return;
     if (state.code !== this.code) {
       this.previous = this.code; this.code = state.code; this.changeStart = this.previous ? state.time : -10;
     }
     const change = state.reduced ? 1 : clamp((state.time - this.changeStart) / CHANGE_TIME);
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const width = Math.max(1, Math.round(this.canvas.clientWidth * dpr)), height = Math.max(1, Math.round(this.canvas.clientHeight * dpr));
+    const width = Math.max(1, Math.round(this.cssWidth * dpr)), height = Math.max(1, Math.round(this.cssHeight * dpr));
     const signature = [state.motif, state.colors.ink, state.colors.accent, state.colors.cyan, state.code, state.position, state.count, state.group, width, height].join("|");
     const orbiting = state.motif === "orbit" && !state.reduced && state.time - this.drawnAt > .25;
     if (signature === this.signature && change >= 1 && !orbiting && this.previous === "") return;

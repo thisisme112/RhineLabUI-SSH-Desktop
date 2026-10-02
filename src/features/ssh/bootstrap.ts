@@ -14,6 +14,7 @@ import { hostLabel, hostSubtitle, SshHostCards } from "./host-cards";
 import { wrap, type ArchiveNavigation } from "../archives/archive-loop";
 import { ArchiveScene } from "../../rendering/scene";
 import { ModelViewer } from "../../rendering/model-viewer";
+import { setData, setStyle } from "../../shared/dom-write";
 
 type SshWorkspaceContext = typeof import("../../app/application").sshWorkspaceContext;
 
@@ -861,7 +862,7 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
       // the screen, with the stack already separated inside it.
       shell.scene?.setSessionOpeningDuration(sshPreferences.value.animation === "first" && openedArchives.has(records[shell.selected]?.id || "") ? .6 : 2.1);
       shell.scene?.setSessionDeckState(resource ? ((terminalRequested || terminalClosing) && operating ? "open" : "packed") : "off");
-      shell.$("#stage").dataset.sshDeck = String(Boolean(resource && shell.scene?.hasSessionDeck));
+      setData(shell.$("#stage"), "sshDeck", String(Boolean(resource && shell.scene?.hasSessionDeck)));
       const covered = panel.isOpen && !panel.isClosing && !shell.sshPromptOpen && !shell.auditOpen && !shell.modal && !shell.viewer?.isOpen;
       shell.scene?.setSessionSurfaceCovered(covered && panel.isProjected);
       shell.audio.setOperating(covered);
@@ -879,7 +880,7 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
         const retired = retiringLastSession; retiringLastSession = null;
         removeClosedSession(retired);
       }
-      shell.$("#stage").style.setProperty("--ssh-focus", String(shell.scene?.sessionDeckFocus ?? 0));
+      setStyle(shell.$("#stage"), "--ssh-focus", String(shell.scene?.sessionDeckFocus ?? 0));
       if (restoreTerminalFocus && !shell.sshSurfaceActive() && (shell.scene?.sessionDeckFocus ?? 0) < .01) {
         const connect = shell.$("#host-connect");
         const button = shell.mode === "detail"

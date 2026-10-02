@@ -31,6 +31,7 @@ import {
   type ArchiveNavigation,
 } from "../features/archives/archive-loop";
 import { labelMarkSvg } from "../shared/brand";
+import { setStyle } from "../shared/dom-write";
 import { archiveFraming } from "./viewport-layout";
 import { ArchiveDrag, ArchivePlaneMomentum, type DragAxis, type DragProjection, type DragPosition } from "../features/archives/archive-drag";
 import { ArchivePull } from "../features/archives/archive-pull";
@@ -1452,7 +1453,7 @@ export class ArchiveScene {
     this.renderedFrames++;
     const step = this.reduced ? 1 : Math.min(elapsed, .25) / 1.1;
     this.presence += Math.sign(this.presenceTarget - this.presence) * Math.min(step, Math.abs(this.presenceTarget - this.presence));
-    this.renderer.domElement.style.opacity = String(THREE.MathUtils.clamp(this.presence / .16, 0, 1));
+    setStyle(this.renderer.domElement, "opacity", String(THREE.MathUtils.clamp(this.presence / .16, 0, 1)));
     this.theme.beginFrame();
     themeEnvironment(this.scene, this.renderer, this.themeAmount);
     const blend = 1 - Math.exp(-dt * (this.reduced ? 35 : 2.8));

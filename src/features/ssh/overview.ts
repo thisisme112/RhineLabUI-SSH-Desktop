@@ -13,6 +13,7 @@ import { SessionTabs } from "./session-tabs";
 import { records } from "../archives/data";
 import type { SshHostEntry } from "./client";
 import { escapeHtml } from "../../shared/html";
+import { setClass, setInert } from "../../shared/dom-write";
 import { MAX_HOST_GROUPS, UNGROUPED } from "./host-groups";
 import "./overview.css";
 
@@ -225,8 +226,9 @@ export class SshOverview {
     });
   }
   setVisible(show: boolean, blocked = false) {
-    this.root.classList.toggle("reduce-motion", this.actions.reduced());
-    this.root.inert = !show || blocked;
+    // Called every frame (application.ts): leave the element alone unless something changed.
+    setClass(this.root, "reduce-motion", this.actions.reduced());
+    setInert(this.root, !show || blocked);
     if (show === this.visible) return;
     this.visible = show;
     if (show) {
