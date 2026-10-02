@@ -164,11 +164,24 @@ export function readWorkspaceBackup(raw: string): WorkspaceBackup {
   return value;
 }
 
+/**
+ * Export and import both read and write the native host, key and profile
+ * stores. The web demo has none of them, so it shows the section disabled.
+ */
+export function migrationAvailable(bridge = getPlatformBridge()) {
+  return Boolean(bridge?.hosts && bridge.keys && bridge.hostProfiles && bridge.migration && bridge.session);
+}
+function migrationBridge() {
+  const bridge = getPlatformBridge();
+  if (!bridge || !migrationAvailable(bridge)) throw new Error("配置迁移仅在桌面版与安卓版可用");
+  return bridge;
+}
+
 export async function createWorkspaceBackup(
   store: WorkspaceStore,
   password?: string,
 ): Promise<WorkspaceBackup> {
-  const bridge = getPlatformBridge()!,
+  const bridge = migrationBridge(),
     listing = await bridge.hosts!();
   if (!listing.ok) throw new Error(listing.error || "无法读取主机列表");
   if (store.error) throw new Error(store.error);
@@ -297,7 +310,7 @@ export async function importWorkspaceBackup(
     throw new Error(
       store.error || sshPreferences.error || terminalAppearance.error,
     );
-  const bridge = getPlatformBridge()!,
+  const bridge = migrationBridge(),
     local = await bridge.hosts!();
   if (!local.ok) throw new Error(local.error || "无法读取主机列表");
   const localKeys = await bridge.keys!.list();

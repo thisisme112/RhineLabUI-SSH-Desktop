@@ -7,6 +7,7 @@ import {
   createWorkspaceBackup,
   readWorkspaceBackup,
   importWorkspaceBackup,
+  migrationAvailable,
   type WorkspaceBackup,
 } from "./configuration";
 import type { WorkspaceStore } from "./workspace-store";
@@ -122,6 +123,12 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
         this.savePreferences(),
       );
     this.input("background-row").hidden = !getPlatformBridge()?.background;
+    // A disabled fieldset outranks the per-control toggling in setBusy().
+    if (!migrationAvailable()) {
+      const data = this.root.querySelector<HTMLFieldSetElement>('fieldset[data-section="data"]')!;
+      data.disabled = true;
+      data.querySelector("legend")!.insertAdjacentHTML("afterend", "<p>仅桌面版与安卓版可用：网页演示不读写本机主机与凭据。</p>");
+    }
     this.input<HTMLInputElement>("background").addEventListener(
       "change",
       () => {
@@ -227,10 +234,12 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
     } else this.message("设置已保存");
   }
   private async setBackground() {
-    const input = this.input("background");
+    const input = this.input("background"),
+      background = getPlatformBridge()?.background;
+    if (!background) return;
     input.disabled = true;
     try {
-      const result = await getPlatformBridge()!.background!.set(input.checked);
+      const result = await background.set(input.checked);
       sshPreferences.save({
         ...sshPreferences.value,
         background: result.enabled,
@@ -311,6 +320,7 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
     }
   }
   private async export() {
+    if (!migrationAvailable()) return;
     this.setBusy(true);
     this.message("正在生成配置备份…");
     try {
@@ -340,7 +350,7 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
   }
   private async readFile() {
     const file = this.input<HTMLInputElement>("file").files?.[0];
-    if (!file) return;
+    if (!file || !migrationAvailable()) return;
     this.setBusy(true);
     this.backup = undefined;
     this.prepared = false;
@@ -367,7 +377,7 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
     }
   }
   private async previewImport() {
-    if (!this.backup) return;
+    if (!this.backup || !migrationAvailable()) return;
     this.setBusy(true);
     try {
       await this.cancelTicket();
@@ -397,7 +407,7 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
     }
   }
   private async import() {
-    if (!this.backup || !this.prepared) return;
+    if (!this.backup || !this.prepared || !migrationAvailable()) return;
     this.setBusy(true);
     this.message("正在导入配置…");
     try {

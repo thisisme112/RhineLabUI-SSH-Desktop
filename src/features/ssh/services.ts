@@ -354,14 +354,16 @@ export class SshServicesClient {
     expected?: { id: string; sessionId: string },
     remember = false,
   ) {
-    const prompt = this.value?.prompt;
+    const prompt = this.value?.prompt,
+      services = getPlatformBridge()?.services;
     if (
       !prompt ||
+      !services ||
       (expected &&
         (expected.id !== prompt.id || expected.sessionId !== this.sessionId))
     )
       return Promise.resolve({ ok: false, error: "认证请求已结束" });
-    return getPlatformBridge()!.services!.answer({
+    return services.answer({
       sessionId: this.sessionId,
       id: prompt.id,
       value,
