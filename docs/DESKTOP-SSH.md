@@ -2,13 +2,13 @@
 
 2026-09-15 新增字体／字号／字距／行距、项目与 tmux、重连、双终端、文本编辑、转发、监控提醒、参数化命令和配置迁移，完整操作见 [工作区设置与项目档案](SSH-WORKSPACE-SETTINGS.md)。电脑默认字号 13px、范围 8–32px；此项覆盖下文早期版本的字号范围。
 
-通过 `npm run dev:desktop` 启动开发版，或先执行 `npm run build:desktop`，再执行 `npm run start:desktop`。需要 Windows 系统 OpenSSH；网页与 Wallpaper Engine 版本不提供 SSH。
+通过 `npm run dev:desktop` 启动开发版，或先执行 `npm run build:desktop`，再执行 `npm run start:desktop`。需要 Windows 系统 OpenSSH。网页版默认附带 SSH 演示：两台演示主机和完整界面，不连接真实主机，`?ssh-demo=0` 关闭；Wallpaper Engine 版本不提供 SSH。
 
 首次桌面构建会下载并校验固定版本的 Go 工具链，生成本机 SSH 桥接程序和 Linux 采集器。之后仅在源码或校验值变化时重新构建，不要求远端安装 Go、Python 或 Node。构建和依赖说明见 [SSH 服务源码](../services/ssh/README.md)。
 
 ## 主机总览
 
-桌面版默认打开半透明磨砂总览，背后保留原来的玻璃档案阵列。五条物理阵列承载主机和可编辑的快捷档案，命令、目录收藏、历史和密钥库放在总览的页签中。原网页和壁纸继续使用原资料内容；安卓使用同一套 SSH 界面，见 [安卓版](ANDROID.md)。
+桌面版默认打开半透明磨砂总览，背后保留原来的玻璃档案阵列。五条物理阵列承载主机和可编辑的快捷档案，命令、目录收藏、历史和密钥库放在总览的页签中。网页版的 SSH 演示以演示主机代替原资料内容（`?ssh-demo=0` 恢复原资料），壁纸继续使用原资料内容；安卓使用同一套 SSH 界面，见 [安卓版](ANDROID.md)。
 
 | 入口 | 内容 |
 | --- | --- |

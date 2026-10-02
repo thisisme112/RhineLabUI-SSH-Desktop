@@ -18,7 +18,7 @@ APK：`android/app/build/outputs/apk/debug/app-debug.apk`。包名仍为 `cc.lub
 
 `scripts/build/android-build.mjs` 优先使用 `JAVA_HOME` / `ANDROID_HOME`，也支持本机已有工具链；不修改系统环境。临时目录下的工具链可能被系统清理，长期构建建议设置常驻 JDK 17 和 Android SDK。`android/local.properties`、生成的网页、JNI 代理及监控二进制均不进入 Git。
 
-安卓版有独立的 Vite `android` 模式和 `dist-android/` 目录，Capacitor 使用原来的本地 HTTPS 来源。应用资源随 APK 离线打包，不注册 PWA Service Worker。网页和壁纸不启用 SSH，电脑端不调用安卓插件。
+安卓版有独立的 Vite `android` 模式和 `dist-android/` 目录，Capacitor 使用原来的本地 HTTPS 来源。应用资源随 APK 离线打包，不注册 PWA Service Worker。网页只提供不连接真实主机的 SSH 演示，壁纸不启用 SSH；电脑端不调用安卓插件。
 
 ## 主机与会话
 
