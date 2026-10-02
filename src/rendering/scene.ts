@@ -19,6 +19,7 @@ import { DecryptionController } from "../features/archives/decryption";
 import { archiveColumns, rebaseArchiveRows, resetArchiveRows, fileLocation, records } from "../features/archives/data";
 import {
   cellKey,
+  cellNumber,
   sameCell,
   selectionCell,
   fileAtCell,
@@ -31,7 +32,7 @@ import {
   type ArchiveNavigation,
 } from "../features/archives/archive-loop";
 import { labelMarkSvg } from "../shared/brand";
-import { setStyle } from "../shared/dom-write";
+import { setData, setStyle } from "../shared/dom-write";
 import { archiveFraming } from "./viewport-layout";
 import { ArchiveDrag, ArchivePlaneMomentum, type DragAxis, type DragProjection, type DragPosition } from "../features/archives/archive-drag";
 import { ArchivePull } from "../features/archives/archive-pull";
@@ -209,9 +210,12 @@ export class ArchiveScene {
   private ao: ScenePipeline["ao"];
   private bokeh: ScenePipeline["bokeh"];
   private instances: THREE.InstancedMesh[] = [];
+  /** One transform per card, shared by every instanced part of it, so it is written and uploaded once. */
+  private instanceMatrix?: THREE.InstancedBufferAttribute;
   private visibility = new ArchiveVisibility();
   private instanceCapacity = LOOP_COLUMNS * LOOP_ROWS;
   private drawnCells: ArchiveCell[] = [];
+  private drawnPool: ArchiveCell[] = [];
   private extraCoverage = false;
   setArchiveCoverage(extra: boolean) { this.extraCoverage = extra; }
   private model = new THREE.Group();
@@ -643,7 +647,8 @@ export class ArchiveScene {
       geom.setAttribute("archiveFlash", this.flashAttribute);
       themeMaterial(arrayMat, name, true, this.subduedIndex);
       const inst = new THREE.InstancedMesh(geom, arrayMat, count);
-      inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      this.instanceMatrix ??= inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      inst.instanceMatrix = this.instanceMatrix;
       inst.castShadow = name === "Optical_Diffuser";
       inst.receiveShadow = true;
       inst.frustumCulled = false;
@@ -999,12 +1004,15 @@ export class ArchiveScene {
   private ensureInstanceCapacity(required: number) {
     if (required <= this.instanceCapacity) return;
     const capacity = Math.max(required, this.instanceCapacity * 2);
+    const matrix = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 16), 16).setUsage(THREE.DynamicDrawUsage);
+    if (this.instanceMatrix) matrix.array.set(this.instanceMatrix.array);
+    matrix.needsUpdate = true;
     for (const inst of this.instances) {
+      // Releases the old buffer; a second release of the shared one is a no-op.
       inst.dispose();
-      const matrix = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 16), 16).setUsage(THREE.DynamicDrawUsage);
-      matrix.array.set(inst.instanceMatrix.array);
       inst.instanceMatrix = matrix;
     }
+    this.instanceMatrix = matrix;
     const previousTheme = this.themeAttribute;
     this.themeAttribute = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(THREE.DynamicDrawUsage);
     if (previousTheme) this.themeAttribute.array.set(previousTheme.array);
@@ -1051,7 +1059,8 @@ export class ArchiveScene {
       shadows: this.renderer.shadowMap.enabled
         ? this.light.shadow.mapSize.x
         : 0,
-      depthOfField: this.bokeh.enabled ? this.quality.depthOfField : 0,
+      // The pass itself turns off while the aperture is zero (update), so report the setting.
+      depthOfField: this.quality.depthOfField,
     });
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -1491,7 +1500,8 @@ export class ArchiveScene {
       if (target === 0 && next < 0.0001) this.hoverLifts.delete(key);
       else this.hoverLifts.set(key, next);
     }
-    const hoverLift = (cell: ArchiveCell) => this.hoverLifts.get(cellKey(cell)) ?? 0;
+    // Asked for every card every frame; usually nothing is hovering, so no key is built.
+    const hoverLift = (cell: ArchiveCell) => this.hoverLifts.size ? this.hoverLifts.get(cellKey(cell)) ?? 0 : 0;
     const chosen = this.cellPosition(this.selectedCell);
     const selectedRow = this.selectedCell.row;
     const selectedLane = this.selectedCell.lane;
@@ -1596,19 +1606,25 @@ export class ArchiveScene {
           this.shoulder.value,
           this.laneFocus.value,
         );
-      const height =
-        archiveWave(
+      // field() runs three times per card per frame. The scan wave is exactly zero once
+      // its packets have passed (t ≥ 4.35 s, motion.ts), and outside the opening scanTime
+      // only grows from 29.1; with ambient motion off idleGain is exactly zero too.
+      const height = this.scanTime < 26.4
+        ? archiveWave(
           row + this.coordinateOrigin.row,
           lane + this.coordinateOrigin.lane,
           this.scanTime,
         ) *
-          this.scanBlend;
-      const breathing = idleWave(
+          this.scanBlend
+        : 0;
+      const breathing = this.idleGain
+        ? idleWave(
           row + this.coordinateOrigin.row,
           lane + this.coordinateOrigin.lane,
           time,
         ) *
-          this.idleGain;
+          this.idleGain
+        : 0;
       let pulseHeight = 0;
       if (!cinematic && !this.reduced) {
         let ripple = 0;
@@ -1627,7 +1643,7 @@ export class ArchiveScene {
         settlingWave(distance, 26.56) *
           columnStrength(lane, this.laneFocus.value)) * (1 - this.flatMix) + breathing + pulseHeight +
         (activePlay && !this.reduced ? rhythmDisplacement(row, lane, time, play.bands, play.strength, rhythm, screenX(row, lane)) : 0) +
-        (this.relayLifts.get(cellKey({ row, lane })) ?? 0)
+        (this.relayLifts.size ? this.relayLifts.get(cellKey({ row, lane })) ?? 0 : 0)
       );
     };
     const selectedBase = chosen.y + field(selectedRow, selectedLane);
@@ -1953,27 +1969,37 @@ export class ArchiveScene {
     const fixed = (Boolean(cinematic) || !this.looping) && !responsiveOpening;
     this.cells = fixed ? Array.from({ length: 160 }, (_, i) => poolCell(i))
       : this.visibility.update(this.camera, fog.far, trackX, entryZ + this.rail.value, this.extraCoverage);
-    const returning = new Map(this.outgoing.filter(o => o.batched).map(o => [cellKey(o.cell), o]));
-    const hidden = new Set(this.outgoing.filter(o => !o.batched).map(o => cellKey(o.cell)));
-    hidden.add(cellKey(this.selectedCell));
+    const returning = new Map(this.outgoing.filter(o => o.batched).map(o => [cellNumber(o.cell), o]));
+    const hidden = new Set(this.outgoing.filter(o => !o.batched).map(o => cellNumber(o.cell)));
+    hidden.add(cellNumber(this.selectedCell));
+    const previousCount = this.drawnCells.length;
     this.drawnCells.length = 0;
     this.relayPoints.clear();
     const flipping = this.flip.active(time);
     // A wave that has just ended still has to write its last (zero) values once.
     const flashDirty = flipping || this.flashWasOn;
     this.flashWasOn = flipping;
+    // Only what changed is uploaded: a resting array rewrites the same values every frame.
+    let matricesDirty = false, themeDirty = false;
     for (const cell of this.cells) {
       const { row, lane } = cell;
-      if (hidden.has(cellKey(cell))) continue;
+      const number = cellNumber(cell);
+      if (hidden.has(number)) continue;
       const x = (lane - 2) * COLUMN_SPACING - trackX;
       const turn = flipping ? this.flip.sample(cell, time) : NO_FLIP;
-      const y = -4.6 + field(row, lane) + hoverLift(cell) - this.presentationDrop(cell) + (returning.get(cellKey(cell))?.lift.value ?? 0) + turn.lift;
+      const y = -4.6 + field(row, lane) + hoverLift(cell) - this.presentationDrop(cell) + (returning.size ? returning.get(number)?.lift.value ?? 0 : 0) + turn.lift;
       const z = (row - 15.5) * ROW_SPACING + entryZ + this.rail.value;
       if (!fixed && !this.visibility.intersects(x, y, z)) continue;
       const i = this.drawnCells.length;
       this.ensureInstanceCapacity(i + 1);
-      this.drawnCells.push({ lane, row });
-      this.themeAttribute?.setX(i, this.theme.sample(cell, time));
+      // Picking copies the cell it hits (pickCell), so the objects are reused frame to frame.
+      const drawn = this.drawnPool[i] ??= { lane, row };
+      drawn.lane = lane; drawn.row = row;
+      this.drawnCells.push(drawn);
+      if (this.themeAttribute) {
+        const value = this.theme.sample(cell, time);
+        if (this.themeAttribute.getX(i) !== Math.fround(value)) { this.themeAttribute.setX(i, value); themeDirty = true; }
+      }
       this.flashAttribute?.setX(i, turn.flash);
       const slope = field(row + .5, lane) - field(row - .5, lane);
       this.dummy.position.set(x, y, z);
@@ -1981,20 +2007,23 @@ export class ArchiveScene {
       this.dummy.scale.setScalar(1);
       this.dummy.updateMatrix();
       if (play.enabled) this.relayPoints.set(cellKey(cell), { cell: { ...cell }, point: new THREE.Vector3(0, 3.5, 0).applyMatrix4(this.dummy.matrix) });
-      for (const inst of this.instances) inst.setMatrixAt(i, this.dummy.matrix);
+      // Every part of a card shares one matrix buffer (ensureInstanceCapacity), written once.
+      const matrices = this.instanceMatrix!.array as Float32Array, elements = this.dummy.matrix.elements, offset = i * 16;
+      if (!matricesDirty) for (let k = 0; k < 16; k++) if (matrices[offset + k] !== Math.fround(elements[k])) { matricesDirty = true; break; }
+      if (matricesDirty) this.dummy.matrix.toArray(matrices, offset);
     }
-    for (const inst of this.instances) {
-      inst.count = this.drawnCells.length;
-      inst.instanceMatrix.needsUpdate = true;
+    for (const inst of this.instances) inst.count = this.drawnCells.length;
+    if (matricesDirty || this.drawnCells.length !== previousCount) {
+      this.instanceMatrix!.needsUpdate = true;
+      // Picking uses only the first instanced surface; three recomputes the bound lazily
+      // when a ray needs it, instead of an O(n) pass every frame.
+      if (this.instances[0]) this.instances[0].boundingSphere = null;
     }
     for (const item of this.outgoing) {
       const p = item.group.position;
       item.group.visible = !item.batched && (Boolean(item.openBlend) || item.returnY !== null || this.visibility.intersects(p.x, p.y, p.z));
     }
-    // Picking uses only the first instanced surface. The other batches disable
-    // renderer culling and do not need an O(n) bound recomputation each frame.
-    this.instances[0]?.computeBoundingSphere();
-    if (this.themeAttribute) this.themeAttribute.needsUpdate = true;
+    if (this.themeAttribute && themeDirty) this.themeAttribute.needsUpdate = true;
     if (this.flashAttribute && flashDirty) this.flashAttribute.needsUpdate = true;
     let neighborTop = -Infinity;
     const lane = selectedLane,
@@ -2016,14 +2045,14 @@ export class ArchiveScene {
       detail > 0.9 &&
       this.pulseGain < 0.01 &&
       this.clearance > 0.3;
-    this.container.dataset.inspection =
+    setData(this.container, "inspection",
       this.returnY !== null
         ? "aligning"
         : this.canInspect
           ? "ready"
           : this.targetDetail
             ? "lifting"
-            : "preview";
+            : "preview");
     const focalPoint = this.model.position
       .clone()
       .add(new THREE.Vector3(0, 2, 0))
@@ -2037,6 +2066,8 @@ export class ArchiveScene {
       (THREE.MathUtils.lerp(0.0003, 0.0008, detail) *
         this.quality.depthOfField * (1 - this.sessionDeckFocus)) /
       100;
+    // A zero aperture blurs nothing (the terminal deck fully open): skip the pass and its depth render.
+    this.bokeh.enabled = this.quality.depthOfField > 0 && bokehUniforms.aperture.value > 0;
     this.renderer.info.reset();
     if (this.contextLost) return;
     if (this.superPerformance) this.renderer.render(this.scene, this.camera);

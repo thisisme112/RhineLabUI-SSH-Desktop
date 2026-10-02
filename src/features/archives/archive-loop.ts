@@ -78,6 +78,12 @@ export function cellKey(cell: ArchiveCell) {
   return `${cell.lane}:${cell.row}`;
 }
 
+/** The same identity as a number, for lookups made for every card every frame
+ *  (no string per card). Exact while |lane| < 2^26 and |row| < 2^25. */
+export function cellNumber(cell: ArchiveCell) {
+  return cell.lane * 2 ** 26 + cell.row;
+}
+
 export function sameCell(a: ArchiveCell, b: ArchiveCell) {
   return a.lane === b.lane && a.row === b.row;
 }
