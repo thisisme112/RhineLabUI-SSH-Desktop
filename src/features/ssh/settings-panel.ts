@@ -1,7 +1,7 @@
 import { getPlatformBridge } from "../../platform/bridge.ts";
 import { SurfaceScope } from "./surface";
 import { SurfaceTransition } from "../../shared/ui-transitions";
-import { terminalAppearance, TERMINAL_FONTS } from "./terminal-appearance";
+import { terminalAppearance, TERMINAL_CURSORS, TERMINAL_FONTS } from "./terminal-appearance";
 import { sshPreferences, type SshPreferences } from "./preferences";
 import {
   createWorkspaceBackup,
@@ -47,9 +47,10 @@ export class SshSettingsPanel {
       <fieldset><legend>终端文字</legend><div class="ssh-settings-grid">
         <label>字体<select data-font></select></label><label>字号 / px<input data-size type="number" min="8" max="32" step="0.5"></label>
         <label>字距 / px<input data-spacing type="number" min="-1" max="3" step="0.1"></label><label>行距 / 倍<input data-line-height type="number" min="1" max="2" step="0.05"></label>
-      </div><pre class="ssh-font-preview" aria-label="终端字体预览">user@rhine:~/project$ ls -la
+        <label>光标<select data-cursor></select></label><label class="ssh-setting-check ssh-setting-check-grid"><input data-cursor-blink type="checkbox">光标闪烁</label>
+      </div><pre class="ssh-font-preview" aria-label="终端字体预览">user@rhine:~/project$ ls -la<span class="ssh-cursor-sample" aria-hidden="true"> </span>
 0123456789  ABCDEFGH  abcdefgh
-total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>恢复终端文字默认值</button><p>所有会话同步生效。负字距会收紧字符，过小可能重叠。</p></fieldset>
+total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>恢复终端文字默认值</button><p>所有会话同步生效。负字距会收紧字符，过小可能重叠。光标颜色取主题强调色，程序可自行指定形状；减少动效时始终常亮。</p></fieldset>
       <fieldset><legend>连接与档案</legend><label class="ssh-setting-check"><input data-reconnect type="checkbox">意外断线后自动重连</label>
       <div class="ssh-settings-grid"><label>最多重试次数<input data-attempts type="number" min="1" max="20" step="1"></label><label>档案开启动画<select data-animation><option value="full">每次完整开盒</option><option value="first">首次完整，之后快速展开</option></select></label></div>
       <p>已连接过的会话才会恢复；认证失败、指纹变化或手动结束后停止重试。项目档案可填写 tmux 名称以重新接回远端工作。</p>
@@ -82,13 +83,18 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
     const font = this.input<HTMLSelectElement>("font");
     for (const [id, value] of Object.entries(TERMINAL_FONTS))
       font.add(new Option(value.name, id));
-    for (const field of ["font", "size", "spacing", "line-height"])
+    const cursor = this.input<HTMLSelectElement>("cursor");
+    for (const [id, name] of Object.entries(TERMINAL_CURSORS))
+      cursor.add(new Option(name, id));
+    for (const field of ["font", "size", "spacing", "line-height", "cursor", "cursor-blink"])
       this.input(field).addEventListener("change", () => {
         const patch = {
           font: font.value as keyof typeof TERMINAL_FONTS,
           size: this.number("size"),
           spacing: this.number("spacing"),
           lineHeight: this.number("line-height"),
+          cursor: cursor.value as keyof typeof TERMINAL_CURSORS,
+          blink: this.input("cursor-blink").checked,
         };
         if (
           ![patch.size, patch.spacing, patch.lineHeight].every(Number.isFinite)
@@ -188,6 +194,8 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
     this.input("size").value = String(value.size);
     this.input("spacing").value = String(value.spacing);
     this.input("line-height").value = String(value.lineHeight);
+    this.input<HTMLSelectElement>("cursor").value = value.cursor;
+    this.input("cursor-blink").checked = value.blink;
     const preview = this.root.querySelector<HTMLElement>(".ssh-font-preview")!;
     Object.assign(preview.style, {
       fontFamily: TERMINAL_FONTS[value.font].family,
@@ -195,6 +203,8 @@ total 128  │ CPU 24% │ MEM 2.8G</pre><button type="button" data-font-reset>�
       letterSpacing: value.spacing + "px",
       lineHeight: String(value.lineHeight),
     });
+    preview.dataset.cursor = value.cursor;
+    preview.dataset.blink = String(value.blink);
   }
   private syncPreferences() {
     const value = sshPreferences.value;

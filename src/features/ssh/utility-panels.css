@@ -258,6 +258,24 @@ html[data-desktop="true"] .ssh-utility-surface :is(button, input, select, textar
   padding: 12px 0;
   font-variant-ligatures: none;
 }
+.ssh-setting-check-grid {
+  align-self: end;
+  min-height: 34px;
+  margin-bottom: 0;
+}
+/* The sample follows 光标 and 光标闪烁, in the accent the terminal cursor uses. */
+.ssh-cursor-sample {
+  display: inline-block;
+  width: 1ch;
+  margin-left: 1ch;
+  box-shadow: inset 2px 0 0 var(--theme-accent);
+}
+.ssh-font-preview[data-cursor="block"] .ssh-cursor-sample { background: var(--theme-accent); box-shadow: none; }
+.ssh-font-preview[data-cursor="underline"] .ssh-cursor-sample { box-shadow: inset 0 -2px 0 var(--theme-accent); }
+.ssh-font-preview[data-blink="true"] .ssh-cursor-sample { animation: ssh-cursor-blink 1.06s steps(1, end) infinite; }
+.reduce-motion .ssh-font-preview .ssh-cursor-sample { animation: none; }
+@media (prefers-reduced-motion: reduce) { .ssh-font-preview .ssh-cursor-sample { animation: none; } }
+@keyframes ssh-cursor-blink { 50% { opacity: 0; } }
 .ssh-settings-import {
   margin-top: 18px;
   padding-top: 14px;

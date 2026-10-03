@@ -142,14 +142,14 @@ export function paintTerminalBuffer(
   }
   ctx.globalAlpha = 1;
   if (cursor && buffer.viewportY === buffer.baseY) {
+    // The chosen shape (terminal-appearance.ts); the packed screen does not blink.
+    const x = rect.x + buffer.cursorX * cw, y = rect.y + buffer.cursorY * ch;
+    const line = Math.max(1.5, fontSize / 9);
     ctx.fillStyle = theme.cursor!;
     ctx.globalAlpha = 0.65;
-    ctx.fillRect(
-      rect.x + buffer.cursorX * cw,
-      rect.y + buffer.cursorY * ch,
-      cw,
-      ch,
-    );
+    if (term.options.cursorStyle === "bar") ctx.fillRect(x, y, line, ch);
+    else if (term.options.cursorStyle === "underline") ctx.fillRect(x, y + ch - line, cw, line);
+    else ctx.fillRect(x, y, cw, ch);
   }
   ctx.restore();
 }

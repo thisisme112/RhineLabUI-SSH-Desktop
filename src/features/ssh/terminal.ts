@@ -244,8 +244,7 @@ export class SshTerminalPanel {
     const term = new Terminal({
       cols: 100,
       rows: 30,
-      ...terminalAppearance.options(),
-      cursorBlink: !this.reduced,
+      ...terminalAppearance.options(this.reduced),
       convertEol: false,
       scrollback: 5000,
       theme: this.screenTheme,
@@ -347,7 +346,7 @@ export class SshTerminalPanel {
     }
     if (reduced !== this.reduced) {
       this.reduced = reduced;
-      this.term.options.cursorBlink = !reduced;
+      this.term.options.cursorBlink = terminalAppearance.value.blink && !reduced;
     }
     this.root.dataset.dark = String(dark);
     this.root.classList.toggle("reduce-motion", reduced);

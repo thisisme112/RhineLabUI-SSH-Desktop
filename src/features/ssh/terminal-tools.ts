@@ -403,7 +403,7 @@ export class TerminalTools {
   }
 
   private applyTypography() {
-    if (this.term) this.term.options = terminalAppearance.options();
+    if (this.term) this.term.options = terminalAppearance.options(this.reduced);
     this.updateFontControls();
     // Font loading must complete before FitAddon measures the cell grid.
     void terminalAppearance.ready().then(() => { if (this.term) this.host.fit(); });

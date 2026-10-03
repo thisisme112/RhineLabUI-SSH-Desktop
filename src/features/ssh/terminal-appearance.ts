@@ -12,24 +12,32 @@ export const TERMINAL_FONTS = {
     family: '"Cascadia Mono", Consolas, "Liberation Mono", Menlo, monospace',
   },
 } as const;
+/** The cursor shapes the Unreal build offers (方块 / 竖线 / 下划线), as xterm names them. */
+export const TERMINAL_CURSORS = { block: "方块", bar: "竖线", underline: "下划线" } as const;
 export type TerminalAppearance = {
   version: 1;
   font: keyof typeof TERMINAL_FONTS;
   size: number;
   spacing: number;
   lineHeight: number;
+  /** Absent in settings and backups saved before the cursor could be chosen. */
+  cursor?: keyof typeof TERMINAL_CURSORS;
+  blink?: boolean;
 };
 export const TERMINAL_FONT = TERMINAL_FONTS.jetbrains.family;
 export const DEFAULT_FONT_SIZE = import.meta.env.MODE === "android" ? 11 : 13;
 export const MIN_FONT_SIZE = 8;
 export const MAX_FONT_SIZE = 32;
 const KEY = "rhine.ssh.terminal-appearance";
-const defaults = (): TerminalAppearance => ({
+// The Unreal build's FRhineTerminalLook defaults: a blinking bar.
+const defaults = (): Required<TerminalAppearance> => ({
   version: 1,
   font: "jetbrains",
   size: DEFAULT_FONT_SIZE,
   spacing: 0,
   lineHeight: 1.15,
+  cursor: "bar",
+  blink: true,
 });
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
@@ -47,11 +55,13 @@ export function validAppearance(value: unknown): value is TerminalAppearance {
     a.spacing <= 3 &&
     Number.isFinite(a.lineHeight) &&
     a.lineHeight >= 1 &&
-    a.lineHeight <= 2
+    a.lineHeight <= 2 &&
+    (a.cursor === undefined || Object.hasOwn(TERMINAL_CURSORS, a.cursor)) &&
+    (a.blink === undefined || typeof a.blink === "boolean")
   );
 }
 class AppearanceStore {
-  value = defaults();
+  value: Required<TerminalAppearance> = defaults();
   error = "";
   private readOnly = false;
   private listeners = new Set<() => void>();
@@ -62,7 +72,7 @@ class AppearanceStore {
         const saved = JSON.parse(raw);
         if (!validAppearance(saved))
           throw new Error("字体设置版本无法读取，原数据已保留");
-        this.value = saved;
+        this.value = { ...defaults(), ...saved };
       } else {
         const size = Number(
           localStorage.getItem("rhine-ssh-terminal-font-size"),
@@ -77,7 +87,9 @@ class AppearanceStore {
   }
   update(patch: Partial<Omit<TerminalAppearance, "version">>) {
     if (this.readOnly) return false;
-    const next: TerminalAppearance = { ...this.value, ...patch, version: 1 };
+    const next: Required<TerminalAppearance> = { ...this.value, ...patch, version: 1 };
+    next.cursor ??= this.value.cursor;
+    next.blink ??= this.value.blink;
     next.size = Math.round(clamp(next.size, 8, 32) * 2) / 2;
     next.spacing = Math.round(clamp(next.spacing, -1, 3) * 10) / 10;
     next.lineHeight = Math.round(clamp(next.lineHeight, 1, 2) * 100) / 100;
@@ -99,13 +111,16 @@ class AppearanceStore {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
-  options(): ITerminalOptions {
+  /** A program may still set its own shape (DECSCUSR); reduced motion keeps the cursor steady. */
+  options(reduced = false): ITerminalOptions {
     const a = this.value;
     return {
       fontFamily: TERMINAL_FONTS[a.font].family,
       fontSize: a.size,
       letterSpacing: a.spacing,
       lineHeight: a.lineHeight,
+      cursorStyle: a.cursor,
+      cursorBlink: a.blink && !reduced,
     };
   }
   async ready() {
