@@ -159,8 +159,8 @@ export class LabelSheet {
       <div class="label-detail" data-frame="detail">
         ${zoneFrame("label-detail-hole")}
         <span class="label-fig label-note label-detail-fig" aria-hidden="true"></span>
-        <span class="label-tag label-cut-br" data-tag="1" aria-hidden="true"><b>01</b>标签 · 与右侧编号同源</span>
-        <span class="label-tag label-cut-br" data-tag="2" aria-hidden="true"><b>02</b>屏幕 · 会话实时预览</span>
+        <span class="label-tag label-cut-br" data-tag="1" aria-hidden="true"><b>01</b><span class="label-tag-ref"></span></span>
+        <span class="label-tag label-cut-br" data-tag="2" aria-hidden="true"><b>02</b><span class="label-tag-ref"></span></span>
         <div class="label-yaw" aria-hidden="true"><span class="label-note"></span><span class="label-figure"></span></div>
         <button type="button" class="label-viewer" data-action="model-viewer"></button>
       </div>
@@ -187,7 +187,7 @@ export class LabelSheet {
       primary: q('[data-label-action="primary"]'), clock: q(".label-clock"), topGround: q(".label-top-ground"),
       homeZone: q('[data-frame="home"] .label-zone'), detailZone: q('[data-frame="detail"] .label-zone'),
       topHole: q("#label-top-hole path"), homeHole: q("#label-home-hole path"), detailHole: q("#label-detail-hole path"), overviewHole: q("#label-overview-hole path"),
-      overviewGround: q(".label-overview-ground"), detailFig: q(".label-detail-fig"), tag1: q('[data-tag="1"]'), tag2: q('[data-tag="2"]'),
+      overviewGround: q(".label-overview-ground"), detailFig: q(".label-detail-fig"), tag1: q('[data-tag="1"]'), tag2: q('[data-tag="2"]'), tag1Ref: q('[data-tag="1"] .label-tag-ref'), tag2Ref: q('[data-tag="2"] .label-tag-ref'),
       yawNote: q(".label-yaw .label-note"), yaw: q(".label-yaw .label-figure"), viewer: q(".label-viewer"),
     };
     this.leaders = [...this.root.querySelectorAll<SVGGElement>(".label-leaders .label-leader")].map(group => ({
@@ -332,6 +332,11 @@ export class LabelSheet {
     const first: [number, number] = [BAND + 38, head + BAND + 86], second: [number, number] = [right - 392, 1080 - 170];
     setStyle(this.els.tag1 as HTMLElement, "translate", `${first[0]}px ${first[1]}px`);
     setStyle(this.els.tag2 as HTMLElement, "translate", `${second[0]}px ${second[1]}px`);
+    // A note is a drawing's reference, not a caption (the Unreal build's RhineLabelDetail.cpp): its number, the
+    // zone of the sheet its leader ends in, and a reading: the number the printed label carries, whether a session shows on the screen.
+    const at = (point: [number, number]) => zone(point[0], point[1] - head, right, 1080 - head);
+    this.text("tag1Ref", `REF. ${probe ? at(probe.pin) : "A—01"} : ${file.prefix}${file.code}`);
+    this.text("tag2Ref", `REF. ${probe ? at(probe.screen) : "A—01"} : ${file.services[1] ? "LIVE" : "STANDBY"}`);
     const detail = probe?.detail ?? 0;
     this.leader(1, probe ? [[first[0] + 30, first[1] + 46], probe.pin] : null, frame.reduced ? 1 : settle((detail - .75) / .25));
     this.leader(2, probe ? [[second[0] + 30, second[1]], probe.screen] : null, frame.reduced ? 1 : settle((detail - .8) / .2));

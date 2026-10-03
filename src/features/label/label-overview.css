@@ -161,7 +161,11 @@
 #viewport[data-design="label"] .ssh-overview-host-actions :is(button[data-armed], .danger:hover) { color: #d9603b; }
 #viewport[data-design="label"] .ssh-overview-host-actions > i { display: none; }
 
-#viewport[data-design="label"] .ssh-overview-empty { padding: 36px 20px 40px; font-size: 30px; font-weight: 700; letter-spacing: .6px; color: var(--ink); }
+#viewport[data-design="label"] .ssh-overview-empty { padding: 36px 20px 40px; color: var(--ink); }
+/* What the system states: the finding as a figure, then its count as a field and a value. No advice. */
+#viewport[data-design^="label"] .ssh-overview-empty em { display: none; }
+#viewport[data-design^="label"] .ssh-overview-empty b { display: block; font-family: var(--display); font-size: 64px; font-weight: 700; line-height: 1; letter-spacing: 0; }
+#viewport[data-design^="label"] .ssh-overview-empty span { display: block; margin-top: 16px; font-family: var(--mono); font-size: 14px; font-weight: 400; letter-spacing: .16em; opacity: .7; white-space: pre-wrap; }
 /* An empty archive is still Rhine Lab's: its mark stands over the line (shared/brand.ts, as a mask in the ink colour). */
 #viewport[data-design^="label"] .ssh-overview-empty::before {
   content: ""; display: block; width: 197px; height: 92px; margin-bottom: 30px; background: currentColor;

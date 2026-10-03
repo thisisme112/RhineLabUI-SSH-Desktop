@@ -598,6 +598,9 @@ html[data-super-performance="true"] .ssh-overview .ssh-overview-restore {
   padding: 24px 32px;
   color: var(--theme-muted);
 }
+/* The label design's wording of it (features/label); here the sentence stands alone. */
+.ssh-overview-empty :is(b, span) { display: none; }
+.ssh-overview-empty em { font-style: normal; }
 .ssh-overview-footer {
   display: flex;
   justify-content: space-between;

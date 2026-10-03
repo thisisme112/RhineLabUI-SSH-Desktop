@@ -629,9 +629,19 @@ export class SshOverview {
     this.root.querySelector<HTMLElement>(".ssh-overview-add")!.hidden = Boolean(query);
     const empty = this.root.querySelector<HTMLElement>(".ssh-overview-empty")!;
     empty.hidden = hosts.length > 0;
-    empty.textContent = query
-      ? "没有匹配的主机。"
-      : "添加第一台主机，建立你的连接档案。";
+    // The classic sheet says it in a sentence; the label design states the finding and its count, in the
+    // sheet's field / value form (label-overview.css shows the one or the other).
+    const total = this.cards.bound.length, count = String(total).padStart(2, "0");
+    const parts: [string, string][] = [
+      ["b", total ? "NO MATCH" : "NO RECORD"],
+      ["span", !total ? "HOSTS / 主机档案  00" : query ? `QUERY / 检索  ${this.query.trim().toUpperCase()}  ·  00 / ${count}` : `GROUP / 分组  00 / ${count}`],
+      ["em", query ? "没有匹配的主机。" : "添加第一台主机，建立你的连接档案。"],
+    ];
+    const state = parts.map(([, text]) => text).join("|");
+    if (empty.dataset.state !== state) {
+      empty.dataset.state = state;
+      empty.replaceChildren(...parts.map(([tag, text]) => Object.assign(document.createElement(tag), { textContent: text })));
+    }
   }
   /** A group heading, reused by name so a redraw does not restart its reveal. */
   private sectionHeader(title: string, count: number) {

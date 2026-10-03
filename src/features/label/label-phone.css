@@ -199,7 +199,9 @@
 #viewport[data-design="label-phone"] .ssh-overview-host-actions button { min-width: 44px; min-height: 36px; padding: 0 10px; box-shadow: inset 0 0 0 2px currentColor; background: none; color: inherit; font-size: 12px; font-weight: 700; letter-spacing: .4px; }
 #viewport[data-design="label-phone"] .ssh-overview-host-actions :is(button[data-armed], .danger[data-armed="true"]) { color: #d9603b; }
 #viewport[data-design="label-phone"] .ssh-overview-host-actions > i { display: none; }
-#viewport[data-design="label-phone"] .ssh-overview-empty { padding: 28px 0 20px; font-size: 17px; font-weight: 700; color: var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-empty { padding: 28px 0 20px; color: var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-empty b { font-size: 40px; }
+#viewport[data-design="label-phone"] .ssh-overview-empty span { margin-top: 10px; font-size: 12px; }
 #viewport[data-design="label-phone"] .ssh-overview-empty::before { width: 120px; height: 56px; margin-bottom: 18px; }
 
 #viewport[data-design="label-phone"] .ssh-overview-add-block {

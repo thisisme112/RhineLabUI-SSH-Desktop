@@ -14,6 +14,7 @@
   --cut: 12px; background: var(--ink); color: var(--ground); font-size: 18px; font-weight: 700; letter-spacing: .5px; white-space: nowrap;
 }
 .label-tag b { font-family: var(--display); font-size: 24px; font-weight: 700; color: var(--theme-signal-on-ink); }
+.label-tag-ref { font-family: var(--mono); font-size: 15px; letter-spacing: .14em; }
 /* The turn of the model, read out as it is dragged. */
 .label-yaw { position: absolute; left: calc(var(--label-band) + 38px); bottom: 52px; display: grid; gap: 14px; justify-items: start; }
 .label-yaw .label-figure { --px: 132px; }
