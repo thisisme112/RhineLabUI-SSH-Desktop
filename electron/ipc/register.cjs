@@ -400,14 +400,17 @@ function registerSessionIpc() {
     if (serviceFor(data.sessionId) !== service) return servicesChanged();
     return service.call(data.sessionId, "upload", { paths: picked.filePaths, destination: data.destination });
   });
-  handle("sftp:drop", (event, data) => {
+  handle("sftp:drop", async (event, data) => {
     const service = serviceFor(data?.sessionId);
     if (!service) return servicesChanged();
     // Paths come exclusively from preload's webUtils.getPathForFile(File).
-    if (!validRemote(data.destination) || !Array.isArray(data.paths) || !data.paths.length || data.paths.length > 256
-      || !data.paths.every((file) => typeof file === "string" && runtimeContext.path.isAbsolute(file) && runtimeContext.fs.existsSync(file)))
+    if (!validRemote(data.destination) || !Array.isArray(data.paths) || !data.paths.length || data.paths.length > 256)
       return { ok: false, error: "拖入文件无效" };
-    return service.call(data.sessionId, "upload", { paths: data.paths, destination: data.destination });
+    // What no longer exists is skipped, not a reason to refuse the rest.
+    const paths = [...new Set(data.paths.filter((file) => typeof file === "string" && runtimeContext.path.isAbsolute(file) && runtimeContext.fs.existsSync(file)))];
+    if (!paths.length) return { ok: false, error: "没有可上传的文件" };
+    const result = await service.call(data.sessionId, "upload", { paths, destination: data.destination });
+    return { ...result, skipped: data.paths.length - paths.length };
   });
   handle("sftp:download", async (event, data) => {
     const service = serviceFor(data?.sessionId);

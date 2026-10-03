@@ -1154,7 +1154,8 @@ export class SftpPanel {
     if (sessionId !== this.sessionId || result.canceled) return;
     if (!result.ok) this.feedback(result.error || "无法加入传输队列");
     else {
-      this.feedback("已加入传输队列");
+      const queued = Array.isArray(result.result) ? result.result.length : 0;
+      this.feedback(queued ? `已加入传输队列：${queued} 项${result.skipped ? `（跳过 ${result.skipped} 项）` : ""}` : "已加入传输队列");
       this.openQueue();
     }
   }

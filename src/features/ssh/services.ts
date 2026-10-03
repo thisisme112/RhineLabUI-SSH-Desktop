@@ -4,6 +4,8 @@ export type ServiceResult<T = unknown> = {
   result?: T;
   error?: string;
   canceled?: boolean;
+  /** Dropped items that were not queued: no local path, gone, or past the 256th. */
+  skipped?: number;
 };
 export type Capability = {
   state: string;

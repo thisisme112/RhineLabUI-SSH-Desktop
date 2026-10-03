@@ -36,18 +36,22 @@ contextBridge.exposeInMainWorld("rhineDesktop", {
     rename: (request) => ipcRenderer.invoke("sftp:rename", request),
     remove: (request) => ipcRenderer.invoke("sftp:remove", request),
     upload: (request) => ipcRenderer.invoke("sftp:upload", request),
+    // Like the Unreal build's drop zone: what has a local path goes (256 at a
+    // time); anything else is counted as skipped. ipc/register.cjs sftp:drop
+    // checks the paths again and adds the ones that no longer exist.
     uploadDropped: async (sessionId, files, destination) => {
       try {
-        if (!Array.isArray(files) || files.length === 0 || files.length > 256)
-          throw new Error("请选择 1–256 个文件或目录");
-        const paths = files.map((file) => webUtils.getPathForFile(file));
-        if (paths.some((file) => !file))
+        if (!Array.isArray(files) || files.length === 0)
+          throw new Error("没有可上传的文件");
+        const paths = files.map((file) => webUtils.getPathForFile(file)).filter(Boolean);
+        if (!paths.length)
           throw new Error("无法读取拖入文件的本地路径，请使用上传入口");
-        return await ipcRenderer.invoke("sftp:drop", {
+        const result = await ipcRenderer.invoke("sftp:drop", {
           sessionId,
           destination,
-          paths,
+          paths: paths.slice(0, 256),
         });
+        return { ...result, skipped: (result?.skipped || 0) + files.length - Math.min(paths.length, 256) };
       } catch (error) {
         return { ok: false, error: String(error?.message || error) };
       }
