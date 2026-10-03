@@ -479,6 +479,21 @@ test("wide-character wrap padding is resolved only against a unique configured k
   );
 });
 
+test("the vault page's listing carries metadata only, never a secret", async (t) => {
+  const { vault } = fixture(t);
+  vault.put("profile", "password", "fixture-password", endpoint, "", fingerprint);
+  const key = await vault.addKey({ source: "import", name: "实验室私钥", content: "-----BEGIN OPENSSH PRIVATE KEY-----\nfixture-only\n-----END OPENSSH PRIVATE KEY-----\n" });
+  vault.put("profile", "passphrase", "fixture-passphrase", endpoint, key.id);
+  vault.put("profile", "passphrase", "other-passphrase", endpoint, "c:/keys/id_ed25519");
+  const listed = vault.list();
+  assert.deepEqual(listed.map((entry) => [entry.kind, entry.key, entry.fingerprint, entry.invalid]).sort(),
+    [["passphrase", "id_ed25519", "", false], ["passphrase", "实验室私钥", "", false], ["password", "", fingerprint, false]].sort());
+  assert(listed.every((entry) => JSON.stringify(entry.endpoint) === JSON.stringify(endpoint) && entry.target === "profile"));
+  const text = JSON.stringify(listed);
+  for (const secret of ["fixture-password", "fixture-passphrase", "other-passphrase", "encrypted", "binding", "BEGIN OPENSSH"])
+    assert(!text.includes(secret), secret);
+});
+
 test("unavailable encryption and malformed vaults fail without replacing originals", (t) => {
   const { file, vault, inspect } = fixture(t);
   const disabled = new CredentialVault(
