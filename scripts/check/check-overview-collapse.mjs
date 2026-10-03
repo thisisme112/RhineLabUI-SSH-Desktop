@@ -212,9 +212,11 @@ try {
     mobile: false,
   });
   // Only for the first document: the reload later in this run is checking that
-  // the stowed state survives, so it must not be primed away.
+  // the stowed state survives, so it must not be primed away. This is the classic
+  // design's glass overview (draggable, stowed by its tab); the label design sets
+  // the overview as a page instead (label-overview.css), so the run chooses classic.
   const prime = await send("Page.addScriptToEvaluateOnNewDocument", {
-    source: `localStorage.removeItem('rhine-ssh-overview-collapsed');`,
+    source: `localStorage.removeItem('rhine-ssh-overview-collapsed'); localStorage.setItem('rhine-settings', JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings') || '{}'), design: 'classic'}));`,
   });
   await send("Page.navigate", { url: `http://127.0.0.1:${port}/?scene=archive` });
   await until(

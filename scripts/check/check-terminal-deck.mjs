@@ -251,8 +251,10 @@ try {
       deviceScaleFactor: 1,
       mobile: false,
     });
+    // The multi-session pass drives the classic design's glass overview (its
+    // heading's buttons, its session tabs); the other passes run the default design.
     await send("Page.addScriptToEvaluateOnNewDocument", {
-      source: `if (!localStorage.getItem('rhine-settings')) localStorage.setItem('rhine-settings', JSON.stringify({sound:false,music:false,reduced:false,superPerformance:${process.argv.includes("--fast")}}));`,
+      source: `if (!localStorage.getItem('rhine-settings')) localStorage.setItem('rhine-settings', JSON.stringify({sound:false,music:false,reduced:false,superPerformance:${process.argv.includes("--fast")}${process.argv.includes("--multi") ? ",design:'classic'" : ""}}));`,
     });
     await send("Page.navigate", {
       // Scripted runs keep every frame (their timings assume it) unless the run is about the frame budget itself.

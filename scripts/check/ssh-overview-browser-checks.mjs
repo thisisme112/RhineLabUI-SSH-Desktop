@@ -37,9 +37,15 @@ export async function checkOverviewUI({
     "overview entered",
     `document.querySelector('.ssh-overview')?.dataset.transition==='open'`,
   );
-  const geometries = [];
-  for (const theme of ["light", "dark"]) {
+  // The overview's 设置 opens the workspace settings; their 外观 section hands
+  // over to the system sheet, where a theme is chosen (each with a fixed brightness).
+  const chooseTheme = async (theme) => {
     await hit('[data-overview-action="settings"]');
+    await until(
+      "workspace settings",
+      `!!document.querySelector('.ssh-workspace-settings:not([hidden])') && document.querySelector('.ssh-overview').inert`,
+    );
+    await evaluate(`document.querySelector('.ssh-workspace-settings [data-settings-section="appearance"]').click()`);
     await until(
       "native settings",
       `document.querySelector('.modal-backdrop')?.dataset.transition==='open'`,
@@ -48,12 +54,18 @@ export async function checkOverviewUI({
       "overview settings isolate background input",
       `document.querySelector('#modal-root').closest('#stage')===null && document.querySelector('.ssh-overview').inert`,
     );
-    await hit(`[data-color-theme="${theme}"]`);
+    // A button: <html> itself carries data-color-palette for the theme on screen.
+    await hit(`button[data-color-palette="${theme}"]`);
+    await until(`${theme} painted`, `document.documentElement.dataset.colorPalette==='${theme}'`);
     await hit('[data-action="close-modal"]');
     await until(
       "settings returned to overview",
       `!document.querySelector('.ssh-overview').inert && !document.querySelector('.modal-backdrop')`,
     );
+  };
+  const geometries = [];
+  for (const theme of ["paper", "night"]) {
+    await chooseTheme(theme);
     await sleep(1200);
     for (const [width, height, dpr] of [
       [1920, 1080, 1],
@@ -68,7 +80,7 @@ export async function checkOverviewUI({
       });
       await sleep(550);
       const geometry = await evaluate(
-        `(() => {const sheet=document.querySelector('.ssh-overview-glass'),r=sheet.getBoundingClientRect(),brand=document.querySelector('.brand').getBoundingClientRect();return {theme:${JSON.stringify(theme)},width:innerWidth,height:innerHeight,dpr:devicePixelRatio,sheet:{x:r.x,y:r.y,width:r.width,height:r.height},overflow:sheet.scrollWidth>sheet.clientWidth,brandOverlap:brand.right>r.left&&brand.bottom>r.top,native:!sheet.closest('#stage')&&getComputedStyle(sheet).transform==='none'};})()`,
+        `(() => {const sheet=document.querySelector('.ssh-overview-glass'),r=sheet.getBoundingClientRect(),brand=document.querySelector('.brand').getBoundingClientRect();return {theme:${JSON.stringify(theme)},width:innerWidth,height:innerHeight,dpr:devicePixelRatio,sheet:{x:r.x,y:r.y,width:r.width,height:r.height},overflow:sheet.scrollWidth>sheet.clientWidth,brandOverlap:brand.right>r.left&&brand.bottom>r.top,native:!sheet.closest('#stage')&&['none','matrix(1, 0, 0, 1, 0, 0)'].includes(getComputedStyle(sheet).transform)};})()`,
       );
       geometries.push(geometry);
       await check(
@@ -86,13 +98,7 @@ export async function checkOverviewUI({
     mobile: false,
   });
   await sleep(350);
-  await hit('[data-overview-action="settings"]');
-  await until(
-    "settings for light theme",
-    `document.querySelector('.modal-backdrop')?.dataset.transition==='open'`,
-  );
-  await hit('[data-color-theme="light"]');
-  await hit('[data-action="close-modal"]');
+  await chooseTheme("paper");
   await until(
     "overview editable",
     `!document.querySelector('.ssh-overview').inert`,
@@ -243,21 +249,22 @@ export async function checkOperatingSettings({
       button: "left",
       clickCount: 1,
     });
+  // The terminal's 设置 opens the workspace settings over it.
   await until(
     "settings above operating terminal",
-    `document.querySelector('.modal-backdrop')?.dataset.transition==='open'`,
+    `!!document.querySelector('.ssh-workspace-settings:not([hidden])')`,
   );
   await check(
     "native settings preserve the visible terminal and isolate its input",
-    `document.querySelector('.ssh-terminal').inert && document.querySelector('.ssh-terminal').dataset.surfaceCovered==='false' && document.querySelector('#modal-root').closest('#stage')===null`,
+    `document.querySelector('.ssh-terminal').inert && document.querySelector('.ssh-terminal').dataset.surfaceCovered==='false'`,
   );
   await shot("operating-settings");
   await evaluate(
-    `document.querySelector('[data-action="close-modal"]').click()`,
+    `document.querySelector('.ssh-workspace-settings [data-close]').click()`,
   );
   await until(
     "operating focus restored",
-    `!document.querySelector('.modal-backdrop') && !document.querySelector('.ssh-terminal').inert`,
+    `!document.querySelector('.ssh-workspace-settings:not([hidden])') && !document.querySelector('.ssh-terminal').inert`,
   );
   await evaluate(
     `document.querySelector('.ssh-terminal .xterm-helper-textarea').focus()`,
@@ -299,6 +306,9 @@ export async function checkTabLifecycle({
   };
   await click('[data-overview-page="hosts"]');
   await click('[data-overview-action="settings"]');
+  // 减少动效 lives in the system sheet, reached through the workspace settings' 外观.
+  await until("workspace settings for motion", `!!document.querySelector('.ssh-workspace-settings:not([hidden])')`);
+  await click('.ssh-workspace-settings [data-settings-section="appearance"]');
   await until(
     "motion setting available",
     `document.querySelector('[data-pref="reduced"]')`,

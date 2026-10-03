@@ -19,7 +19,8 @@ export async function checkSshMultisession({ evaluate, until: waitFor, check, sh
   await until('host overview', `document.querySelectorAll('.ssh-overview-host').length === 8`);
   const { checkOverviewUI, checkOperatingSettings, checkTabLifecycle } = await import('./ssh-overview-browser-checks.mjs');
   await checkOverviewUI({evaluate,until,check,shot,send,sleep,evidence});
-  await check('five physical host lanes sit behind a native translucent overview', `document.querySelector('#column-number').textContent.includes('/ 05') && document.querySelector('.ssh-overview').closest('#stage') === null && getComputedStyle(document.querySelector('.ssh-overview-glass')).backdropFilter.includes('blur')`);
+  // The glass blurs what is behind it, except in super performance mode, where it is solid by design (overview.css).
+  await check('five physical host lanes sit behind a native translucent overview', `document.querySelector('#column-number').textContent.includes('/ 05') && document.querySelector('.ssh-overview').closest('#stage') === null && (document.documentElement.dataset.superPerformance === 'true' || getComputedStyle(document.querySelector('.ssh-overview-glass')).backdropFilter.includes('blur'))`);
   await shot('00-host-overview');
   await evaluate(`document.querySelector('.ssh-overview-host:last-child .ssh-overview-connect').focus()`);
   await until('hover preview arrives at destination', `rhine.stats().selectedIndex === rhineSshUi.cardOf('host-8')`);

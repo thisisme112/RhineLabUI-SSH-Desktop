@@ -227,7 +227,9 @@ try {
   await send("Page.enable");
   await send("Emulation.setFocusEmulationEnabled", { enabled: true });
   await send("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
-  await send("Page.addScriptToEvaluateOnNewDocument", { source: `localStorage.removeItem('rhine-ssh-overview-collapsed');` });
+  // The classic design's glass overview, where the other rows step back under the
+  // pointer; the label design keeps its timetable rows at full strength.
+  await send("Page.addScriptToEvaluateOnNewDocument", { source: `localStorage.removeItem('rhine-ssh-overview-collapsed'); localStorage.setItem('rhine-settings', JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings') || '{}'), design: 'classic'}));` });
   await send("Page.navigate", { url: `http://127.0.0.1:${port}/?scene=archive` });
   await until("overview with two hosts", `window.rhine?.stats().ready && document.querySelectorAll('.ssh-overview-host').length === 2`, 40000);
   await sleep(600);
