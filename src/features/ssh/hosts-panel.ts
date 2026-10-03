@@ -76,11 +76,11 @@ export class SshHostsPanel {
           <label data-ssh-reveal>PORT / 端口<input name="port" type="number" min="1" max="65535" step="1" placeholder="22"></label>
           <label data-ssh-reveal>AUTHENTICATION / 登录方式<select name="authMode"><option value="password">密码登录</option><option value="key">指定私钥</option><option value="auto">跟随系统 SSH 配置</option></select></label>
           <label class="ssh-host-wide" data-key-choice data-ssh-reveal>IDENTITY / 登录密钥<span class="ssh-host-key"><select name="keyId"><option value="">使用下方已有私钥路径</option></select><button type="button" class="export-button" data-action="identity">选择本机私钥 ↗</button></span></label>
+          <label class="ssh-host-wide ssh-host-jump" data-ssh-reveal>JUMP HOST / 跳板机<select name="jumpHostId"><option value="">不经跳板机，直连</option></select><input name="jumpHost" placeholder="user@bastion:22，或配置别名；多个用逗号分隔" spellcheck="false" hidden><small>经由已保存的主机跳转时，每一跳都用它自己档案里的已存口令，紧挨目标的一跳还会用它自己的私钥。经由跳板机时不设连接超时：等待目标机期间也包括跳板机的提问。</small></label>
           <div class="ssh-host-wide ssh-host-credential" data-ssh-reveal><p class="ssh-credential-state" role="status"></p><label class="ssh-remember"><input type="checkbox" name="rememberCredential">保存或更新<span data-credential-label>登录密码</span></label><input name="credential" type="password" autocomplete="new-password" placeholder="留空保留已保存的凭据" maxlength="16384" hidden><small>由当前 Windows 账户加密，下次连接自动使用。</small><button type="button" class="export-button" data-action="forget-credential" hidden>删除已保存凭据</button></div>
           <div class="ssh-host-wide ssh-host-membership" data-ssh-reveal><p class="ssh-host-membership-state" role="status"></p><div class="ssh-host-group-choices" role="group" aria-label="所属分组"></div></div>
-          <details class="ssh-host-wide" data-ssh-reveal><summary>连接选项 <span>跳板机 · 超时 · 保活</span></summary><div class="ssh-host-fields ssh-host-advanced">
+          <details class="ssh-host-wide" data-ssh-reveal><summary>连接选项 <span>私钥路径 · 超时 · 保活</span></summary><div class="ssh-host-fields ssh-host-advanced">
             <label class="ssh-host-wide">IDENTITY FILE / 已有私钥路径<input name="identityFile" placeholder="已有配置可继续使用；密钥库选择优先" spellcheck="false"></label>
-            <label class="ssh-host-wide ssh-host-jump">JUMP HOST / 跳板机<select name="jumpHostId"><option value="">不经跳板机，直连</option></select><input name="jumpHost" placeholder="user@bastion:22，或配置别名；多个用逗号分隔" spellcheck="false" hidden><small>经由已保存的主机跳转时，每一跳都用它自己档案里的已存口令，紧挨目标的一跳还会用它自己的私钥。经由跳板机时不设连接超时：等待目标机期间也包括跳板机的提问。</small></label>
             <label>连接超时（秒）<input name="connectTimeout" type="number" min="1" max="600" step="1" placeholder="使用 SSH 配置"></label>
             <label>保活间隔（秒，0 为关闭）<input name="keepAliveInterval" type="number" min="0" max="3600" step="1" placeholder="使用 SSH 配置"></label>
             <label>保活重试次数<input name="keepAliveCountMax" type="number" min="1" max="30" step="1" placeholder="使用 SSH 配置"></label>
@@ -105,7 +105,7 @@ export class SshHostsPanel {
       this.root.querySelector('[data-source="config"]')!.remove();
       this.field("identityFile").closest("label")!.hidden = true;
       this.root.querySelector(".ssh-host-jump small")!.textContent = "每一跳都用它自己档案里的私钥与已存口令。";
-      this.root.querySelector(".ssh-host-advanced")!.closest("details")!.querySelector("summary")!.textContent = "跳板机、超时与保活";
+      this.root.querySelector(".ssh-host-advanced")!.closest("details")!.querySelector("summary")!.textContent = "超时与保活";
       this.root.querySelector(".ssh-host-editor-note")!.textContent = "导入手机中的私钥后可供多个主机使用。验证码每次单独输入。";
     }
     this.search.addEventListener("input", () => this.renderList());
