@@ -9,7 +9,7 @@
  *   otherwise                            → dist-desktop/index.html built with
  *                                          `vite build --mode desktop`
  */
-const { app, BrowserWindow, clipboard, dialog, ipcMain, shell, safeStorage } = require("electron");
+const { app, BrowserWindow, clipboard, dialog, ipcMain, screen, shell, safeStorage } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const os = require("node:os");
@@ -23,6 +23,7 @@ const { HostProfiles, keyFor } = require("./host-profiles.cjs");
 const { recordPath, pruneRecords } = require("./session-records.cjs");
 const { buildSshArgs, resolveSshPath } = require("./ssh-args.cjs");
 const { createTextClipboard } = require("./terminal-clipboard.cjs");
+const { WindowState, DEFAULT: WINDOW_DEFAULT, MINIMUM: WINDOW_MINIMUM } = require("./window-state.cjs");
 const { SshServices, effectiveEndpoint, serviceExecutable } = require("./ssh-services.cjs");
 const { CredentialVault, inspectPrivateKey } = require("./credential-vault.cjs");
 const { createDiagnosticLog, bindCrashRecovery, sanitize } = require("./diagnostic-log.cjs");
@@ -348,12 +349,16 @@ let appliedChrome = null;
 
 
 function createWindow() {
+  // Checks always get the default window, and never leave a placement behind.
+  const windowState = SMOKE || SESSION_SMOKE ? null : new WindowState(path.join(app.getPath("userData"), "window-state.json"));
+  const placement = windowState?.placement(screen.getAllDisplays(), screen.getPrimaryDisplay())
+    ?? { bounds: { width: WINDOW_DEFAULT.width, height: WINDOW_DEFAULT.height }, maximized: false };
   const win = new BrowserWindow({
-    width: 1600,
-    height: 900,
-    minWidth: 1024,
-    minHeight: 640,
-    show: !(SMOKE || SESSION_SMOKE),
+    ...placement.bounds,
+    minWidth: WINDOW_MINIMUM.width,
+    minHeight: WINDOW_MINIMUM.height,
+    // A maximised window is shown by maximize() below, without first flashing its normal size.
+    show: !(SMOKE || SESSION_SMOKE) && !placement.maximized,
     backgroundColor: "#e8e5e1",
     title: "RHINE LAB · ANALYSIS OS",
     icon: path.join(__dirname, "assets", "app-icon.ico"),
@@ -375,6 +380,11 @@ function createWindow() {
   });
   trustedWindows.add(win.webContents.id);
   const contentsId = win.webContents.id;
+  // Without a native caption the constructor makes the window a few pixels wider
+  // than asked; setBounds comes closer (window-state.cjs keeps an untouched placement).
+  if (windowState) win.setBounds(placement.bounds);
+  if (placement.maximized) { win.maximize(); win.focus(); }
+  windowState?.track(win);
   // With backgroundThrottling off a minimised page still calls itself visible
   // (and still gets a frame a second), so the renderer is told and stops drawing.
   // The channel name is mirrored in preload.cjs.

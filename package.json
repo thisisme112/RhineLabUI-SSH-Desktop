@@ -23,6 +23,7 @@
     "check:ssh-client": "node scripts/lib/run-check.mjs check:ssh-client",
     "check:ssh-host": "node scripts/lib/run-check.mjs check:ssh-host",
     "check:ssh-profiles": "node scripts/lib/run-check.mjs check:ssh-profiles",
+    "check:window-state": "node scripts/lib/run-check.mjs check:window-state",
     "check:ssh-column": "node scripts/lib/run-check.mjs check:ssh-column",
     "check:ssh-clipboard": "node scripts/lib/run-check.mjs check:ssh-clipboard",
     "check:ssh-diagnostic": "node scripts/lib/run-check.mjs check:ssh-diagnostic",

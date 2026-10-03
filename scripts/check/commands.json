@@ -10,6 +10,7 @@
   "check:ssh-client": "node --experimental-strip-types scripts/check/check-ssh-client.mjs",
   "check:ssh-host": "node scripts/check/check-ssh-host.mjs",
   "check:ssh-profiles": "node scripts/check/check-ssh-profiles.mjs",
+  "check:window-state": "node scripts/check/check-window-state.mjs",
   "check:ssh-column": "node --experimental-strip-types scripts/check/check-ssh-host-column.mjs",
   "check:ssh-clipboard": "node --test scripts/check/check-terminal-clipboard.mjs",
   "check:ssh-diagnostic": "node --test scripts/check/check-diagnostic-log.cjs && node node_modules/electron/cli.js scripts/check/check-diagnostic-native.cjs",
