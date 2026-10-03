@@ -384,7 +384,8 @@ export async function checkTerminalTools({
     `document.querySelectorAll('.ssh-terminal .xterm').length === 1 && getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '15px'`,
   );
   await evaluate(
-    `__deckFixture.end(0); localStorage.setItem('rhine-settings', JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings')),colorTheme:'dark',reduced:true}))`,
+    // Each theme has a fixed brightness now (theme-design.ts); night is the dark one.
+    `__deckFixture.end(0); localStorage.setItem('rhine-settings', JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings')),theme:'night',reduced:true}))`,
   );
   await send("Page.reload");
   await until(
@@ -521,7 +522,10 @@ export async function checkTerminalTools({
       host.append(button);
       try { button.click(); } finally { button.remove(); }
     })()`);
-  await pickPalette("cool");
+  // The ten themes of the Unreal build, each with a fixed brightness (theme-design.ts).
+  const themes = ["paper", "night", "hazard", "clinic", "orbit", "print", "transit", "slate", "reagent", "cryo"];
+  const painted = (name) => until(`${name} is painted`, `document.documentElement.dataset.colorPalette === '${name}'`);
+  await pickPalette("paper");
   // The preference is written synchronously but `paintTheme` runs on the next
   // animation frame, so a single read can land before the repaint.
   await until(
@@ -536,44 +540,42 @@ export async function checkTerminalTools({
   );
   await check(
     "a palette choice is remembered",
-    `JSON.parse(localStorage.getItem('rhine-settings')||'{}').palette === 'cool'`,
+    `JSON.parse(localStorage.getItem('rhine-settings')||'{}').theme === 'paper'`,
   );
   // Put it back so the run leaves the fixture profile as it found it.
-  await pickPalette("warm");
+  await pickPalette("night");
+  await painted("night");
   await evaluate(`rhine.settings()`);
   await until("settings panel opens", `!!document.querySelector('[data-color-palette]')`);
   await check(
-    "the settings panel offers fourteen preview palettes with the current one marked",
+    "the settings panel offers the ten themes with the current one marked",
     `(() => {
       const buttons = [...document.querySelectorAll('button[data-color-palette]')];
       const pressed = buttons.filter(button => button.getAttribute('aria-pressed') === 'true');
-      return buttons.length === 14 && buttons.every(button => button.querySelector('.theme-sample')) && pressed.length === 1 && pressed[0].dataset.colorPalette === 'warm';
+      return buttons.length === ${themes.length} && buttons.every(button => button.querySelector('.theme-sample')) && pressed.length === 1 && pressed[0].dataset.colorPalette === 'night';
     })()`,
   );
   await shot("settings-palettes");
   await send("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
-  for (const mode of ["dark", "light"]) {
-    await evaluate(`document.querySelector('button[data-color-theme="${mode}"]').click()`);
-    await sleep(300);
-  for (const name of ["warm", "cool", "sand", "phosphor", "hologram", "amber", "nova", "cryo", "hazard", "voidwave", "industrial", "clinic", "orbit", "riso"]) {
+  for (const name of themes) {
     await evaluate(`document.querySelector('button[data-color-palette="${name}"]').click()`);
+    await painted(name);
     await sleep(450);
-    await check(`${name}: ${mode} settings controls retain readable contrast`, `(() => {
+    await check(`${name}: settings controls retain readable contrast`, `(() => {
       const luma = value => value.match(/[\\d.]+/g).slice(0, 3).map(Number).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
       return [...document.querySelectorAll('.quality-settings select, .theme-choices button')].every(node => {
         const style = getComputedStyle(node), fg = luma(style.color), bg = luma(style.backgroundColor);
         return (Math.max(fg, bg) + .05) / (Math.min(fg, bg) + .05) >= 4.5;
       });
     })()`);
-    await check(`${name}: ${mode} secondary text and control boundaries meet contrast targets`, `(() => {
+    await check(`${name}: secondary text and control boundaries meet contrast targets`, `(() => {
       const style=getComputedStyle(document.documentElement);
       const rgb=name=>style.getPropertyValue(name).match(/[\\d.]+/g).slice(0,3).map(Number);
       const luma=rgb=>rgb.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);
       const ratio=(a,b)=>(Math.max(luma(a),luma(b))+.05)/(Math.min(luma(a),luma(b))+.05);
       return ['paper','panel','field','glass'].every(surface=>ratio(rgb('--theme-muted'),rgb('--theme-'+surface))>=4.5 && ratio(rgb('--ui-control-line'),rgb('--theme-'+surface))>=3 && ratio(rgb('--ui-focus'),rgb('--theme-'+surface))>=3);
     })()`);
-    if (["hologram", "hazard", "voidwave"].includes(name)) await shot(`settings-${name}-${mode}`);
-  }
+    if (["night", "hazard", "orbit"].includes(name)) await shot(`settings-${name}`);
   }
   await evaluate(`document.querySelector('[data-settings-section="terminal"]').click()`);
   await until('shared terminal settings', `!!document.querySelector('.ssh-workspace-settings:not([hidden])')`);
@@ -584,7 +586,7 @@ export async function checkTerminalTools({
   await shot('settings-data');
   await evaluate(`document.querySelector('.ssh-workspace-settings [data-settings-section="appearance"]').click()`);
   await until('appearance settings return', `!!document.querySelector('.settings-modal')`);
-  await evaluate(`document.querySelector('[data-color-theme="dark"]').click()`); await sleep(300);
+  await evaluate(`document.querySelector('[data-color-palette="night"]').click()`); await painted("night"); await sleep(300);
   await evaluate(`document.querySelector('[data-action="close-modal"]').click()`);
   await until("settings close button still works after choosing a theme", `!document.querySelector('.settings-modal')`);
   await check("theme selection does not swallow ordinary menu actions", `!document.querySelector('.settings-modal')`);

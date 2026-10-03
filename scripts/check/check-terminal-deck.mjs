@@ -483,9 +483,11 @@ try {
       "alternate screen",
       `document.querySelector('.xterm-rows').textContent.includes('FULLSCREEN_APPLICATION')`,
     );
+    // On paper the terminal raises low-contrast colours to 4.5:1 (terminal.ts
+    // minimumContrastRatio): the red is darkened, not kept verbatim, but stays red.
     await check(
       "ANSI truecolor and wide characters render",
-      `Array.from(document.querySelectorAll('.xterm-rows span')).some(node => node.textContent.includes('TRUECOLOR') && getComputedStyle(node).color === 'rgb(231, 74, 52)') && document.querySelector('.xterm-rows').textContent.includes('中文')`,
+      `Array.from(document.querySelectorAll('.xterm-rows span')).some(node => { if (!node.textContent.includes('TRUECOLOR')) return false; const [r, g, b] = getComputedStyle(node).color.match(/\\d+/g).map(Number); return r > 120 && r > g * 1.6 && r > b * 1.6; }) && document.querySelector('.xterm-rows').textContent.includes('中文')`,
     );
     await evaluate(`rhineSshUi.closeTerminal()`);
     await until(
@@ -600,7 +602,8 @@ try {
 
     // Apply the existing settings in an isolated profile; reload the actual app.
     await evaluate(
-      `localStorage.setItem('rhine-settings', JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings')),colorTheme:'dark',reduced:true}))`,
+      // Each theme has a fixed brightness now (theme-design.ts); night is the dark one.
+      `localStorage.setItem('rhine-settings', JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings')),theme:'night',reduced:true}))`,
     );
     await send("Page.reload");
     await until(

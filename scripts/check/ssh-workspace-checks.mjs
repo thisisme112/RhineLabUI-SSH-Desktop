@@ -273,7 +273,8 @@ export async function checkSshWorkspace({
   // The store is covered by unit tests; what those cannot see is the wiring
   // between a checkbox and the store, which is where a `name`/data mismatch hid.
   await evaluate(`rhineSshUi.closeTerminal()`);
-  await until("terminal folded for the overview", `!rhineSshUi.isOpen && !document.querySelector('.model-viewer').hidden`);
+  // The detail's model viewer action: .model-viewer in the classic design, .label-viewer in the label design.
+  await until("terminal folded for the overview", `!rhineSshUi.isOpen && [...document.querySelectorAll('.model-viewer, .label-viewer')].some(node => !node.hidden && node.getClientRects().length > 0)`);
   await evaluate(`rhineSshUi.openHosts()`);
   await until(
     "host overview opens",
@@ -745,7 +746,8 @@ export async function checkSshWorkspace({
     `document.querySelectorAll('.ssh-gpu').length === 2 && document.querySelector('.ssh-monitor').dataset.stale === 'true'`,
   );
   await evaluate(
-    `localStorage.setItem('rhine-settings',JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings')),colorTheme:'dark',reduced:true}))`,
+    // Each theme has a fixed brightness now (theme-design.ts); night is the dark one.
+    `localStorage.setItem('rhine-settings',JSON.stringify({...JSON.parse(localStorage.getItem('rhine-settings')),theme:'night',reduced:true}))`,
   );
   await send("Emulation.setDeviceMetricsOverride", {
     width: 1920,
