@@ -143,7 +143,7 @@ export function updateQualitySummary(runtimeContext: ModalContext) {
 function layoutSettingsMarkup(runtimeContext: ModalContext) {
   if (!runtimeContext.labelCapable) return "";
   const label = runtimeContext.prefs.design !== "classic";
-  return `<div class="theme-settings layout-settings"><div><strong>版式</strong><span>标签系统：巨型编号、色块与刻度图框；经典：玻璃面板。窄屏始终使用经典版式</span></div><div class="theme-choices" role="group" aria-label="版式"><button type="button" data-design-choice="label" aria-pressed="${label}">标签系统</button><button type="button" data-design-choice="classic" aria-pressed="${!label}">经典</button></div></div>`;
+  return `<div class="theme-settings layout-settings"><div><strong>版式</strong><span>标签系统：巨型编号、色块与墨线，手机和窄窗口用同一套版式的紧凑排法；经典：玻璃面板</span></div><div class="theme-choices" role="group" aria-label="版式"><button type="button" data-design-choice="label" aria-pressed="${label}">标签系统</button><button type="button" data-design-choice="classic" aria-pressed="${!label}">经典</button></div></div>`;
 }
 
 export function settingsMarkup(runtimeContext: ModalContext) {

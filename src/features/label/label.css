@@ -10,8 +10,10 @@
  * corner cut at 45 degrees; 3 px and 2 px ink rules. Stage units throughout:
  * the stage is 1080 tall, so these numbers are the Unreal ones.
  */
-/* On the viewport, which holds both the stage and the overview sheet: one set of lengths for both. */
-#viewport[data-design="label"] {
+/* On the viewport, which holds both the stage and the overview sheet: one set of lengths for both.
+   [data-design^="label"] is the desktop sheet ("label") and the phone's ("label-phone", label-phone.css)
+   alike: the inks, the forms, the workspace. The sheet's own geometry below is "label" alone. */
+#viewport[data-design^="label"] {
   --ground: var(--theme-paper);
   --ink: var(--theme-ink);
   --signal: var(--theme-signal);
@@ -154,19 +156,19 @@
 /* The terminal's bar in the label design (RhineLabelDetail.cpp MakeLabelTerminalTitle / Close):
    the host's mark, the session's slit number, the name, the state as a block, an ink 收起 block. */
 .ssh-terminal-label { display: none; }
-#viewport[data-design="label"] .ssh-terminal-label { display: flex; align-items: center; gap: 14px; margin-right: 14px; color: var(--ink); }
-#viewport[data-design="label"] .ssh-terminal-label .label-sigil { width: 30px; height: 30px; }
-#viewport[data-design="label"] .ssh-terminal-label .label-figure { --px: 34px; --slit: var(--ground); }
-#viewport[data-design="label"] .ssh-terminal-target { font-size: 18px; font-weight: 700; letter-spacing: .3px; text-transform: none; color: var(--ink); }
-#viewport[data-design="label"] .ssh-terminal-phase {
+#viewport[data-design^="label"] .ssh-terminal-label { display: flex; align-items: center; gap: 14px; margin-right: 14px; color: var(--ink); }
+#viewport[data-design^="label"] .ssh-terminal-label .label-sigil { width: 30px; height: 30px; }
+#viewport[data-design^="label"] .ssh-terminal-label .label-figure { --px: 34px; --slit: var(--ground); }
+#viewport[data-design^="label"] .ssh-terminal-target { font-size: 18px; font-weight: 700; letter-spacing: .3px; text-transform: none; color: var(--ink); }
+#viewport[data-design^="label"] .ssh-terminal-phase {
   height: 26px; padding: 0 10px; display: inline-flex; align-items: center; box-shadow: inset 0 0 0 2px var(--ink);
   font-size: 12px; font-weight: 700; letter-spacing: .8px; color: var(--ink);
 }
-#viewport[data-design="label"] .ssh-terminal-phase[data-phase="interactive"] {
+#viewport[data-design^="label"] .ssh-terminal-phase[data-phase="interactive"] {
   box-shadow: none; background: var(--signal); color: var(--on-signal);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
 }
-#viewport[data-design="label"] .ssh-terminal-close {
+#viewport[data-design^="label"] .ssh-terminal-close {
   height: 44px; padding: 0 18px 0 22px; border: 0; background: var(--ink); color: var(--ground);
   font-size: 15px; font-weight: 700; letter-spacing: .8px; clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px);
 }

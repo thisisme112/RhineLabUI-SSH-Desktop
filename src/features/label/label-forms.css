@@ -6,55 +6,55 @@
  * printed on an ink block with a corner cut. Used by the detail page's tabs and
  * the overview's editor page alike.
  */
-#viewport[data-design="label"] {
+#viewport[data-design^="label"] {
   --field: color-mix(in srgb, var(--ink) 7%, var(--ground));
 }
-#viewport[data-design="label"] .ssh-host-editor :is(label, .panel-label) { color: rgba(var(--theme-ink-rgb), .62); font-size: 11px; font-weight: 700; letter-spacing: 1.1px; }
-#viewport[data-design="label"] .ssh-host-editor :is(input:not([type="checkbox"]), select) {
+#viewport[data-design^="label"] .ssh-host-editor :is(label, .panel-label) { color: rgba(var(--theme-ink-rgb), .62); font-size: 11px; font-weight: 700; letter-spacing: 1.1px; }
+#viewport[data-design^="label"] .ssh-host-editor :is(input:not([type="checkbox"]), select) {
   margin-top: 6px; padding: 8px 10px; border: 0; border-radius: 0; box-shadow: inset 0 -2px 0 var(--ink);
   background: var(--field); color: var(--ink); font-size: 15px; font-weight: 500; letter-spacing: 0;
 }
-#viewport[data-design="label"] .ssh-host-editor :is(input:not([type="checkbox"]), select):focus { outline: none; box-shadow: inset 0 -3px 0 var(--signal), inset 0 0 0 1px var(--ink); }
-#viewport[data-design="label"] .ssh-host-editor input::placeholder { color: rgba(var(--theme-ink-rgb), .45); }
-#viewport[data-design="label"] .ssh-host-editor .ssh-host-name-label { color: inherit; }
-#viewport[data-design="label"] .ssh-host-mode button,
-#viewport[data-design="label"] .ssh-host-group-choices :is(button, label) {
+#viewport[data-design^="label"] .ssh-host-editor :is(input:not([type="checkbox"]), select):focus { outline: none; box-shadow: inset 0 -3px 0 var(--signal), inset 0 0 0 1px var(--ink); }
+#viewport[data-design^="label"] .ssh-host-editor input::placeholder { color: rgba(var(--theme-ink-rgb), .45); }
+#viewport[data-design^="label"] .ssh-host-editor .ssh-host-name-label { color: inherit; }
+#viewport[data-design^="label"] .ssh-host-mode button,
+#viewport[data-design^="label"] .ssh-host-group-choices :is(button, label) {
   min-height: 37px; padding: 0 14px; border: 0; border-radius: 0; box-shadow: inset 0 -2px 0 var(--ink);
   background: var(--field); color: var(--ink); font-size: 13px; font-weight: 700; letter-spacing: .5px;
 }
-#viewport[data-design="label"] .ssh-host-mode button:is(.active, [aria-pressed="true"]),
-#viewport[data-design="label"] .ssh-host-group-choices :is(button[aria-pressed="true"], label:has(input:checked)) { background: var(--ink); color: var(--ground); }
-#viewport[data-design="label"] .ssh-host-editor details > summary {
+#viewport[data-design^="label"] .ssh-host-mode button:is(.active, [aria-pressed="true"]),
+#viewport[data-design^="label"] .ssh-host-group-choices :is(button[aria-pressed="true"], label:has(input:checked)) { background: var(--ink); color: var(--ground); }
+#viewport[data-design^="label"] .ssh-host-editor details > summary {
   min-height: 37px; padding: 0 14px; display: flex; align-items: center; gap: 12px;
   background: var(--field); box-shadow: inset 0 -2px 0 var(--ink); color: var(--ink); font-size: 13px; font-weight: 700;
 }
-#viewport[data-design="label"] .ssh-host-editor details > summary span { color: rgba(var(--theme-ink-rgb), .62); font-weight: 400; }
-#viewport[data-design="label"] .ssh-host-editor :is(.export-button, .ssh-host-key button) {
+#viewport[data-design^="label"] .ssh-host-editor details > summary span { color: rgba(var(--theme-ink-rgb), .62); font-weight: 400; }
+#viewport[data-design^="label"] .ssh-host-editor :is(.export-button, .ssh-host-key button) {
   min-height: 37px; padding: 0 14px; border: 0; box-shadow: inset 0 0 0 2px var(--ink); background: none; color: var(--ink); font-size: 13px; font-weight: 700;
 }
-#viewport[data-design="label"] .ssh-host-editor .export-button:hover { background: var(--ink); color: var(--ground); }
-#viewport[data-design="label"] .ssh-host-editor .solid-button {
+#viewport[data-design^="label"] .ssh-host-editor .export-button:hover { background: var(--ink); color: var(--ground); }
+#viewport[data-design^="label"] .ssh-host-editor .solid-button {
   height: 41px; padding: 0 0 0 24px; border: 0; background: var(--ink); color: var(--ground);
   clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px); font-size: 16px; letter-spacing: 1.2px;
 }
-#viewport[data-design="label"] .ssh-host-editor .solid-button > span { margin-left: auto; padding-right: 16px; color: rgba(var(--theme-paper-rgb), .62); }
-#viewport[data-design="label"] .ssh-host-editor .solid-button::after {
+#viewport[data-design^="label"] .ssh-host-editor .solid-button > span { margin-left: auto; padding-right: 16px; color: rgba(var(--theme-paper-rgb), .62); }
+#viewport[data-design^="label"] .ssh-host-editor .solid-button::after {
   content: "→"; flex: none; width: 41px; height: 41px; display: grid; place-items: center; background: var(--signal); color: var(--on-signal); font-size: 20px;
 }
-#viewport[data-design="label"] .ssh-host-editor :is(.ssh-host-editor-note, .ssh-credential-state, .ssh-host-credential small) { color: rgba(var(--theme-ink-rgb), .62); }
-#viewport[data-design="label"] .ssh-host-editor .ssh-host-jump small { color: rgba(var(--theme-ink-rgb), .62); font-size: 12px; font-weight: 400; letter-spacing: 0; }
+#viewport[data-design^="label"] .ssh-host-editor :is(.ssh-host-editor-note, .ssh-credential-state, .ssh-host-credential small) { color: rgba(var(--theme-ink-rgb), .62); }
+#viewport[data-design^="label"] .ssh-host-editor .ssh-host-jump small { color: rgba(var(--theme-ink-rgb), .62); font-size: 12px; font-weight: 400; letter-spacing: 0; }
 
 /* 03 会话记录: a table, one ruled row per session. */
-#viewport[data-design="label"] .host-sessions { margin: 10px 0 0; padding: 0; list-style: none; border-top: 2px solid var(--ink); }
-#viewport[data-design="label"] .host-session-row {
+#viewport[data-design^="label"] .host-sessions { margin: 10px 0 0; padding: 0; list-style: none; border-top: 2px solid var(--ink); }
+#viewport[data-design^="label"] .host-session-row {
   width: 100%; display: grid; grid-template-columns: 1.1fr 1fr auto; gap: 14px; align-items: center; padding: 9px 4px;
   border: 0; border-bottom: 1px solid var(--ink); background: none; color: var(--ink); text-align: left; font-size: 13px;
 }
-#viewport[data-design="label"] .host-session-row > span:first-child { font-family: var(--mono); font-size: 12px; }
-#viewport[data-design="label"] .host-session-row b { font-family: var(--mono); font-size: 12px; font-weight: 700; }
-#viewport[data-design="label"] .host-session-row:hover { background: var(--ink); color: var(--ground); }
+#viewport[data-design^="label"] .host-session-row > span:first-child { font-family: var(--mono); font-size: 12px; }
+#viewport[data-design^="label"] .host-session-row b { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+#viewport[data-design^="label"] .host-session-row:hover { background: var(--ink); color: var(--ground); }
 /* 04 事件日志: the raw lines printed on an ink block. */
-#viewport[data-design="label"] .host-raw.host-log {
+#viewport[data-design^="label"] .host-raw.host-log {
   padding: 14px 16px; background: var(--ink); color: var(--ground);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
 }

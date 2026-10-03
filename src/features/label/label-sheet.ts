@@ -5,6 +5,7 @@ import "./label-settings.css";
 import "./label-forms.css";
 import "./label-workspace.css";
 import "./label-overview-pages.css";
+import "./label-phone.css";
 import { setAttr, setData, setStyle } from "../../shared/dom-write";
 import {
   BAND, DECODE, FIELD, FOOT, SPINE, TOP,
@@ -67,6 +68,8 @@ export type LabelFrame = {
   width: number;
   /** How much of the stage's top the window's caption buttons keep (frameless Windows), in stage units. */
   inset: number;
+  /** A phone or a narrow window (label-phone.css): the stage is in CSS pixels, and the sheet sizes itself there. */
+  pocket?: boolean;
   file: LabelFile;
   /** The column the file is in, and where in it. */
   lane: { index: number; count: number; name: string; position: number; files: readonly number[] };
@@ -105,6 +108,7 @@ export class LabelSheet {
   private mark = "";
   private width = 0;
   private inset = -1;
+  private pocket = false;
   private hull = "";
   private arrivedAt = -10;
   private page: LabelPage | "" = "";
@@ -230,6 +234,7 @@ export class LabelSheet {
       setData(this.root, "page", frame.page);
     }
     if (this.root.dataset.arriving !== undefined && (frame.reduced || time - this.arrivedAt > ARRIVAL)) delete this.root.dataset.arriving;
+    if (Boolean(frame.pocket) !== this.pocket) { this.pocket = Boolean(frame.pocket); this.width = 0; }
     if (frame.width !== this.width || frame.inset !== this.inset) this.layout(frame.width, frame.inset);
     if (frame.selection !== this.selection) {
       if (this.selection) { this.markFrom = this.mark; this.changedAt = time; }
@@ -239,7 +244,7 @@ export class LabelSheet {
     const changed = frame.reduced ? 1 : Math.min(1, (time - this.changedAt) / DECODE);
     // The top strip: 01 changes with the page, the clock with the second.
     const primary = this.els.primary as HTMLElement;
-    const [number, label] = frame.page === "detail" ? ["ESC", "返回"] : frame.page === "overview" ? ["01", "档案阵列"] : ["01", "主机总览"];
+    const [number, label] = frame.page === "detail" ? [frame.pocket ? "←" : "ESC", "返回"] : frame.page === "overview" ? ["01", "档案阵列"] : ["01", "主机总览"];
     if (primary.firstElementChild!.textContent !== number) primary.firstElementChild!.textContent = number;
     if (primary.lastElementChild!.textContent !== label) primary.lastElementChild!.textContent = label;
     const second = Math.floor(Date.now() / 1000);
@@ -428,6 +433,8 @@ export class LabelSheet {
    */
   private fitFigures() {
     const field = this.els.figure as HTMLElement;
+    // On a phone the field's figure takes its size from the style sheet.
+    if (this.pocket) { field.style.removeProperty("--px"); return; }
     const measure = document.createElement("canvas").getContext("2d");
     if (!measure) return;
     measure.font = `700 100px "Barlow Condensed"`;

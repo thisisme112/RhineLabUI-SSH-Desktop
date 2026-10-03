@@ -1,0 +1,338 @@
+/*
+ * The label design on a phone or a narrow window (application.ts labelPocket,
+ * data-design="label-phone"). The stage is in CSS pixels here, not the 1080-tall
+ * stage the desktop sheet is drawn on, so the sheet is set again for a hand:
+ *
+ *   top       a 48 px strip on a 3 px ink rule: the mark, and 01–04 as on the desk
+ *   home      the array fills the screen; the selected file's label is a block of
+ *             the signal colour along its foot, over a foot that counts the files
+ *   overview  the host timetable as one column under its giant count, 添加主机 as a
+ *             signal block at the bottom
+ *   detail    the document under its model, headed by the same label
+ *
+ * The inks, the forms, the workspace, the settings and the overview's other pages
+ * are the shared rules ([data-design^="label"]); this file is geometry and sizes.
+ * A phone on its side (under 520 px tall) puts the label and the count in a column
+ * at the left instead. No drawing sheet round the model and no page turn here.
+ */
+#viewport[data-design="label-phone"] {
+  --label-top: 48px;
+  --label-head: calc(var(--label-top) + env(safe-area-inset-top, 0px));
+  --label-edge: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  --label-low: env(safe-area-inset-bottom, 0px);
+  --label-foot: calc(104px + var(--label-low));
+  --label-field: 232px;
+}
+
+/* The classic chrome steps aside; the 3D array, the poster and the surfaces stay. */
+#stage[data-design="label-phone"] :is(.brand, .system-nav, #archive-ui, .powered, .system-footer, .scene-atmosphere, .portal-launcher, .back-button) { display: none !important; }
+#viewport[data-design="label-phone"] .ssh-overview-restore { display: none !important; }
+#stage[data-design="label-phone"] .label-sheet { display: block; position: absolute; inset: 0; z-index: 8; pointer-events: none; color: var(--ink); font-family: "MiSans", "Microsoft YaHei", system-ui, sans-serif; }
+/* The desk's furniture round the model: the spine, the ruled frames, the leaders, the overview's ground. */
+#stage[data-design="label-phone"] :is(.label-spine, .label-zone, .label-fig, .label-selected, .label-leaders, .label-powered, .label-field-slashes, .label-services-note, .label-overview, .label-tag, .label-yaw, .label-top-ground, .label-system, .label-clock) { display: none; }
+
+/* ── The top strip ─────────────────────────────────────────────────────────── */
+#stage[data-design="label-phone"] .label-top { height: var(--label-head); box-sizing: border-box; background: var(--ground); border-bottom: 3px solid var(--ink); pointer-events: auto; }
+#stage[data-design="label-phone"] .label-top-row { top: env(safe-area-inset-top, 0px); height: calc(var(--label-top) - 3px); padding: 0 var(--label-edge); }
+#stage[data-design="label-phone"] .label-brand { min-width: 0; overflow: hidden; font-size: 13px; letter-spacing: .3px; }
+#stage[data-design="label-phone"] .label-brand span { display: none; }
+#stage[data-design="label-phone"] .label-nav button { min-width: 40px; margin-left: 10px; gap: 4px; justify-content: center; font-size: 12px; }
+#stage[data-design="label-phone"] .label-nav button b { font-size: 14px; }
+#stage[data-design="label-phone"] .label-nav button:hover { text-decoration: none; }
+
+/* ── The home: the array, the selected file's label along its foot, the count ── */
+#stage[data-design="label-phone"] .label-field-reveal { left: 0; right: 0; top: auto; bottom: var(--label-foot); width: auto; height: var(--label-field); }
+#stage[data-design="label-phone"] .label-sheet:not([data-page="archive"]) .label-field-reveal { transform: translateY(calc(var(--label-field) + var(--label-foot) + 8px)); }
+#stage[data-design="label-phone"] .label-field { --cut: 28px; }
+#stage[data-design="label-phone"] .label-field-kicker { left: var(--label-edge); top: 16px; font-size: 11px; }
+#stage[data-design="label-phone"] .label-field-prefix { left: var(--label-edge); top: 38px; --px: 20px; }
+#stage[data-design="label-phone"] .label-field-figure { left: calc(var(--label-edge) - 3px); top: 62px; --px: 96px; }
+#stage[data-design="label-phone"] .label-field-sigil { right: var(--label-edge); top: 64px; width: 52px; height: 52px; }
+#stage[data-design="label-phone"] .label-field-name { left: var(--label-edge); right: var(--label-edge); top: 140px; width: auto; height: 30px; font-size: 22px; letter-spacing: .3px; }
+#stage[data-design="label-phone"] .label-field-address { left: var(--label-edge); top: 176px; max-width: calc(100% - 2 * var(--label-edge)); overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+#stage[data-design="label-phone"] .label-field-chips { left: var(--label-edge); top: 197px; gap: 8px; }
+#stage[data-design="label-phone"] .label-chip { height: 26px; padding: 0 10px; font-size: 12px; letter-spacing: .8px; }
+#stage[data-design="label-phone"] .label-chip[data-solid] { --cut: 7px; }
+#stage[data-design="label-phone"] .label-chip:not([data-solid]) { box-shadow: inset 0 0 0 2px var(--on-signal); }
+#stage[data-design="label-phone"] .label-field-services { display: none; }
+/* 读取档案 stands on the label's lower right corner. */
+#stage[data-design="label-phone"] .label-window { left: 0; right: 0; top: auto; bottom: var(--label-foot); height: var(--label-field); overflow: visible; }
+#stage[data-design="label-phone"] .label-sheet:not([data-page="archive"]) .label-window { visibility: hidden; }
+#stage[data-design="label-phone"] .label-read { right: var(--label-edge); bottom: 12px; }
+#stage[data-design="label-phone"] .label-read-text { --cut: 12px; height: 44px; padding: 0 14px 0 20px; }
+#stage[data-design="label-phone"] .label-read-text b { font-size: 15px; letter-spacing: .6px; }
+#stage[data-design="label-phone"] .label-read-text .label-note { display: none; }
+#stage[data-design="label-phone"] .label-read-go { width: 44px; height: 44px; background: var(--ground); color: var(--ink); font-size: 24px; font-weight: 400; }
+
+#stage[data-design="label-phone"] .label-foot {
+  height: var(--label-foot); box-sizing: border-box; padding: 0 var(--label-edge) var(--label-low);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 54px 44px; align-items: center; column-gap: 12px;
+  pointer-events: auto;
+}
+#stage[data-design="label-phone"] .label-foot-count { min-width: 0; }
+#stage[data-design="label-phone"] .label-foot-count .label-figure { --px: 44px; }
+#stage[data-design="label-phone"] .label-foot-total { margin-left: 6px; font-size: 18px; }
+#stage[data-design="label-phone"] .label-ruler { margin-left: 0; gap: 4px; justify-self: end; overflow: hidden; }
+#stage[data-design="label-phone"] .label-ruler button { flex: none; width: 40px; height: 40px; --cut: 0px; box-shadow: inset 0 0 0 2px var(--ink); font-size: 17px; }
+#stage[data-design="label-phone"] .label-ruler button[aria-pressed="true"] { --cut: 9px; box-shadow: none; }
+/* Five of the column's files: the selected one is never past the fourth (label-sheet.ts home). */
+#stage[data-design="label-phone"] .label-ruler button:nth-child(n + 6) { display: none; }
+#stage[data-design="label-phone"] .label-keys { grid-column: 1 / -1; margin: 0; align-self: start; font-size: 12px; }
+#stage[data-design="label-phone"] .label-key { min-width: 40px; height: 40px; padding: 0 8px; font-size: 17px; }
+#stage[data-design="label-phone"] .label-key + .label-key { margin-left: 6px; }
+#stage[data-design="label-phone"] .label-keys span { margin: 0 auto 0 8px; }
+#stage[data-design="label-phone"] .label-keys span:last-child { margin-right: 0; }
+
+/* The portals fold out under the strip's 04. */
+#stage[data-design="label-phone"] .portal-drawer { z-index: 9; }
+#stage[data-design="label-phone"] .portal-card { background: var(--ground); border: 0; box-shadow: inset 0 0 0 2px var(--ink); }
+#stage[data-design="label-phone"] .portal-card::after { background: var(--signal); }
+
+/* ── 主机总览: the timetable as one column ─────────────────────────────────── */
+#viewport[data-design="label-phone"] .ssh-overview { inset: 0; display: block; padding: 0; color: var(--ink); font-family: "MiSans", "Microsoft YaHei", system-ui, sans-serif; }
+#viewport[data-design="label-phone"] .ssh-overview[hidden] { display: none; }
+#viewport[data-design="label-phone"] .ssh-overview-glass {
+  position: absolute; inset: var(--label-head) 0 0 0; width: auto; height: auto; max-height: none;
+  display: flex; flex-direction: column;
+  background: var(--ground); backdrop-filter: none; border: 0; box-shadow: none;
+  transform: none !important; opacity: 1; visibility: visible;
+  transition: opacity .4s var(--settle), transform .4s var(--settle);
+}
+#viewport[data-design="label-phone"] .ssh-overview[data-collapsed="true"] .ssh-overview-glass {
+  transform: translateY(24px) !important; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .2s, transform .2s, visibility 0s .2s;
+}
+#viewport[data-design="label-phone"] .ssh-overview-glass::before,
+#viewport[data-design="label-phone"] :is(.ssh-overview-heading, .ssh-overview-summary, .ssh-overview-add, .ssh-overview-columns, .ssh-overview-footer, .ssh-overview-host-name b, .ssh-overview-host-state i, .ssh-overview-host-load, .ssh-overview-host-meters, .ssh-overview-search > span:nth-child(3), .ssh-overview-search kbd, .ssh-overview-nav > button:not([data-overview-page])) { display: none; }
+
+/* The signal block at the foot replaces the dashed row under the list (it is `display: flex !important` in the classic sheet). */
+#viewport[data-design="label-phone"] .ssh-overview-add { display: none !important; }
+/* Upright, another page or the editor has the whole column: the count and 添加主机 belong to the timetable. */
+#viewport[data-design="label-phone"][data-fit="portrait"] .ssh-overview-glass:has(.ssh-overview-hosts[hidden]) :is(.ssh-overview-side, .ssh-overview-add-block) { display: none; }
+#viewport[data-design="label-phone"][data-fit="portrait"] .ssh-overview-glass:has(.ssh-overview-hosts[hidden]) .ssh-overview-nav { border-top: 0; }
+
+/* How many hosts: the page's one giant figure, the three counts beside it. */
+#viewport[data-design="label-phone"] .ssh-overview-side {
+  order: 1; flex: none; position: static; width: auto;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto 1fr; column-gap: 16px;
+  padding: 14px var(--label-edge) 12px;
+}
+#viewport[data-design="label-phone"] .ssh-overview-side > .label-note { grid-column: 1 / -1; font-size: 11px; }
+#viewport[data-design="label-phone"] .ssh-overview-count { grid-row: 2 / 4; margin: 12px 0 0 -3px; --px: 100px; --slit: var(--ground); }
+#viewport[data-design="label-phone"] .ssh-overview-group-count { margin-top: 10px; font-size: 17px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
+#viewport[data-design="label-phone"] .ssh-overview-stats { align-self: end; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 8px 0 0; border-top: 2px solid var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-stats div { display: grid; gap: 5px; padding-top: 8px; }
+#viewport[data-design="label-phone"] .ssh-overview-stats dt { --px: 26px; }
+#viewport[data-design="label-phone"] .ssh-overview-stats dd { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .3px; white-space: nowrap; }
+/* Live sessions, when there are any, between the counts and the pages. */
+#viewport[data-design="label-phone"] .ssh-overview-glass > .ssh-session-tabs { order: 2; flex: none; margin: 0; padding: 0 var(--label-edge) 8px; }
+
+/* The pages: numbered, the current one reversed. */
+#viewport[data-design="label-phone"] .ssh-overview-nav {
+  order: 3; flex: none; display: flex; gap: 0; height: 44px; box-sizing: content-box; padding: 0 var(--label-edge);
+  border: 0; border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink);
+  overflow-x: auto; scrollbar-width: none; counter-reset: tab; pointer-events: auto;
+}
+#viewport[data-design="label-phone"] .ssh-overview-nav::-webkit-scrollbar { display: none; }
+#viewport[data-design="label-phone"] .ssh-overview-nav button {
+  counter-increment: tab; flex: none; height: 44px; min-height: 0; padding: 0 12px; margin: 0; border: 0;
+  display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; letter-spacing: .3px; color: var(--ink); white-space: nowrap;
+}
+#viewport[data-design="label-phone"] .ssh-overview-nav button::before { content: counter(tab, decimal-leading-zero); font-family: var(--display); font-size: 15px; font-weight: 700; opacity: .55; }
+#viewport[data-design="label-phone"] .ssh-overview-nav button[aria-current="page"] {
+  --cut: 10px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  background: var(--ink); color: var(--ground);
+}
+#viewport[data-design="label-phone"] .ssh-overview-nav button[aria-current="page"]::before { opacity: 1; color: var(--theme-signal-on-ink); }
+
+#viewport[data-design="label-phone"] .ssh-overview-content { order: 4; flex: 1; min-height: 0; padding: 0; display: flex; overflow: hidden; pointer-events: auto; }
+#viewport[data-design="label-phone"] .ssh-overview-hosts { padding: 0 var(--label-edge); box-sizing: border-box; }
+#viewport[data-design="label-phone"] .ssh-overview-search { flex: none; height: 46px; min-height: 0; margin: 0; padding: 0; gap: 10px; border-bottom: 2px solid var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-search > span:first-child { font-size: 20px; }
+#viewport[data-design="label-phone"] .ssh-overview-search input { padding: 8px 0; border: 0; outline: none; font-size: 15px; color: var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-search input::placeholder { color: rgba(var(--theme-ink-rgb), .45); }
+#viewport[data-design="label-phone"] .ssh-overview-groups { flex: none; padding: 8px 0 0; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+#viewport[data-design="label-phone"] .ssh-overview-groups::-webkit-scrollbar { display: none; }
+#viewport[data-design="label-phone"] .ssh-overview-groups button { flex: none; min-height: 36px; padding: 0 12px; border: 0; box-shadow: inset 0 0 0 2px var(--ink); font-size: 13px; font-weight: 700; letter-spacing: .4px; color: var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-groups button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+#viewport[data-design="label-phone"] .ssh-overview-group-chip > button:first-child { box-shadow: inset 2px 2px 0 var(--ink), inset 0 -2px 0 var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-scroll { margin-top: 8px; padding: 0 0 12px; scrollbar-color: var(--ink) transparent; }
+#viewport[data-design="label-phone"] .ssh-overview-group { height: 28px; margin: 0; padding: 0 0 5px; box-sizing: border-box; align-items: flex-end; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: rgba(var(--theme-ink-rgb), .6); }
+#viewport[data-design="label-phone"] .ssh-overview-group::after { display: none; }
+#viewport[data-design="label-phone"] .ssh-overview-group small { font: inherit; color: inherit; }
+#viewport[data-design="label-phone"] .ssh-overview-group small::before { content: "· "; }
+
+/* A host row: ruled in ink, the raised host's row printed in reverse, its state a block. */
+#viewport[data-design="label-phone"] .ssh-overview-host { display: block; border-top: 1px solid var(--ink); background: none; content-visibility: visible; opacity: 1 !important; isolation: isolate; }
+#viewport[data-design="label-phone"] .ssh-overview-host::before { inset: 0; width: auto; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; z-index: -1; transition: transform .16s var(--settle); }
+#viewport[data-design="label-phone"] .ssh-overview-host[data-focus="true"]::before { transform: scaleX(1); }
+#viewport[data-design="label-phone"] .ssh-overview-host[data-focus="true"] { color: var(--ground); }
+#viewport[data-design="label-phone"] .ssh-overview .ssh-overview-connect {
+  display: grid; grid-template-columns: 50px 28px minmax(0, 1fr) auto 36px; align-items: center; gap: 0 10px;
+  width: 100%; min-height: 68px; padding: 8px 4px 8px 6px; box-sizing: border-box; color: inherit;
+}
+#viewport[data-design="label-phone"] .ssh-overview-host-no { display: block; --px: 30px; --slit: var(--ground); }
+#viewport[data-design="label-phone"] .ssh-overview-host[data-focus="true"] .ssh-overview-host-no { --slit: var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-host-sigil { display: block; width: 28px; height: 28px; }
+#viewport[data-design="label-phone"] .ssh-overview-host-name { display: block; min-width: 0; }
+#viewport[data-design="label-phone"] .ssh-overview-host-name > span { display: block; transform: none !important; }
+#viewport[data-design="label-phone"] .ssh-overview-host-name strong { font-size: 17px; font-weight: 700; letter-spacing: .2px; color: inherit; }
+#viewport[data-design="label-phone"] .ssh-overview-host-name small { margin-top: 2px; font-family: var(--mono); font-size: 11px; color: inherit; opacity: .72; }
+#viewport[data-design="label-phone"] .ssh-overview-host-state { height: 24px; padding: 0 8px; box-shadow: inset 0 0 0 2px currentColor; color: inherit; font-size: 11px; font-weight: 700; letter-spacing: .6px; white-space: nowrap; }
+#viewport[data-design="label-phone"] .ssh-overview-host[data-connected="true"] .ssh-overview-host-state {
+  --cut: 7px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+  box-shadow: none; background: var(--signal); color: var(--on-signal);
+}
+#viewport[data-design="label-phone"] .ssh-overview-host[data-pending="true"] .ssh-overview-host-state { box-shadow: none; background: var(--ink); color: var(--ground); }
+#viewport[data-design="label-phone"] .ssh-overview-host[data-focus="true"][data-pending="true"] .ssh-overview-host-state { background: var(--ground); color: var(--ink); }
+#viewport[data-design="label-phone"] .ssh-overview-host-go { display: grid; place-items: center; justify-self: end; width: 36px; height: 36px; box-shadow: inset 0 0 0 2px currentColor; font-size: 18px; }
+#viewport[data-design="label-phone"] .ssh-overview-host[data-focus="true"] .ssh-overview-host-go {
+  --cut: 8px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  box-shadow: none; background: var(--signal); color: var(--on-signal);
+}
+/* The row's actions open under it once it is touched, on the row's own ground. */
+#viewport[data-design="label-phone"] .ssh-overview-host-actions {
+  position: static; display: none; flex-wrap: wrap; gap: 6px; width: auto; padding: 0 4px 10px 6px;
+  background: none; border: 0; box-shadow: none; opacity: 1; pointer-events: auto; transform: none; color: inherit;
+}
+#viewport[data-design="label-phone"] .ssh-overview-host:is([data-preview="true"], :focus-within) .ssh-overview-host-actions { display: flex; transform: none; }
+#viewport[data-design="label-phone"] .ssh-overview-host-actions button { min-width: 44px; min-height: 36px; padding: 0 10px; box-shadow: inset 0 0 0 2px currentColor; background: none; color: inherit; font-size: 12px; font-weight: 700; letter-spacing: .4px; }
+#viewport[data-design="label-phone"] .ssh-overview-host-actions :is(button[data-armed], .danger[data-armed="true"]) { color: #d9603b; }
+#viewport[data-design="label-phone"] .ssh-overview-host-actions > i { display: none; }
+#viewport[data-design="label-phone"] .ssh-overview-empty { padding: 20px 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+
+#viewport[data-design="label-phone"] .ssh-overview-add-block {
+  order: 5; flex: none; position: static; display: flex; align-items: center; justify-content: space-between;
+  height: 52px; margin: 0 var(--label-edge) calc(12px + var(--label-low)); padding: 0 18px; pointer-events: auto;
+  --cut: 14px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  background: var(--signal); color: var(--on-signal); font-size: 17px; font-weight: 700; letter-spacing: 1px;
+}
+#viewport[data-design="label-phone"] .ssh-overview-add-block span { font-size: 26px; font-weight: 300; }
+
+/* The other pages and the editor: the shared rules, at a phone's sizes. */
+#viewport[data-design="label-phone"] .ssh-overview-secondary { flex: 1; min-height: 0; overflow: auto; padding: 14px var(--label-edge) 16px; box-sizing: border-box; }
+#viewport[data-design="label-phone"] :is(.ssh-overview-secondary.ssh-library, .ssh-overview-secondary.ssh-shortcuts, .ssh-overview-secondary .ssh-key-library) h2 { font-size: 34px; margin-top: 10px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-catalog-heading { gap: 12px; padding-bottom: 12px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-catalog-heading h2 { font-size: 28px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary :is(.ssh-library-tools button, .ssh-catalog-heading > button) { padding: 0 14px; font-size: 14px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-library-toolbar { flex-wrap: wrap; gap: 10px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-library-toolbar input { flex: 1 1 100%; font-size: 15px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-library-row { grid-template-columns: 44px minmax(0, 1fr) auto 28px; gap: 0 10px; min-height: 60px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-library-row::before { padding-left: 4px; font-size: 24px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-library-row strong { font-size: 16px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-library-row small { font-size: 11px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary :is(.ssh-shortcut-list article, .ssh-key-row) { padding: 14px 0 14px 44px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary :is(.ssh-shortcut-list article, .ssh-key-row)::before { left: 4px; top: 16px; font-size: 24px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary :is(.ssh-shortcut-heading strong, .ssh-key-row strong) { font-size: 16px; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary .ssh-key-row { flex-wrap: wrap; }
+#viewport[data-design="label-phone"] .ssh-overview-secondary :is(.ssh-library-empty, .ssh-catalog-empty) { padding: 20px 0; font-size: 15px; }
+#viewport[data-design="label-phone"] .ssh-host-editor :is(label, .panel-label) { font-size: 11px; }
+#viewport[data-design="label-phone"] .ssh-host-editor :is(input:not([type="checkbox"]), select) { min-height: 40px; font-size: 15px; }
+#viewport[data-design="label-phone"] .ssh-host-editor .ssh-host-editor-head .export-button { min-height: 36px; }
+#viewport[data-design="label-phone"] .ssh-host-editor-actions { flex-wrap: wrap; gap: 10px; }
+#viewport[data-design="label-phone"] .ssh-host-editor .solid-button { height: 44px; flex: 1 1 100%; font-size: 15px; }
+#viewport[data-design="label-phone"] .ssh-host-editor .solid-button::after { width: 44px; height: 44px; }
+#viewport[data-design="label-phone"] .ssh-host-editor :is(.export-button, .ssh-host-key button) { min-height: 40px; font-size: 13px; width: auto; }
+
+/* ── The detail page: the document under its model ─────────────────────────── */
+#viewport[data-design="label-phone"] #stage :is(.object-caption, .detail-content > :is(.detail-kicker, h2, .detail-title-cn, .detail-rule)) { display: none; }
+#viewport[data-design="label-phone"] #stage .detail-ui::before { content: ""; position: absolute; left: 0; right: 0; top: 43%; bottom: 0; background: var(--ground); border-top: 3px solid var(--ink); }
+#viewport[data-design="label-phone"] #stage .detail-content {
+  left: var(--label-edge); right: var(--label-edge); width: auto; top: calc(43% + 3px); bottom: 0; max-height: none;
+  padding: 12px 0 calc(16px + var(--label-low)); border: 0; overflow-y: auto; color: var(--ink);
+}
+/* 拆解模型 / 360° under the strip, at the model's corner. */
+#stage[data-design="label-phone"] .label-viewer { left: var(--label-edge); top: calc(var(--label-head) + 12px); bottom: auto; height: 36px; padding: 0 12px; background: var(--ground); box-shadow: inset 0 0 0 2px var(--ink); font-size: 12px; }
+/* The document's head: the home's label again. */
+#stage[data-design="label-phone"] .detail-label { display: block; position: relative; height: 128px; margin-bottom: 14px; --cut: 22px; background: var(--signal); color: var(--on-signal); }
+#stage[data-design="label-phone"] .detail-label > .label-note { left: 14px; top: 13px; font-size: 11px; }
+#stage[data-design="label-phone"] .detail-label .detail-label-figure { left: 12px; top: 33px; --px: 58px; --slit: var(--signal); }
+#stage[data-design="label-phone"] .detail-label strong { left: 14px; top: 81px; max-width: calc(100% - 28px); font-size: 17px; }
+#stage[data-design="label-phone"] .detail-label-address { left: 14px; top: 106px; max-width: calc(100% - 130px); overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
+#stage[data-design="label-phone"] .detail-label .label-sigil { right: 14px; top: 13px; width: 40px; height: 40px; }
+#stage[data-design="label-phone"] .detail-label .label-chip { right: 30px; bottom: 11px; height: 24px; padding: 0 9px; font-size: 11px; letter-spacing: .6px; }
+/* The document in the label's inks. */
+#stage[data-design="label-phone"] .detail-content .metadata { margin: 14px 0 16px; }
+#stage[data-design="label-phone"] .detail-content .metadata dt { letter-spacing: .4px; color: rgba(var(--theme-ink-rgb), .62); }
+#stage[data-design="label-phone"] .detail-content .metadata dd { color: var(--ink); }
+#stage[data-design="label-phone"] .detail-content .metadata dd i { background: var(--signal); }
+#stage[data-design="label-phone"] .detail-tabs { gap: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; border-bottom: 2px solid var(--ink); }
+#stage[data-design="label-phone"] .detail-tabs::-webkit-scrollbar { display: none; }
+#stage[data-design="label-phone"] .detail-tabs button { flex: none; min-height: 44px; padding: 8px 7px 6px; color: rgba(var(--theme-ink-rgb), .62); white-space: nowrap; }
+#stage[data-design="label-phone"] .detail-tabs button span { font-size: 13px; font-weight: 600; color: var(--ink); }
+#stage[data-design="label-phone"] .detail-tabs button.active { background: var(--ink); color: var(--ground); }
+#stage[data-design="label-phone"] .detail-tabs button.active span { color: var(--ground); }
+#stage[data-design="label-phone"] .detail-tabs .tab-indicator { display: none; }
+#stage[data-design="label-phone"] .detail-content :is(.panel-label, .log-note, .host-loading) { color: rgba(var(--theme-ink-rgb), .62); }
+#stage[data-design="label-phone"] .detail-content :is(p, pre, .host-raw, .log-row, li) { color: var(--ink); }
+#stage[data-design="label-phone"] .detail-content .solid-button { height: 44px; padding-right: 0; background: var(--ink); color: var(--ground); font-size: 13px; }
+#stage[data-design="label-phone"] .detail-content .solid-button > span { margin-left: auto; padding-right: 14px; color: rgba(var(--theme-paper-rgb), .62); }
+#stage[data-design="label-phone"] .detail-content .solid-button::after { content: "→"; flex: none; width: 44px; height: 44px; display: grid; place-items: center; background: var(--signal); color: var(--on-signal); font-size: 20px; }
+#stage[data-design="label-phone"] .detail-content .export-button { color: var(--ink); font-weight: 600; }
+#stage[data-design="label-phone"] .detail-content .detail-footnote { color: rgba(var(--theme-ink-rgb), .62); }
+
+/* ── The workspace: its bar at a phone's sizes ─────────────────────────────── */
+#viewport[data-design="label-phone"] .ssh-terminal-label { gap: 8px; margin-right: 8px; }
+#viewport[data-design="label-phone"] .ssh-terminal-label .label-sigil { width: 22px; height: 22px; }
+/* The host's mark stays; the session's number has no room beside the name on a 360 px bar. */
+#viewport[data-design="label-phone"] .ssh-terminal-label .label-figure { display: none; }
+#viewport[data-design="label-phone"] .ssh-terminal-target { font-size: 13px; }
+#viewport[data-design="label-phone"] .ssh-terminal-close { height: 32px; min-height: 32px; padding: 0 10px 0 14px; font-size: 12px; clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px); }
+#viewport[data-design="label-phone"] .ssh-metric-value { font-size: 44px; }
+
+/* ── Dialogs: the settings sheet and the archive index fill the screen ─────────
+   (the modal root is beside the stage, so the classic sheet keeps a desk's margins and padding here) */
+#viewport[data-design="label-phone"] #modal-root .modal-backdrop { padding: 0; align-items: stretch; background: var(--ground); backdrop-filter: none; }
+#viewport[data-design="label-phone"] #modal-root .terminal-modal { width: 100%; height: 100%; max-height: none; box-sizing: border-box; padding: calc(10px + env(safe-area-inset-top, 0px)) var(--label-edge) calc(18px + var(--label-low)); overflow-y: auto; overscroll-behavior: contain; }
+#viewport[data-design="label-phone"] #modal-root .settings-modal { border: 0; border-top: 8px solid var(--signal); }
+#viewport[data-design="label-phone"] .modal-top { padding-bottom: 8px; gap: 12px; font-size: 11px; }
+#viewport[data-design="label-phone"] :is(.settings-intro, .theme-card small) { font-size: 11px; }
+#viewport[data-design="label-phone"] .modal-top button { min-width: 44px; min-height: 40px; }
+#viewport[data-design="label-phone"] #modal-root .terminal-modal h2 { margin: 18px 0 10px; font-size: 26px; flex-wrap: wrap; gap: 8px; }
+#viewport[data-design="label-phone"] .settings-figure { top: calc(64px + env(safe-area-inset-top, 0px)); right: var(--label-edge); --px: 58px; }
+#viewport[data-design="label-phone"] .settings-sections { display: flex; flex-wrap: nowrap; margin: 14px 0 12px; overflow-x: auto; scrollbar-width: none; }
+#viewport[data-design="label-phone"] .settings-sections::-webkit-scrollbar { display: none; }
+#viewport[data-design="label-phone"] .settings-sections button { flex: none; padding: 8px 12px 0; font-size: 15px; }
+#viewport[data-design="label-phone"] .ssh-workspace-settings > header strong { font-size: 24px; }
+
+/* ── A phone on its side, or a narrow window (the compact layout: the model keeps the left half) ──
+   the label and the count go in a column at the left ─────────────────────── */
+#viewport[data-design="label-phone"][data-fit="compact"] { --label-top: 40px; --label-foot: calc(52px + var(--label-low)); --label-field: 272px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-nav button { margin-left: 18px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-brand span { display: inline; margin-left: 8px; letter-spacing: 1.6px; }
+
+#stage[data-design="label-phone"][data-layout="compact"] .label-field-reveal { right: auto; top: var(--label-head); bottom: var(--label-foot); width: var(--label-field); height: auto; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-sheet:not([data-page="archive"]) .label-field-reveal { transform: translateX(calc(-1 * var(--label-field) - 8px)); }
+#stage[data-design="label-phone"][data-layout="compact"] .label-field-kicker { top: 12px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-field-prefix { top: 32px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-field-figure { top: 54px; --px: 84px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-field-sigil { top: 56px; width: 44px; height: 44px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-field-name { top: 122px; height: 28px; font-size: 20px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-field-address { top: 154px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-field-chips { top: 176px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-window { left: var(--label-field); top: var(--label-head); height: auto; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-read { bottom: 10px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-read-go { background: var(--signal); color: var(--on-signal); }
+#stage[data-design="label-phone"][data-layout="compact"] .label-foot { grid-template-columns: auto auto minmax(0, 1fr); grid-template-rows: 49px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-foot-count .label-figure { --px: 38px; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-keys { grid-column: auto; align-self: center; justify-self: end; }
+#stage[data-design="label-phone"][data-layout="compact"] .label-keys span { margin: 0 14px 0 8px; }
+
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-glass { display: grid; grid-template-columns: 236px minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-side { grid-column: 1; grid-row: 1 / 4; display: block; padding: 10px 14px 0 var(--label-edge); border-right: 3px solid var(--ink); }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-count { margin: 10px 0 0 -3px; --px: 86px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-group-count { display: block; margin-top: 10px; font-size: 14px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-stats { margin-top: 8px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-stats dt { --px: 22px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-stats dd { font-size: 11px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-add-block { grid-column: 1; grid-row: 4; height: 44px; margin: 0 14px calc(10px + var(--label-low)) var(--label-edge); font-size: 15px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-glass > .ssh-session-tabs { grid-column: 2; grid-row: 1; padding-top: 6px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-nav { grid-column: 2; grid-row: 2; height: 40px; border-top: 0; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-nav button { height: 40px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-content { grid-column: 2; grid-row: 3 / 5; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-search { height: 40px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview .ssh-overview-connect { min-height: 56px; padding-block: 5px; }
+
+#viewport[data-design="label-phone"][data-fit="compact"] #stage .detail-ui::before { left: calc(50% - 14px); top: var(--label-head); border-top: 0; border-left: 3px solid var(--ink); }
+#viewport[data-design="label-phone"][data-fit="compact"] #stage .detail-content { left: 50%; top: var(--label-head); padding-top: 10px; }
+

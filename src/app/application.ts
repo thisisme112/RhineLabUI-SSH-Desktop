@@ -300,10 +300,11 @@ $("#stage").innerHTML = `
 const stageEl = $("#stage"), archiveUiEl = $("#archive-ui"), systemNavEl = $(".system-nav"),
   detailContentEl = $("#detail-content"), threeSceneEl = $("#three-scene"), viewportEl = $("#viewport");
 /**
- * The label design (features/label): the desktop shells' default, laid over the same stage. Phones and
- * narrow windows keep the classic layout, which was drawn for them; so does the opening film.
+ * The label design (features/label): the default wherever there are hosts, laid over the same stage.
+ * A desktop window gets the sheet the Unreal build draws; a phone or a narrow window gets the same
+ * inks, figures and blocks set for a hand (label-phone.css). The opening film keeps its own layout.
  */
-const labelSheet = desktopShell && !isAndroid ? new LabelSheet(stageEl, {
+const labelSheet = desktopShell ? new LabelSheet(stageEl, {
   primary: () => {
     if (mode === "detail") goBack();
     else { sshOverview?.toggleCollapsed(); audio.play("ui-tick"); }
@@ -737,7 +738,7 @@ function setMode(next: Mode) {
     pendingDetailFocus = false;
     tabTransition.cancel();
     detailTransition.hide(prefs.reduced || next === "boot");
-    if (!modal && next === "archive") (labelActive() ? labelSheet!.root.querySelector<HTMLElement>(".label-read")! : $(".read-file")).focus({ preventScroll: true });
+    if (!modal && next === "archive") (labelActive() || labelPocket() ? labelSheet!.root.querySelector<HTMLElement>(".label-read")! : $(".read-file")).focus({ preventScroll: true });
   }
   $("#detail-ui").inert = next !== "detail" || Boolean(modal);
   scene?.setMode(next === "boot" ? "hidden" : next);
@@ -1561,6 +1562,11 @@ function posterState(time: number): PosterState {
 function labelActive() {
   return Boolean(labelSheet) && prefs.design !== "classic" && ready && mode !== "boot" && stageEl.dataset.layout === "desktop";
 }
+/** The label design as a phone or a narrow window shows it (label-phone.css): no drawing sheet round the model, no page turn. */
+function labelPocket() {
+  const layout = stageEl.dataset.layout;
+  return Boolean(labelSheet) && prefs.design !== "classic" && ready && mode !== "boot" && (layout === "portrait" || layout === "compact");
+}
 let labelShown = false, labelMarksAt = 0, labelTurnPage: LabelPage | "" = "", labelTurnTab = "";
 /** The document tabs as the page turn names them (MakeLabelWipe TabNames). */
 const TAB_NAMES: Record<string, string> = { overview: "OVERVIEW / 概述", config: "CONNECTION / 连接配置", notes: "SESSIONS / 会话记录", history: "EVENT LOG / 事件日志" };
@@ -1613,13 +1619,18 @@ function labelFile(): LabelFile {
 }
 function updateLabel(time: number) {
   if (!labelSheet) return;
-  const active = labelActive();
-  setData(stageEl, "design", active ? "label" : "classic");
-  setData(viewportEl, "design", active ? "label" : "classic");
+  const active = labelActive(), pocket = !active && labelPocket();
+  // "label-phone" shares the inks, the forms and the workspace with "label" (rules keyed on [data-design^="label"]);
+  // the sheet's desktop geometry is keyed on "label" alone.
+  const design = active ? "label" : pocket ? "label-phone" : "classic";
+  setData(stageEl, "design", design);
+  setData(viewportEl, "design", design);
+  // The overview sheet sits beside the stage: it reads the layout from the viewport.
+  setData(viewportEl, "fit", stageEl.dataset.layout ?? "");
   const page = labelPage();
   const inset = windowControlsHeight() / stageScale;
   scene?.setLabelLayout(active ? page === "overview" ? "shelf" : page === "archive" ? "home" : "" : "", inset);
-  if (!active) { labelShown = false; labelTurnPage = ""; return; }
+  if (!active && !pocket) { labelShown = false; labelTurnPage = ""; return; }
   if (!labelShown) { labelShown = true; labelSheet.arrive(time); }
   // The operating terminal is the workspace's own page: the sheet steps aside while it is up.
   setData(labelSheet.root, "covered", String((scene?.sessionDeckFocus ?? 0) > .05 || Boolean(sshTerminal?.isOpen) || sshTerminalPending));
@@ -1629,10 +1640,12 @@ function updateLabel(time: number) {
     const serial = (card !== undefined ? records[card]?.id : undefined) ?? "S-000";
     session.panel.setLabel(serial.replace("-", "—"), hostMark(session.descriptor?.target ?? session.client.target));
   }
-  const turn = labelTurn(page, inset);
-  if (turn) labelWipe?.begin(turn, time);
-  // A turning page runs at the full rate.
-  if (labelWipe?.draw(time, stageScale, labelSheet.hullPoints)) frameBudget?.busy(time * 1000, 300);
+  if (active) {
+    const turn = labelTurn(page, inset);
+    if (turn) labelWipe?.begin(turn, time);
+    // A turning page runs at the full rate.
+    if (labelWipe?.draw(time, stageScale, labelSheet.hullPoints)) frameBudget?.busy(time * 1000, 300);
+  } else labelTurnPage = "";
   // Once a second: a session that has verified its host's key gives that host its mark.
   if (time - labelMarksAt > 1) {
     labelMarksAt = time;
@@ -1646,10 +1659,11 @@ function updateLabel(time: number) {
   // The overview prints the raised host's row in reverse.
   sshOverview?.setFocus(page === "overview" ? hostAtCard(selected)?.alias ?? null : null);
   labelSheet.update({
-    page, time, reduced: prefs.reduced, width: stageWidth, inset,
+    page, time, reduced: prefs.reduced, width: stageWidth, inset, pocket,
     file: labelFile(),
     lane: { index: lane, count: archiveColumns.length, name: archiveColumns[lane], position: files.indexOf(selected), files },
-    probe: scene?.labelProbe() ?? null,
+    // The phone's sheet draws nothing round the model: no outline to cut, no leader to pin.
+    probe: pocket ? null : scene?.labelProbe() ?? null,
     selection: `${selected}|${records[selected].id}`,
   });
 }
@@ -2072,7 +2086,7 @@ export const sshWorkspaceContext = {
   set portals(value: typeof portals) { portals = value; },
   get prefs() { return prefs; },
   /** Whether the label design is on screen (labelActive): the terminal is then set in ink. */
-  get labelDesign() { return labelActive(); },
+  get labelDesign() { return labelActive() || labelPocket(); },
   get audio() { return audio; },
   get openHostSession() { return openHostSession; },
   set openHostSession(value: typeof openHostSession) { openHostSession = value; },
