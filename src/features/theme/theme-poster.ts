@@ -6,8 +6,10 @@ type Rgb = readonly number[];
 /**
  * The far-layer poster (Unreal SRhineThemePoster): flat graphic design in the
  * theme's motif — grids, oversized figures, colour blocks, halftone and overprint —
- * drawn behind the interface. Unreal lays it over the fogged far rows with a
- * depth-masked post-process; here it is a canvas under the atmosphere gradients.
+ * drawn behind the interface. As in Unreal, the scene lays it over the fogged far
+ * rows in a depth-masked pass (scene-pipeline.ts); where the scene renders without
+ * its passes (super performance) the canvas itself lies over the scene, under the
+ * atmosphere gradients.
  *
  * Layout rule kept from Unreal: the document column (right of 60% of the width)
  * is veiled in paper for legibility, so only faint texture covers the frame and
@@ -51,6 +53,8 @@ export class ThemePoster {
   /** The canvas's CSS size, kept by a ResizeObserver: reading it off the element each frame forced a layout. */
   private cssWidth = 0;
   private cssHeight = 0;
+  /** Counts the drawings, so the scene uploads the canvas only when it changed (ArchiveScene.setPoster). */
+  revision = 0;
 
   constructor(readonly canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d");
@@ -85,6 +89,7 @@ export class ThemePoster {
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
     ctx.clearRect(0, 0, width / scale, 1080);
     this.draw(ctx, width / scale, 1080, state, easeOut(change));
+    this.revision++;
   }
 
   private draw(ctx: CanvasRenderingContext2D, W: number, H: number, s: PosterState, change: number) {

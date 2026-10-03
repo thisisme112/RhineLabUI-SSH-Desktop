@@ -87,4 +87,6 @@
 /* The far-layer poster (theme-poster.ts): flat graphic design behind the archive and its detail page. */
 .theme-poster { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .6s; }
 .theme-poster[data-on="true"] { opacity: 1; }
+/* Composited by the scene over its far rows (scene-pipeline.ts): the canvas is only its source, still laid out to keep its size. */
+.theme-poster[data-composited="true"] { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .theme-poster { transition: none; } }

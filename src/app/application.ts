@@ -74,7 +74,7 @@ import {
 } from "../features/archives/data";
 import { TerminalAudio, VOICES } from "../shared/audio";
 import { motifOf } from "../features/theme/theme-design";
-import { ThemePoster } from "../features/theme/theme-poster";
+import { ThemePoster, type PosterState } from "../features/theme/theme-poster";
 import { setSceneThemes } from "../features/theme/theme-material";
 import { playThemeReveal } from "../features/theme/theme-reveal";
 import { showThemeMark } from "../features/theme/theme-mark";
@@ -1535,11 +1535,17 @@ function updatePoster(time: number) {
   if (!poster || !posterCanvas) return;
   const show = ready && (mode === "archive" || mode === "detail") && !sshSurfaceActive() && !viewer?.isOpen && !portals?.isPageOpen;
   setData(posterCanvas, "on", String(show));
-  if (!show) return;
+  // The scene lays the canvas over its far rows only (scene-pipeline.ts PosterShader);
+  // the page shows it itself where the scene renders without its passes.
+  setData(posterCanvas, "composited", String(Boolean(scene?.posterComposited)));
+  if (show) poster.update(posterState(time));
+  scene?.setPoster(posterCanvas, show, poster.revision);
+}
+function posterState(time: number): PosterState {
   const name = currentPalette();
   const { lane } = fileLocation(selected);
   const files = columnFiles(lane);
-  poster.update({
+  return {
     motif: motifOf(name),
     colors: { ink: paletteRgb(name, "ink"), accent: paletteRgb(name, "accent"), cyan: paletteRgb(name, "cyan"), paper: paletteRgb(name, "paper"), signal: hexRgb(DESIGNS[name].signal ?? signalsOf(name)[0]) },
     // The figure reads as the card's own number: X-001 becomes X.001.
@@ -1549,7 +1555,7 @@ function updatePoster(time: number) {
     group: archiveColumns[lane],
     time,
     reduced: prefs.reduced,
-  });
+  };
 }
 /** Whether the label design is on screen: its preference, a desktop layout, and not during the opening film. */
 function labelActive() {

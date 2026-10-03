@@ -23,6 +23,8 @@ export async function checkThemeSync({ evaluate, until, check, shot, send, sleep
       palette: document.documentElement.dataset.colorPalette,
       mark: mark ? { opacity: +getComputedStyle(mark).opacity, rect: (r => [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)])(mark.getBoundingClientRect()), z: getComputedStyle(mark).zIndex, text: mark.querySelector('small')?.textContent, name: [...mark.querySelectorAll('.theme-mark-letter b:last-child')].map(b => b.textContent).join(''), glyph: !!mark.querySelector('svg') } : null,
       posterOn: poster?.dataset.on ?? null,
+      posterComposited: poster?.dataset.composited ?? null,
+      posterVisibility: poster ? getComputedStyle(poster).visibility : null,
       posterDrawn: drawn,
       exposure: stats.exposure ?? null,
       budget: stats.budget,
@@ -35,6 +37,8 @@ export async function checkThemeSync({ evaluate, until, check, shot, send, sleep
   const before = await state();
   await check("the far-layer poster is on over the archive", `${before.posterOn === "true"}`);
   await check("the poster has been drawn (not an empty canvas)", `${before.posterDrawn > 50}`);
+  // The scene lays it over its far rows only (scene-pipeline.ts): the page's canvas is just its source.
+  await check("the scene composites the poster, the page's canvas hidden", `${before.posterComposited === "true" && before.posterVisibility === "hidden"}`);
 
   await choose("clinic");
   await sleep(120);

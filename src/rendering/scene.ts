@@ -118,6 +118,7 @@ export class ArchiveScene {
     this.assemblyTemplate?.then(disposeThreeTree).catch(() => {});
     this.assemblyTemplate = undefined;
     this.light.shadow.map?.dispose();
+    this.posterTexture?.dispose();
     for (const pass of this.composer.passes) pass.dispose();
     this.composer.dispose();
     this.renderer.dispose();
@@ -147,6 +148,37 @@ export class ArchiveScene {
       inst.visible = !enabled || original.name.replace(/\.\d+$/, "") !== "Titanium_Fasteners";
     }
     this.resize();
+  }
+  /**
+   * The theme's poster (theme-poster.ts) over the fogged far rows, composited by the
+   * last pass (scene-pipeline.ts PosterShader). The page hands its canvas in every frame,
+   * with whether it shows and which drawing it holds; super performance renders without
+   * the passes, so there the page keeps the canvas over the scene instead.
+   */
+  private posterTexture?: THREE.CanvasTexture;
+  private posterRevision = -1;
+  private posterSize = "";
+  private posterShown = false;
+  /** 0–1 toward posterShown over the page's own .6 s fade (theme.css .theme-poster). */
+  private posterFade = 0;
+  get posterComposited() { return !this.superPerformance; }
+  setPoster(canvas: HTMLCanvasElement, shown: boolean, revision: number) {
+    if (this.posterTexture?.image !== canvas) {
+      this.posterTexture?.dispose();
+      this.posterTexture = new THREE.CanvasTexture(canvas);
+      this.posterTexture.minFilter = THREE.LinearFilter;
+      this.posterTexture.generateMipmaps = false;
+      this.posterPass.uniforms.tPoster.value = this.posterTexture;
+      this.posterRevision = -1;
+    }
+    if (revision !== this.posterRevision) {
+      this.posterRevision = revision;
+      // Three allocates a texture's storage once, at the size it first had: a resized canvas needs new storage.
+      const size = `${canvas.width}x${canvas.height}`;
+      if (size !== this.posterSize) { this.posterSize = size; this.posterTexture.dispose(); }
+      this.posterTexture.needsUpdate = true;
+    }
+    this.posterShown = shown;
   }
   setSelectedIndexAccent(onlySelected: boolean) { this.selectedIndexOnly = onlySelected; }
   private themeAttribute?: THREE.InstancedBufferAttribute;
@@ -244,6 +276,8 @@ export class ArchiveScene {
   private composer: ScenePipeline["composer"];
   private ao: ScenePipeline["ao"];
   private bokeh: ScenePipeline["bokeh"];
+  private far: ScenePipeline["far"];
+  private posterPass: ScenePipeline["poster"];
   private instances: THREE.InstancedMesh[] = [];
   /** One transform per card, shared by every instanced part of it, so it is written and uploaded once. */
   private instanceMatrix?: THREE.InstancedBufferAttribute;
@@ -597,7 +631,7 @@ export class ArchiveScene {
     this.cameraAim.set(-0.5, 1.1, 0.4);
     this.camera.fov = 6.15;
     this.camera.lookAt(this.cameraAim);
-    ({ composer: this.composer, ao: this.ao, bokeh: this.bokeh, smaa: this.smaa } = createScenePipeline(this.renderer, this.scene, this.camera, container.clientWidth, container.clientHeight, lightingLook));
+    ({ composer: this.composer, ao: this.ao, bokeh: this.bokeh, smaa: this.smaa, far: this.far, poster: this.posterPass } = createScenePipeline(this.renderer, this.scene, this.camera, container.clientWidth, container.clientHeight, lightingLook));
     this.bindPointer();
   }
   async load(assetUrl = publicAsset("assets/archive-cassette.glb")) {
@@ -2075,6 +2109,18 @@ export class ArchiveScene {
     const fogTheme = this.themeAmount;
     fog.near = renderedDistance + THREE.MathUtils.lerp(5 - 4 * fogTheme, -1, detail);
     fog.far = renderedDistance + THREE.MathUtils.lerp(25 - 9 * fogTheme, 12, detail);
+    // The poster fades in with depth from just before the focused row, or behind the
+    // inspected one (SshWorkbenchHome.cpp FieldLook, 100 cm to a unit), and leaves the
+    // operating view clean.
+    const posterTarget = this.posterShown && this.posterTexture ? 1 : 0;
+    this.posterFade = this.reduced ? posterTarget
+      : posterTarget > this.posterFade ? Math.min(posterTarget, this.posterFade + dt / .6) : Math.max(posterTarget, this.posterFade - dt / .6);
+    const posterAmount = this.superPerformance ? 0 : THREE.MathUtils.smoothstep(this.posterFade, 0, 1) * (1 - this.sessionDeckFocus);
+    this.far.on = this.posterPass.enabled = posterAmount > 0;
+    this.posterPass.uniforms.amount.value = posterAmount;
+    const farUniforms = this.far.material.uniforms;
+    farUniforms.start.value = renderedDistance + THREE.MathUtils.lerp(-3, 6, detail);
+    farUniforms.range.value = 22;
 
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
@@ -2207,6 +2253,7 @@ export class ArchiveScene {
       this.themeAmount, this.renderer.toneMappingExposure, this.detail, this.openBlend, this.reveal, this.rotation,
       this.lift.value, this.decryption.clarity, this.subduedIndex.value, aperture, focus, this.drawnCells.length,
       this.labelTexture?.version ?? -1, this.deck ? this.deck.group.visible ? 1 : 0 : -1, this.deck?.pictureRevision ?? -1,
+      this.posterPass.uniforms.amount.value, this.posterRevision,
     ];
   }
   /**
