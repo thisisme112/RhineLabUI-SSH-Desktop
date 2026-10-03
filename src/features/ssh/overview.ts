@@ -205,11 +205,16 @@ export class SshOverview {
       );
       if (!row || row.dataset.hostAlias === this.focusAlias) return;
       this.focusAlias = row.dataset.hostAlias!;
+      // The row answers the hand at once; its archive follows once the pointer has stayed 60 ms
+      // (the Unreal build's TickHomeChrome), so a sweep across the list does not drag the array along.
+      this.pendingFocus = this.focusAlias;
+      this.pendingUntil = performance.now() + 500;
+      this.setFocus(this.focused);
       clearTimeout(this.timer);
       this.timer = window.setTimeout(() => {
         if (this.visible && !this.collapsed && this.page === "hosts")
           this.actions.preview(this.focusAlias);
-      }, 100);
+      }, 60);
       this.root.querySelector(".ssh-overview-selection")!.textContent =
         row.querySelector("strong")!.textContent;
       for (const item of this.rows.values())
@@ -220,6 +225,7 @@ export class SshOverview {
     this.list.addEventListener("pointerleave", () => {
       clearTimeout(this.timer);
       this.focusAlias = "";
+      this.pendingFocus = "";
     });
     // Native overlays must not send wheel / shortcuts through to the 3D canvas.
     this.root.addEventListener("wheel", (event) => event.stopPropagation(), {
@@ -342,11 +348,16 @@ export class SshOverview {
     )?.focus({ preventScroll: true });
   }
   private focused = "";
+  /** The row the pointer has just reached, shown as focused until its archive is the raised one (or half a second). */
+  private pendingFocus = "";
+  private pendingUntil = 0;
   /** The host whose archive stands raised: the label design prints its row in reverse. */
   setFocus(alias: string | null) {
-    if ((alias ?? "") === this.focused) return;
+    if (this.pendingFocus && (alias === this.pendingFocus || performance.now() > this.pendingUntil)) this.pendingFocus = "";
+    const next = this.pendingFocus || (alias ?? "");
+    if (next === this.focused) return;
     this.rows.get(this.focused)?.removeAttribute("data-focus");
-    this.focused = alias ?? "";
+    this.focused = next;
     this.rows.get(this.focused)?.setAttribute("data-focus", "true");
   }
   focusSession() {

@@ -2,20 +2,26 @@ import "./hover-card.css";
 import { motifOf } from "../features/theme/theme-design";
 
 /**
- * The hover detail card (the Unreal build's RhineHoverCard.h), after ObsidianUI's
- * Hover Image (obsidianui.dev/docs/hover-img). One card for the whole page:
+ * The hover detail card (the Unreal build's RhineHoverCard.h): the row under the
+ * pointer, enlarged. One card for the whole page, laid out as ObsidianUI's Hover
+ * Image (obsidianui.dev/docs/hover-img) and moving like a drop of water:
  *
- *   - centred on the pointer, kept 16 px inside the viewport;
- *   - it follows on gsap.quickTo(0.4 s, power3.out): every move starts a fresh
- *     0.4 s out-quartic tween from where the card is, so it lags and settles,
- *     with no spring, no overshoot and no stretch;
- *   - it scales in from nothing on the first row (0.4 s, power2.out) and out on
- *     leaving the list (0.3 s). Moving from one row to the next does not close it:
- *     the new content slides in like a reel (0.4 s) while the card's window grows
- *     or shrinks to it, in the direction the pointer went;
- *   - it sits on a large soft shadow.
+ *   - centred on the pointer, kept 16 px inside the viewport, and it stays with
+ *     the hand: a critically damped spring (FOLLOW: a thirtieth of a second
+ *     behind, 32 px at 960 px/s) where a 0.4 s tween trailed by three times that;
+ *   - it swells out of the pointer with a small overshoot (0.3 s) and is gone
+ *     0.16 s after the pointer leaves the list. Moving from one row to the next
+ *     does not close it: the new content slides in like a reel (0.24 s) while
+ *     the card's window grows or shrinks to it, in the direction the pointer went;
+ *   - it stretches along its travel and narrows across it; when the pointer
+ *     stops, the stretch swings back through a slight squash before the card
+ *     rounds off (an under-damped spring on the stretch alone: the place itself
+ *     never overshoots);
+ *   - its type is larger than the rows it explains, and it sits on a large soft
+ *     shadow.
  *
- * Each motif still dresses it its own way (hover-card.css).
+ * Both springs take their exact step over the frame's time, so a slow frame
+ * cannot throw the card. Each motif still dresses it its own way (hover-card.css).
  */
 export type HoverContent = {
   title: string;
@@ -26,9 +32,12 @@ export type HoverContent = {
 };
 
 /** A leave only counts once no other row has been entered (the gap between two rows). */
-const GRACE = 70, FOLLOW = 400, REEL = 400, GROW = 400, SHRINK = 300, INSET = 16;
+const GRACE = 70, REEL = 240, GROW = 300, SHRINK = 160, INSET = 16;
+/** How closely the card keeps to the pointer (1/s), how far it may stretch, and how the stretch swings back. */
+const FOLLOW = 60, MAX_STRETCH = .16, WOBBLE = 24, WOBBLE_DAMPING = .42;
 const outQuad = (t: number) => { t = Math.min(1, Math.max(0, t)); return 1 - (1 - t) * (1 - t); };
-const outQuart = (t: number) => { t = Math.min(1, Math.max(0, t)); return 1 - (1 - t) ** 4; };
+/** Out-back with a small overshoot (about 5 %). */
+const outBack = (t: number) => { t = Math.min(1, Math.max(0, t)) - 1; return 1 + 2.25 * t * t * t + 1.25 * t * t; };
 
 type Size = { w: number; h: number };
 let card: HTMLElement | undefined;
@@ -39,7 +48,7 @@ let front = 0;
 let owner: HTMLElement | undefined;
 let content: ((el: HTMLElement) => HoverContent | null) | undefined;
 let pointer = { x: 0, y: 0 }, lastY = 0;
-let position = { x: 0, y: 0 }, tweenFrom = { x: 0, y: 0 }, tweenAim = { x: 0, y: 0 }, tweenAt = 0, snap = false;
+let position = { x: 0, y: 0 }, velocity = { x: 0, y: 0 }, axis = { x: 1, y: 0 }, stretch = 0, stretchVelocity = 0, tickedAt = 0, snap = false;
 let wanted = false, leaveAt = -1, reelAt = -1, reelDirection = 1;
 let scale = 0, scaleFrom = 0, scaleTo = 0, scaleAt = 0, scaleFor = 0;
 let frame = 0, refresh = 0;
@@ -97,9 +106,12 @@ function tick(now: number) {
   frame = 0;
   const c = element();
   const still = reduced();
+  const dt = Math.min(.1, Math.max(0, (now - tickedAt) / 1000));
+  tickedAt = now;
   // Leaving the list: a row's leave only counts once no other row has been entered.
   if (leaveAt >= 0 && now - leaveAt >= GRACE) { leaveAt = -1; wanted = false; owner = undefined; content = undefined; startScale(0, SHRINK, now); }
-  scale = still ? scaleTo : scaleFrom + (scaleTo - scaleFrom) * outQuad(scaleFor > 0 ? (now - scaleAt) / scaleFor : 1);
+  // The drop swells past its size and settles; it leaves without a bounce.
+  scale = still ? scaleTo : scaleFrom + (scaleTo - scaleFrom) * (scaleTo > scaleFrom ? outBack : outQuad)(scaleFor > 0 ? (now - scaleAt) / scaleFor : 1);
   if (scale <= .001 && !wanted) { c.hidden = true; return; }
 
   // The reel: both faces slide by the window's height; the window follows the content's size.
@@ -111,17 +123,35 @@ function tick(now: number) {
   faces[back].hidden = p >= 1;
   if (p < 1) faces[back].style.transform = `translateY(${(-p * reelDirection * size.h).toFixed(1)}px)`;
 
-  // Centred on the pointer, kept inside the viewport; quickTo: each move restarts the tween from where the card is.
+  // Centred on the pointer, kept inside the viewport.
   const w = size.w + chrome.w, h = size.h + chrome.h;
   const aim = {
     x: innerWidth > w + 2 * INSET ? Math.min(Math.max(pointer.x, w / 2 + INSET), innerWidth - w / 2 - INSET) : innerWidth / 2,
     y: innerHeight > h + 2 * INSET ? Math.min(Math.max(pointer.y, h / 2 + INSET), innerHeight - h / 2 - INSET) : innerHeight / 2,
   };
-  if (snap || still) { position = { ...aim }; tweenFrom = { ...aim }; tweenAim = { ...aim }; tweenAt = now; snap = false; }
-  else if (Math.hypot(aim.x - tweenAim.x, aim.y - tweenAim.y) > .5) { tweenFrom = { ...position }; tweenAim = aim; tweenAt = now; }
-  const e = outQuart((now - tweenAt) / FOLLOW);
-  position = { x: tweenFrom.x + (tweenAim.x - tweenFrom.x) * e, y: tweenFrom.y + (tweenAim.y - tweenFrom.y) * e };
-  c.style.transform = `translate3d(${(position.x - w / 2).toFixed(1)}px, ${(position.y - h / 2).toFixed(1)}px, 0) scale(${Math.max(scale, .001).toFixed(4)})`;
+  if (snap || still) { position = { ...aim }; velocity = { x: 0, y: 0 }; stretch = stretchVelocity = 0; snap = false; }
+  else {
+    // The place: critically damped towards the pointer, the exact step over dt.
+    const decay = Math.exp(-FOLLOW * dt);
+    for (const k of ["x", "y"] as const) {
+      const offset = position[k] - aim[k], impulse = velocity[k] + FOLLOW * offset;
+      position[k] = aim[k] + (offset + impulse * dt) * decay;
+      velocity[k] = (impulse - FOLLOW * (offset + impulse * dt)) * decay;
+    }
+    // The stretch: as much as the card travels, along the way it travels. Under-damped
+    // (the exact step again), so a stop swings it through a slight squash before it rests.
+    const speed = Math.hypot(velocity.x, velocity.y);
+    if (speed > 40) axis = { x: velocity.x / speed, y: velocity.y / speed };
+    const want = Math.min(MAX_STRETCH, speed / 6000);
+    const a = WOBBLE * WOBBLE_DAMPING, wd = WOBBLE * Math.sqrt(1 - WOBBLE_DAMPING * WOBBLE_DAMPING);
+    const x0 = stretch - want, v0 = stretchVelocity, e = Math.exp(-a * dt), cos = Math.cos(wd * dt), sin = Math.sin(wd * dt);
+    stretch = want + e * (x0 * cos + (v0 + a * x0) / wd * sin);
+    stretchVelocity = e * (v0 * cos - (a * v0 + WOBBLE * WOBBLE * x0) / wd * sin);
+  }
+  // Longer along the travel, narrower across it, about the card's centre.
+  const give = Math.min(.2, Math.max(-.08, stretch)), whole = Math.max(scale, .001);
+  const along = whole * (1 + give), across = whole * (1 - .6 * give), skew = (along - across) * axis.x * axis.y;
+  c.style.transform = `translate3d(${(position.x - w / 2).toFixed(1)}px, ${(position.y - h / 2).toFixed(1)}px, 0) matrix(${(along * axis.x * axis.x + across * axis.y * axis.y).toFixed(4)}, ${skew.toFixed(4)}, ${skew.toFixed(4)}, ${(along * axis.y * axis.y + across * axis.x * axis.x).toFixed(4)}, 0, 0)`;
 
   if (wanted && owner && content && now - refresh > 500) {
     refresh = now;

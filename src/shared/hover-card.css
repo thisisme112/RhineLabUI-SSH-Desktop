@@ -6,7 +6,7 @@
   top: 0;
   z-index: 2147482000;
   box-sizing: border-box;
-  padding: 12px 14px 11px 17px;
+  padding: 16px 22px 17px 24px;
   pointer-events: none;
   will-change: transform;
   transform-origin: 50% 50%;
@@ -14,34 +14,36 @@
   background: var(--theme-paper);
   border: 1px solid color-mix(in srgb, var(--theme-line) 80%, transparent);
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.3);
-  font-size: 12px;
+  /* The row, enlarged: larger than the list it explains (a file row is 13–14 px). */
+  font-size: 16px;
   line-height: 1.45;
   font-variant-numeric: tabular-nums;
 }
 .rhine-hover-card[hidden] { display: none; }
 /* The window the faces slide through, and the faces: one shows, the other leaves as a reel. */
 .rhine-hover-window { position: relative; overflow: hidden; }
-.rhine-hover-face { position: absolute; left: 0; top: 0; width: max-content; min-width: 178px; max-width: min(308px, calc(100vw - 48px)); }
+.rhine-hover-face { position: absolute; left: 0; top: 0; width: max-content; min-width: 260px; max-width: min(440px, calc(100vw - 64px)); }
 .rhine-hover-face[hidden] { display: none; }
 .rhine-hover-card small {
   display: block;
   color: var(--card-series);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 .rhine-hover-card small:empty { display: none; }
 .rhine-hover-card strong {
   display: block;
-  margin: 2px 0 7px;
-  font-size: 14px;
-  font-weight: 600;
+  margin: 3px 0 10px;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 .rhine-hover-card dl {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 3px 14px;
+  gap: 5px 20px;
   margin: 0;
 }
 .rhine-hover-card dt { color: var(--theme-muted); white-space: nowrap; }
@@ -67,7 +69,7 @@
   background: #2a2a28;
   border: 0;
   border-top: 4px solid #f2c230;
-  padding-left: 14px;
+  padding-left: 20px;
 }
 .rhine-hover-card[data-motif="hazard"] dt { color: #a7a397; }
 .rhine-hover-card[data-motif="hazard"] small { color: #f2c230; }
@@ -82,10 +84,10 @@
   background: #fff;
   border-color: #cfd6da;
   box-shadow: 0 10px 26px -18px rgb(0 0 0 / 0.35);
-  padding-left: 14px;
+  padding-left: 20px;
 }
 .rhine-hover-card[data-motif="frames"] dt { color: #7b868d; }
-.rhine-hover-card[data-motif="frames"] .rhine-hover-mark { top: 11px; right: 11px; width: 7px; height: 7px; border-radius: 50%; background: var(--card-series); }
+.rhine-hover-card[data-motif="frames"] .rhine-hover-mark { top: 12px; right: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--card-series); }
 
 /* Orbit: deep blue, a small ring at the left. */
 .rhine-hover-card[data-motif="orbit"] {
@@ -93,10 +95,10 @@
   background: #0d1633;
   border-color: rgb(120 150 255 / 0.3);
   border-radius: 10px;
-  padding-left: 30px;
+  padding-left: 40px;
 }
 .rhine-hover-card[data-motif="orbit"] dt { color: rgb(190 205 255 / 0.6); }
-.rhine-hover-card[data-motif="orbit"] .rhine-hover-mark { top: 15px; left: 11px; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--card-series); }
+.rhine-hover-card[data-motif="orbit"] .rhine-hover-mark { top: 22px; left: 15px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--card-series); }
 
 /* Print: a mis-registered pink plate under a blue outline. */
 .rhine-hover-card[data-motif="plates"] {
@@ -104,21 +106,21 @@
   background: #fbf6ec;
   border: 1.5px solid #2c46b8;
   box-shadow: 4px 4px 0 #f08fb2;
-  padding-left: 14px;
+  padding-left: 20px;
 }
 .rhine-hover-card[data-motif="plates"] dt { color: #6a73a8; }
 .rhine-hover-card[data-motif="plates"] small { color: #d9477c; }
 
 /* Transit: solid, an ink hairline, a route bar in the series colour down the left edge with a station on it. */
-.rhine-hover-card[data-motif="transit"] { background: var(--theme-panel); border-color: var(--theme-ink); padding-left: 19px; }
+.rhine-hover-card[data-motif="transit"] { background: var(--theme-panel); border-color: var(--theme-ink); padding-left: 27px; }
 .rhine-hover-card[data-motif="transit"] .rhine-hover-mark { inset: 0 auto 0 0; width: 5px; background: var(--card-series); }
 .rhine-hover-card[data-motif="transit"] .rhine-hover-mark::after {
-  content: ""; position: absolute; top: 11px; left: -3px; box-sizing: border-box; width: 11px; height: 11px;
+  content: ""; position: absolute; top: 20px; left: -3px; box-sizing: border-box; width: 11px; height: 11px;
   border: 2.5px solid var(--theme-ink); background: var(--theme-panel);
 }
 
 /* Slate: a row of sprocket holes along the top edge. Reagent and cryo keep the plain card. */
-.rhine-hover-card[data-motif="darkroom"] { padding-top: 15px; }
+.rhine-hover-card[data-motif="darkroom"] { padding-top: 21px; }
 .rhine-hover-card[data-motif="darkroom"] .rhine-hover-mark {
   top: 3px; left: 8px; right: 8px; height: 5px;
   background: repeating-linear-gradient(90deg, rgba(var(--theme-cyan-rgb), .6) 0 6px, transparent 6px 12px);

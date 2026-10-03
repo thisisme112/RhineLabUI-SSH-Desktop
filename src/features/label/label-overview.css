@@ -105,16 +105,16 @@
 
 /* A host row: 84 tall, ruled in ink; the raised host's row printed in reverse, the block wiping in from the left. */
 #viewport[data-design="label"] .ssh-overview-host { height: 85px; border-top: 1px solid var(--ink); content-visibility: visible; opacity: 1 !important; isolation: isolate; }
-#viewport[data-design="label"] .ssh-overview-host::before { inset: 0; width: auto; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; z-index: -1; transition: transform .5s var(--settle); }
+#viewport[data-design="label"] .ssh-overview-host::before { inset: 0; width: auto; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; z-index: -1; transition: transform .16s var(--settle); }
 #viewport[data-design="label"] .ssh-overview-host[data-focus="true"]::before { transform: scaleX(1); }
 #viewport[data-design="label"] .ssh-overview-host:is(:hover, [data-preview="true"]):not([data-focus="true"]) { background: rgba(var(--theme-ink-rgb), .07); }
 #viewport[data-design="label"] .ssh-overview-host[data-focus="true"] { color: var(--ground); }
 #viewport[data-design="label"] .ssh-overview .ssh-overview-connect { position: relative; display: block; height: 84px; min-height: 0; padding: 0; color: inherit; }
-#viewport[data-design="label"] .ssh-overview-host-no { display: block; position: absolute; left: 20px; top: 22px; --px: 56px; --slit: var(--ground); transition: color .3s; }
+#viewport[data-design="label"] .ssh-overview-host-no { display: block; position: absolute; left: 20px; top: 22px; --px: 56px; --slit: var(--ground); transition: color .12s; }
 #viewport[data-design="label"] .ssh-overview-host[data-focus="true"] .ssh-overview-host-no { --slit: var(--ink); }
 #viewport[data-design="label"] .ssh-overview-host-sigil { display: block; position: absolute; left: 150px; top: 22px; width: 40px; height: 40px; }
 #viewport[data-design="label"] .ssh-overview-host-name { position: absolute; left: 214px; top: 12px; right: 55%; display: block; }
-#viewport[data-design="label"] .ssh-overview-host-name > span { display: block; transition: transform .3s var(--settle); }
+#viewport[data-design="label"] .ssh-overview-host-name > span { display: block; transition: transform .16s var(--settle); }
 #viewport[data-design="label"] .ssh-overview-host:is(:hover, [data-preview="true"]) .ssh-overview-host-name > span { transform: translateX(10px); }
 #viewport[data-design="label"] .ssh-overview-host-name strong { font-size: 27px; font-weight: 700; letter-spacing: .3px; line-height: 36px; color: inherit; }
 #viewport[data-design="label"] .ssh-overview-host-name small { margin-top: 2px; font-family: var(--mono); font-size: 15px; color: inherit; opacity: .72; }

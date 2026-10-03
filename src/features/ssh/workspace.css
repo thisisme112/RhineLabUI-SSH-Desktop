@@ -481,8 +481,9 @@
 .ssh-file-row[data-kind="directory"] .ssh-file-name { font-weight: 500; }
 .ssh-file-row[data-hidden="true"] .ssh-file-name { opacity: .62; }
 /* The row under the pointer recedes to half and its name steps back (ObsidianUI Hover Image, as the
-   Unreal build's file list): the hover card centred on the pointer carries it now. */
-.ssh-file-row, .ssh-file-row .ssh-file-name { transition: opacity .5s ease, transform .5s ease; }
+   Unreal build's file list): the hover card centred on the pointer carries it now. It answers as
+   fast as the card arrives (Hover Image's own .5 s read as lag here). */
+.ssh-file-row, .ssh-file-row .ssh-file-name { transition: opacity .15s ease-out, transform .15s ease-out; }
 .ssh-files:not(:has(.ssh-files-menu:not([hidden]))) .ssh-file-rows .ssh-file-row:hover { opacity: .5; }
 .ssh-files:not(:has(.ssh-files-menu:not([hidden]))) .ssh-file-rows .ssh-file-row:hover .ssh-file-name { transform: translateX(-6px); }
 .ssh-overview-host { transition: background-color 180ms, opacity 160ms; }
