@@ -21,6 +21,8 @@
   color: var(--ink);
   font-family: "MiSans", "Microsoft YaHei", system-ui, sans-serif;
 }
+/* `display: block` above outranks the classic sheet's [hidden]: off the archive page (a file is open) the sheet is gone. */
+#viewport[data-design="label"] .ssh-overview[hidden] { display: none; }
 #viewport[data-design="label"] .ssh-overview-glass {
   position: absolute; inset: 0; width: auto; height: auto; display: block;
   background: none; backdrop-filter: none; border: 0; box-shadow: none;
