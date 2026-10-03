@@ -94,8 +94,9 @@ function effectiveEndpoint(launch, executable = resolveSshPath()) {
           viaProxy: [fields.proxyjump, fields.proxycommand].some(
             (value) => value && value !== "none",
           ),
-          proxyJump: fields.proxyjump && fields.proxyjump !== "none" ? fields.proxyjump : undefined,
-          proxyCommand: fields.proxycommand && fields.proxycommand !== "none",
+          // Present only when set: the endpoint is compared and stored as is.
+          ...(fields.proxyjump && fields.proxyjump !== "none" ? { proxyJump: fields.proxyjump } : {}),
+          ...(fields.proxycommand && fields.proxycommand !== "none" ? { proxyCommand: true } : {}),
           ...(launch.identityFile ? { identityFiles } : {}),
         });
       },
