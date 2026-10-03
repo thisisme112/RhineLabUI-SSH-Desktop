@@ -1,5 +1,10 @@
-// One shared mark for the interface and the printed archive label.
-const paths = `<path d="M156 75C127 48 103 15 70 15C37 15 15 39 15 70S38 128 70 128C103 128 127 96 176 52M155 75C182 99 208 128 240 128C273 128 295 105 295 73S273 15 240 15C221 15 207 23 192 38" fill="none" stroke="currentColor" stroke-width="26"/><path d="M44 70h50M69 45v50M219 70h44" fill="none" stroke="currentColor" stroke-width="15"/>`;
+// One shared mark for the interface and the printed archive label: the stroke round the two loops (26 wide
+// in its 310 x 145 box) and the plus and minus inside them (15 wide).
+export const markStroke = "M156 75C127 48 103 15 70 15C37 15 15 39 15 70S38 128 70 128C103 128 127 96 176 52M155 75C182 99 208 128 240 128C273 128 295 105 295 73S273 15 240 15C221 15 207 23 192 38";
+export const markSigns = "M44 70h50M69 45v50M219 70h44";
+const paths = `<path d="${markStroke}" fill="none" stroke="currentColor" stroke-width="26"/><path d="${markSigns}" fill="none" stroke="currentColor" stroke-width="15"/>`;
+/** The mark alone, in the text colour; it is sized by the class given. */
+export const markSvg = (className: string) => `<svg class="${className}" viewBox="0 0 310 145" aria-hidden="true">${paths}</svg>`;
 export const labelMarkSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 310 145" color="#171713">${paths}</svg>`;
 export const logo = `<svg viewBox="0 0 310 185" aria-label="Rhine Lab" role="img">${paths}<text x="165" y="174" text-anchor="middle" font-family="MiSans,sans-serif" font-size="16" font-weight="700" letter-spacing="22">RHINE·LAB</text></svg>`;
 // The same Bezier contour, continuous for the opening's moving draw/erase ends.

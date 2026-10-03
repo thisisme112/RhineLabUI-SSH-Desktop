@@ -1,3 +1,4 @@
+import { markSigns, markStroke } from "../../shared/brand";
 import { glide, resolve } from "./label-kit";
 
 /**
@@ -160,7 +161,18 @@ export class LabelWipe {
     ctx.font = `700 11px "JetBrains Mono", monospace`;
     ctx.letterSpacing = "1.76px";
     ctx.textBaseline = "top";
-    ctx.fillText("RHINE LAB — LABEL SYSTEM / PAGE TURN", x, h - 34);
+    ctx.fillText("RHINE LAB, LLC. — SOLVE INTELLIGENCE. THINK DIFFERENT", x, h - 34);
+    // The maker's mark, printed at the foot of the last column.
+    const high = Math.min(44, Math.max(16, wide * .28)), across = high * 310 / 145;
+    ctx.save();
+    ctx.translate(w - across - Math.max(6, (wide - across) * .5), h - high - 18);
+    ctx.scale(high / 145, high / 145);
+    ctx.strokeStyle = this.colors.paper;
+    ctx.lineWidth = 26;
+    ctx.stroke(new Path2D(markStroke));
+    ctx.lineWidth = 15;
+    ctx.stroke(new Path2D(markSigns));
+    ctx.restore();
   }
 }
 

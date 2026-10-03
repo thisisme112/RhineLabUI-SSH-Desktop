@@ -161,7 +161,13 @@
 #viewport[data-design="label"] .ssh-overview-host-actions :is(button[data-armed], .danger:hover) { color: #d9603b; }
 #viewport[data-design="label"] .ssh-overview-host-actions > i { display: none; }
 
-#viewport[data-design="label"] .ssh-overview-empty { padding: 28px 20px; font-size: 20px; font-weight: 600; color: var(--ink); }
+#viewport[data-design="label"] .ssh-overview-empty { padding: 36px 20px 40px; font-size: 30px; font-weight: 700; letter-spacing: .6px; color: var(--ink); }
+/* An empty archive is still Rhine Lab's: its mark stands over the line (shared/brand.ts, as a mask in the ink colour). */
+#viewport[data-design^="label"] .ssh-overview-empty::before {
+  content: ""; display: block; width: 197px; height: 92px; margin-bottom: 30px; background: currentColor;
+  --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 310 145'%3E%3Cpath d='M156 75C127 48 103 15 70 15C37 15 15 39 15 70S38 128 70 128C103 128 127 96 176 52M155 75C182 99 208 128 240 128C273 128 295 105 295 73S273 15 240 15C221 15 207 23 192 38' fill='none' stroke='black' stroke-width='26'/%3E%3Cpath d='M44 70h50M69 45v50M219 70h44' fill='none' stroke='black' stroke-width='15'/%3E%3C/svg%3E");
+  -webkit-mask: var(--mark) no-repeat 0 0 / contain; mask: var(--mark) no-repeat 0 0 / contain;
+}
 #viewport[data-design="label"] .ssh-overview-secondary { flex: 1; min-height: 0; overflow: auto; padding-top: 16px; }
 
 #viewport[data-design="label"] .ssh-overview-footer {

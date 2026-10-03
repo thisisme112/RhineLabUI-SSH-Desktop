@@ -6,6 +6,7 @@ import "./label-forms.css";
 import "./label-workspace.css";
 import "./label-overview-pages.css";
 import "./label-phone.css";
+import { markSvg } from "../../shared/brand";
 import { setAttr, setData, setStyle } from "../../shared/dom-write";
 import {
   BAND, DECODE, FIELD, FOOT, SPINE, TOP,
@@ -148,7 +149,7 @@ export class LabelSheet {
           <div class="label-foot-count" aria-hidden="true"><span class="label-figure" data-figure="count"></span><span class="label-foot-total"></span></div>
           <div class="label-ruler" role="group" aria-label="本列档案">${Array.from({ length: SLOTS }, (_, i) => `<button type="button" class="label-cut-tr" data-slot="${i}" ${arrive(1.5 + i * .06)}></button>`).join("")}</div>
           <div class="label-keys" ${arrive(1.9)}><button type="button" class="label-key" data-label-action="prev" aria-label="上一个档案">←</button><button type="button" class="label-key" data-label-action="next" aria-label="下一个档案">→</button><span>前后档案</span><button type="button" class="label-key" data-label-action="column-prev" aria-label="上一列">↑</button><button type="button" class="label-key" data-label-action="column-next" aria-label="下一列">↓</button><span>切换列</span></div>
-          <div class="label-powered" ${arrive(2.0)}>POWERED BY <b>RHINE LAB</b><i></i></div>
+          <div class="label-powered" ${arrive(2.0)}>POWERED BY <b>RHINE LAB</b>${markSvg("label-mark")}</div>
         </footer>
       </div>
       <div class="label-overview" aria-hidden="true">
@@ -166,8 +167,8 @@ export class LabelSheet {
       <header class="label-top">
         <svg class="label-top-ground" aria-hidden="true"><defs><clipPath id="label-top-hole"><path clip-rule="evenodd"/></clipPath></defs><g clip-path="url(#label-top-hole)"><path class="label-ground"/><path class="label-rule"/></g></svg>
         <div class="label-top-row">
-          <span class="label-brand">RHINE LAB<span>ANALYSIS OS</span></span>
-          <span class="label-system label-note">ARCHIVE SYSTEM — SSH WORKSPACE${demo ? " · 演示模式" : ""}</span>
+          <span class="label-brand">${markSvg("label-mark")}RHINE LAB<span>ANALYSIS OS</span></span>
+          <span class="label-system label-note">SYNTHESIZE INFORMATION — SSH WORKSPACE${demo ? " · 演示模式" : ""}</span>
           <nav class="label-nav" aria-label="系统导航">
             <button type="button" data-label-action="primary"><b></b><span></span></button>
             <button type="button" data-label-action="search"><b>02</b><span>检索</span></button>

@@ -71,7 +71,9 @@
 .label-top-ground .label-ground { fill: var(--ground); }
 .label-top-ground .label-rule { fill: var(--ink); }
 .label-top-row { position: absolute; left: 0; right: 0; top: var(--label-inset, 0px); height: var(--label-top); display: flex; align-items: center; padding-left: 64px; }
-.label-brand { font-size: 24px; font-weight: 700; letter-spacing: .5px; white-space: nowrap; }
+.label-brand { display: flex; align-items: center; font-size: 24px; font-weight: 700; letter-spacing: .5px; white-space: nowrap; }
+/* The Rhine Lab mark (shared/brand.ts), set by the height of the line it stands in. */
+.label-mark { flex: none; height: 1.25em; width: auto; margin-right: .75em; overflow: visible; }
 .label-brand span { margin-left: 12px; font-weight: 300; letter-spacing: 2.9px; }
 .label-system { margin-left: 40px; opacity: .6; }
 .label-nav { margin-left: auto; display: flex; height: 100%; }
@@ -148,7 +150,7 @@
 .label-keys span:last-child { margin-right: 0; }
 .label-powered { margin-left: auto; display: flex; align-items: center; font-size: 22px; letter-spacing: .4px; white-space: nowrap; }
 .label-powered b { margin-left: .3em; }
-.label-powered i { width: 44px; height: 9px; margin-left: 14px; background: var(--ink); }
+.label-powered .label-mark { height: 26px; margin: 0 0 0 16px; }
 
 /* The operating terminal is the workspace's own page: the sheet steps aside while it is up. */
 .label-sheet[data-covered="true"] { opacity: 0; visibility: hidden; transition: opacity .2s, visibility 0s .2s; }
