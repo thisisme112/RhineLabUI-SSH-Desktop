@@ -146,6 +146,7 @@ export class TransferPanel {
     }
     const root = row.root;
     root.dataset.state = job.state;
+    root.dataset.direction = job.direction;
     root.querySelector(".ssh-transfer-direction")!.textContent =
       job.direction === "upload" ? "↑" : "↓";
     root.querySelector(".ssh-transfer-name")!.textContent = job.name;

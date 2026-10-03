@@ -129,6 +129,8 @@ export class SshTerminalPanel {
   private viewport: HTMLElement;
   private fitFrame = 0;
   dark = false;
+  /** Set in ink by the label design (setAppearance). */
+  private ink = false;
   screenRevision = 0;
 
   constructor(
@@ -249,7 +251,7 @@ export class SshTerminalPanel {
       scrollback: 5000,
       theme: this.screenTheme,
       // Programs pick ANSI colours for a dark screen; on paper they must still read.
-      minimumContrastRatio: this.dark ? 1 : 4.5,
+      minimumContrastRatio: this.contrast,
       allowProposedApi: true,
       disableStdin: true,
     });
@@ -295,10 +297,27 @@ export class SshTerminalPanel {
     const button = this.root.querySelector<HTMLButtonElement>(".ssh-terminal-recovery")!;
     button.hidden = !message; button.textContent = message ? message + " · 停止" : "";
   }
+  /** Light themes hold text to WCAG AA on paper; on ink it only rescues the unreadable. */
+  private get contrast() {
+    return this.dark ? 1 : this.ink ? 3 : 4.5;
+  }
   get screenTheme() {
     const style = getComputedStyle(document.documentElement);
     const token = (name: string, fallback: string) =>
       style.getPropertyValue(`--theme-${name}`).trim() || fallback;
+    if (this.ink) {
+      // The label design sets the terminal as a block of ink (RhineTheme::Terminal
+      // bInk): paper type and the dark ANSI set, cursor and selection in the signal.
+      const signal = token("signal", TERMINAL_DARK_THEME.cursor!);
+      return {
+        ...TERMINAL_DARK_THEME,
+        background: token("ink", TERMINAL_DARK_THEME.background!),
+        foreground: token("paper", TERMINAL_DARK_THEME.foreground!),
+        cursor: signal,
+        cursorAccent: token("ink", TERMINAL_DARK_THEME.background!),
+        selectionBackground: `color-mix(in srgb, ${signal} 32%, transparent)`,
+      };
+    }
     const base = this.dark ? TERMINAL_DARK_THEME : TERMINAL_THEME;
     const accent = token("accent", base.cursor!);
     return {
@@ -325,25 +344,29 @@ export class SshTerminalPanel {
   }
   get isUsable() { return this.open && !this.root.closest("[inert],[hidden]") && (this.workspace?.terminalVisible ?? true); }
 
-  setAppearance(dark: boolean, reduced: boolean) {
+  /** `label`: the label design is on screen, which sets a light theme's terminal in ink. */
+  setAppearance(dark: boolean, reduced: boolean, label = false) {
     // Called every frame (bootstrap.ts sshFrame). The theme properties only change when
     // paintTheme rewrites them, so the computed style is read only after it has.
     let signature = this.themeSignature;
     if (paintRevision !== this.themeRevision) {
       this.themeRevision = paintRevision;
       const style = getComputedStyle(document.documentElement);
-      signature = ["paper", "ink", "accent", "cyan"]
+      signature = ["paper", "ink", "accent", "cyan", "signal"]
         .map(name => style.getPropertyValue(`--theme-${name}`))
         .join("/");
     }
-    if (this.root.dataset.dark === String(dark) && reduced === this.reduced && signature === this.themeSignature) return;
-    if (dark !== this.dark || signature !== this.themeSignature) {
+    const ink = label && !dark;
+    if (this.root.dataset.dark === String(dark) && reduced === this.reduced && signature === this.themeSignature && ink === this.ink) return;
+    if (dark !== this.dark || signature !== this.themeSignature || ink !== this.ink) {
       this.dark = dark;
+      this.ink = ink;
       this.themeSignature = signature;
       this.term.options.theme = this.screenTheme;
-      this.term.options.minimumContrastRatio = dark ? 1 : 4.5;
+      this.term.options.minimumContrastRatio = this.contrast;
       this.screenRevision++;
     }
+    this.root.dataset.ink = String(ink);
     if (reduced !== this.reduced) {
       this.reduced = reduced;
       this.term.options.cursorBlink = terminalAppearance.value.blink && !reduced;
@@ -352,7 +375,7 @@ export class SshTerminalPanel {
     this.root.classList.toggle("reduce-motion", reduced);
     this.tools.setAppearance(dark, reduced);
     this.workspace?.setReduced(reduced);
-    this.splitPeer?.setAppearance(dark, reduced);
+    this.splitPeer?.setAppearance(dark, reduced, label);
   }
 
   setSplitOptions(options: { value: string; label: string }[]) {

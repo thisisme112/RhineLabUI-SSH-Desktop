@@ -209,13 +209,15 @@ export async function checkSshWorkspace({
     `(() => {
       const row = document.querySelector('.ssh-file-row');
       const name = getComputedStyle(row.querySelector('.ssh-file-name')).color;
-      return { rowOpacity: getComputedStyle(row).opacity, nameColor: name, surfaceColor: getComputedStyle(document.querySelector('.ssh-terminal')).color, rowRunning: row.getAnimations().filter(animation => animation.playState === 'running').length };
+      return { rowOpacity: getComputedStyle(row).opacity, nameColor: name, rowColor: getComputedStyle(row).color, rowRunning: row.getAnimations().filter(animation => animation.playState === 'running').length };
     })()`,
   );
   const paint = evidence.fileMenuPaint;
+  // The right-clicked row is selected, which the label design reverses: the
+  // name must keep its row's colour, whatever that is, rather than fade.
   await check(
     "opening the menu neither dims nor re-animates the list behind it",
-    `${Number(paint.rowOpacity) === 1 && paint.rowRunning === 0 && paint.nameColor === paint.surfaceColor}`,
+    `${Number(paint.rowOpacity) === 1 && paint.rowRunning === 0 && paint.nameColor === paint.rowColor}`,
   );
   await shot("workspace-files-menu");
   const clipboardWrites = await evaluate(

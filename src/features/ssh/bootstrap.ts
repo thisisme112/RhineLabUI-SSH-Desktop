@@ -471,7 +471,7 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
         sessionCard = shell.selected;
         current.view.sessionCard = shell.selected;
         revealed = true;
-        panel.setAppearance(shell.prefs.colorTheme === "dark", shell.prefs.reduced);
+        panel.setAppearance(shell.prefs.colorTheme === "dark", shell.prefs.reduced, shell.labelDesign);
         panel.show(shell.prefs.reduced, shell.scene?.projectSessionScreen());
       }
       deck?.bind(client, panel);
@@ -845,7 +845,7 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
       const dt = previous ? Math.min(0.25, Math.max(0, time - previous)) : 0;
       previous = time;
       const snapshot = client.tick(dt);
-      panel.setAppearance(shell.prefs.colorTheme === "dark", shell.prefs.reduced);
+      panel.setAppearance(shell.prefs.colorTheme === "dark", shell.prefs.reduced, shell.labelDesign);
       // null means no session has run yet: hand the scene back to its own clock.
       shell.scene?.setDecryptionReference(snapshot && shell.mode === "detail" && shell.selected === sessionCard ? snapshot.reference : null);
       // The session's own card carries the session as its contents: auth log

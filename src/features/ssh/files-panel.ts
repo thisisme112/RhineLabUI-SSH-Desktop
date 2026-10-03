@@ -871,6 +871,8 @@ export class SftpPanel {
       }
       row.className = "ssh-file-row";
       row.dataset.fileIndex = String(index);
+      // The label design numbers the rows (001, 002…) as the Unreal build's file list does.
+      row.dataset.number = String(index + 1).padStart(3, "0");
       row.dataset.kind = fileTone(entry);
       row.dataset.focused = String(
         index === this.cursor && document.activeElement === this.viewport,
@@ -1167,6 +1169,7 @@ export class SftpPanel {
     this.edit = { action, entries, sessionId: this.sessionId, path: this.path };
     this.editRevision++;
     this.editor.hidden = false;
+    this.editor.dataset.action = action;
     this.editor.querySelector(".ssh-file-editor-title")!.textContent = (
       {
         mkdir: "NEW DIRECTORY",

@@ -1,0 +1,91 @@
+/*
+ * The SSH workspace in the label design (the Unreal build's RhineWorkspace.cpp
+ * under bLabelDesign): the terminal is a block of ink in a light theme, the
+ * page tabs are reversed when chosen, the side column's headings stand on a
+ * 3 px ink rule, the file list is numbered and reverses its selection with a
+ * signal bar, readings are condensed figures over segmented bars, and the
+ * transfer queue marks each job with a solid direction block.
+ */
+
+/* The terminal's screen: terminal.ts sets data-ink and the xterm theme (ink ground, paper type). */
+#viewport[data-design="label"] .ssh-terminal[data-ink="true"] .ssh-terminal-main { background: var(--theme-ink); }
+#viewport[data-design="label"] .ssh-terminal[data-ink="true"] .ssh-terminal-auth { color: var(--theme-paper); }
+
+/* Page tabs: the chosen one reversed, no underline. */
+#viewport[data-design="label"] .ssh-workspace-tabs { gap: 0; align-self: center; }
+#viewport[data-design="label"] .ssh-workspace-tabs button { min-height: 30px; padding: 4px 13px; color: var(--ink); font-weight: 700; letter-spacing: .06em; }
+#viewport[data-design="label"] .ssh-workspace-tabs button::after { display: none; }
+#viewport[data-design="label"] .ssh-workspace-tabs button:is(:hover, :focus-visible):not([aria-selected="true"]) { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
+#viewport[data-design="label"] .ssh-workspace-tabs [aria-selected="true"] { background: var(--ink); color: var(--ground); }
+
+/* Side column headings: heavy, on a 3 px ink rule; a reading's own name stays small. */
+#viewport[data-design="label"] .ssh-workspace-side .ssh-side-kicker { color: var(--ink); font-weight: 700; letter-spacing: .14em; }
+#viewport[data-design="label"] .ssh-workspace-side .ssh-side-kicker:not(:is(.ssh-metric, .ssh-gpu) .ssh-side-kicker) { padding-bottom: 6px; border-bottom: 3px solid var(--ink); }
+#viewport[data-design="label"] .ssh-workspace-side .ssh-side-kicker > span:last-child { font-family: var(--mono); font-weight: 700; }
+
+/* Files: tool buttons in an ink outline, reversed under the pointer. */
+#viewport[data-design="label"] .ssh-file-toolbar { gap: 4px; }
+#viewport[data-design="label"] .ssh-file-toolbar button { color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); border-bottom: 0; }
+#viewport[data-design="label"] .ssh-file-toolbar button:is(:hover, :focus-visible):not(:disabled),
+#viewport[data-design="label"] .ssh-file-toolbar button[aria-expanded="true"] { background: var(--ink); color: var(--ground); outline: none; }
+#viewport[data-design="label"] .ssh-files-list { border-block: 2px solid var(--ink); }
+
+/* Rows: numbered, ruled apart, the selection reversed with a signal bar at its edge. */
+#viewport[data-design="label"] .ssh-file-row { grid-template-columns: 30px 18px minmax(0, 1fr) auto; border-bottom-color: color-mix(in srgb, var(--ink) 12%, transparent); }
+#viewport[data-design="label"] .ssh-file-row::before { content: attr(data-number); font: 700 11px/1 var(--mono); color: color-mix(in srgb, var(--ink) 55%, transparent); }
+#viewport[data-design="label"] .ssh-file-row:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+#viewport[data-design="label"] .ssh-file-row[aria-selected="true"] { background: var(--ink); color: var(--ground); box-shadow: inset 4px 0 var(--signal); }
+#viewport[data-design="label"] .ssh-file-row[aria-selected="true"]::before { color: color-mix(in srgb, var(--ground) 60%, transparent); }
+#viewport[data-design="label"] .ssh-file-row[aria-selected="true"] :is(.ssh-file-glyph, .ssh-file-name) { color: var(--ground); }
+#viewport[data-design="label"] .ssh-file-row[aria-selected="true"] small { color: color-mix(in srgb, var(--ground) 70%, transparent); }
+#viewport[data-design="label"] .ssh-file-row[data-focused="true"] { outline: 2px solid var(--ink); }
+#viewport[data-design="label"] .ssh-file-row .ssh-file-name { font-size: 14px; }
+#viewport[data-design="label"] .ssh-file-row[data-kind="directory"] .ssh-file-name { font-weight: 700; }
+#viewport[data-design="label"] .ssh-file-selection button[data-file-action="remove"] { color: var(--ssh-high); }
+/* Deleting is confirmed on a solid block. */
+#viewport[data-design="label"] .ssh-file-editor[data-action="remove"] .ssh-file-editor-submit { padding: 4px 12px; border: 0; background: var(--ssh-high); color: var(--ground); font-weight: 700; }
+
+/* Monitor: readings as condensed figures in ink (a warning keeps its colour), bars in cells. */
+#viewport[data-design="label"] .ssh-monitor-host strong { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+#viewport[data-design="label"] .ssh-metric-value { font: 700 58px/.9 var(--display); letter-spacing: 0; color: var(--ink); }
+/* Condensed digits are narrow: two of them, not the classic 1.9 em, keep the unit from jumping. */
+#viewport[data-design="label"] .ssh-metric-value .ssh-reading-number { min-width: 1em; }
+#viewport[data-design="label"] .ssh-metric-value .ssh-reading-unit { font: 700 20px/1 var(--display); color: var(--ink); margin-left: 2px; }
+#viewport[data-design="label"] [data-tone="high"] > .ssh-metric-value,
+#viewport[data-design="label"] .ssh-metric[data-tone="high"] .ssh-metric-value { color: var(--ssh-high); }
+#viewport[data-design="label"] .ssh-monitor :is([data-tone="low"], [data-tone="medium"], [data-tone="unknown"]) { --meter-color: var(--ink); }
+#viewport[data-design="label"] .ssh-monitor .ssh-meter {
+  height: 8px; margin: 6px 0;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+  /* Sixteen cells with 2 px gaps (SRhineCells). */
+  -webkit-mask: repeating-linear-gradient(90deg, #000 0 calc(6.25% - 2px), transparent calc(6.25% - 2px) 6.25%);
+  mask: repeating-linear-gradient(90deg, #000 0 calc(6.25% - 2px), transparent calc(6.25% - 2px) 6.25%);
+}
+#viewport[data-design="label"] .ssh-monitor-section { border-top: 2px solid var(--ink); }
+#viewport[data-design="label"] .ssh-monitor-status i { width: 7px; height: 7px; }
+
+/* Transfers: a solid direction block (uploads in the signal), the name heavy, progress in cells. */
+#viewport[data-design="label"] .ssh-transfer-head { color: var(--ink); font-weight: 700; }
+#viewport[data-design="label"] .ssh-transfer-job { padding: 10px 0; border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); }
+#viewport[data-design="label"] .ssh-transfer-info { align-items: center; }
+#viewport[data-design="label"] .ssh-transfer-direction {
+  display: grid; place-items: center; flex: 0 0 24px; width: 24px; height: 24px;
+  background: var(--ink); color: var(--ground); font: 700 13px/1 var(--mono);
+}
+#viewport[data-design="label"] .ssh-transfer-job[data-direction="upload"] .ssh-transfer-direction { background: var(--signal); color: var(--on-signal); }
+#viewport[data-design="label"] .ssh-transfer-job:is([data-state="failed"], [data-state="uncertain"]) .ssh-transfer-direction { background: var(--ssh-high); color: var(--ground); }
+#viewport[data-design="label"] .ssh-transfer-name { font-weight: 700; color: var(--ink); }
+#viewport[data-design="label"] .ssh-transfer-state { font: 700 11px/1 var(--mono); color: var(--ink); }
+#viewport[data-design="label"] .ssh-transfer-progress, #viewport[data-design="label"] .ssh-transfer-detail { margin-left: 36px; }
+#viewport[data-design="label"] .ssh-transfer-progress {
+  height: 7px; background: color-mix(in srgb, var(--ink) 12%, transparent);
+  /* Twenty-four cells. */
+  -webkit-mask: repeating-linear-gradient(90deg, #000 0 calc(100% / 24 - 2px), transparent calc(100% / 24 - 2px) calc(100% / 24));
+  mask: repeating-linear-gradient(90deg, #000 0 calc(100% / 24 - 2px), transparent calc(100% / 24 - 2px) calc(100% / 24));
+}
+#viewport[data-design="label"] .ssh-transfer-progress i { background: var(--ink); }
+#viewport[data-design="label"] .ssh-transfer-job[data-direction="upload"] .ssh-transfer-progress i { background: var(--signal); }
+#viewport[data-design="label"] .ssh-transfer-job:is([data-state="failed"], [data-state="uncertain"]) .ssh-transfer-progress i { background: var(--ssh-high); }
+/* Each action a small ink outline. */
+#viewport[data-design="label"] .ssh-transfer-info button { padding: 2px 8px; min-height: 0; border: 0; box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); font-weight: 700; font-size: 11px; }
+#viewport[data-design="label"] .ssh-transfer-info button:is(:hover, :focus-visible):not(:disabled) { background: var(--ink); color: var(--ground); }

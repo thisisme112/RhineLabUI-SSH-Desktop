@@ -2065,6 +2065,8 @@ export const sshWorkspaceContext = {
   get portals() { return portals; },
   set portals(value: typeof portals) { portals = value; },
   get prefs() { return prefs; },
+  /** Whether the label design is on screen (labelActive): the terminal is then set in ink. */
+  get labelDesign() { return labelActive(); },
   get audio() { return audio; },
   get openHostSession() { return openHostSession; },
   set openHostSession(value: typeof openHostSession) { openHostSession = value; },
