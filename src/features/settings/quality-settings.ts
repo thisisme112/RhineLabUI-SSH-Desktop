@@ -74,8 +74,8 @@ export function qualityMarkup(quality: RenderQuality) {
       quality,
       "transmission",
       "透明材质分辨率",
-      "控制盖板折射画面的清晰度",
-      [0.25, 0.5, 0.75, 1].map((v) => [v, `${v * 100}%`]),
+      "控制盖板折射画面的清晰度；“仅抽出的档案”时阵列不透光，整幅只画一遍",
+      [[0, "仅抽出的档案"] as const, ...[0.25, 0.5, 0.75, 1].map((v) => [v, `${v * 100}%`] as const)],
     )}
     ${select(
       quality,

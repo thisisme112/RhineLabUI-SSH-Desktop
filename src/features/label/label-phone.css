@@ -28,6 +28,8 @@
 #stage[data-design="label-phone"] :is(.brand, .system-nav, #archive-ui, .powered, .system-footer, .scene-atmosphere, .portal-launcher, .back-button) { display: none !important; }
 #viewport[data-design="label-phone"] .ssh-overview-restore { display: none !important; }
 #stage[data-design="label-phone"] .label-sheet { display: block; position: absolute; inset: 0; z-index: 8; pointer-events: none; color: var(--ink); font-family: "MiSans", "Microsoft YaHei", system-ui, sans-serif; }
+/* A phone draws the scene straight to its canvas, so the poster is not laid in by depth: it lies over the far rows at the head of the window and stops short of the raised file. */
+#stage[data-design="label-phone"] .theme-poster[data-composited="false"] { -webkit-mask-image: linear-gradient(#000 0, #000 19%, transparent 31%); mask-image: linear-gradient(#000 0, #000 19%, transparent 31%); }
 /* The desk's furniture round the model: the spine, the ruled frames, the leaders, the overview's ground. */
 #stage[data-design="label-phone"] :is(.label-spine, .label-zone, .label-fig, .label-selected, .label-leaders, .label-powered, .label-field-slashes, .label-services-note, .label-overview, .label-tag, .label-yaw, .label-top-ground, .label-system, .label-clock) { display: none; }
 

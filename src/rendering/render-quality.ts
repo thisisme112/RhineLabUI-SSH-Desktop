@@ -7,30 +7,32 @@ export type RenderQuality = {
   aoSamples: number;
   aoResolution: number;
   depthOfField: number;
+  /** The share of the picture the glass's refraction capture is drawn at; 0 keeps glass for the raised file alone (scene.ts lean). */
   transmission: number;
   anisotropy: number;
 };
 
 export const qualityPresets = {
   /**
-   * A phone's default (Android builds until the person picks a preset): the look
-   * of `original` without what a phone's GPU pays most for — ambient occlusion and
-   * the bokeh pass are off, transmission and shadows are cheaper, and the frame
-   * budget (frame-budget.ts) keeps it from running hotter than 60 fps.
-   *
-   * The density cap is 2: a phone's screen is 2.6-3x, so a cap of 1.5 drew the scene at about half
-   * its physical pixels and stretched it up, which read as blur. The resolution governor
-   * (ResolutionGovernor) still steps the buffers down when a phone cannot hold its budget.
+   * A phone's default (until the person picks a preset): sharp before rich. Measured at 360 x 800
+   * (2026-10-04), `original`'s way of drawing cost a phone three million triangles a frame: every row
+   * twice, once into the capture its glass refracts, with the fasteners nobody can see at that size
+   * making up half of each card. Here the rows are opaque and drawn once, straight to the canvas with
+   * its own multisampling (`transmission: 0`: scene.ts lean and direct); only the raised file keeps
+   * its glass. What that saves is spent on pixels: the density cap is 3, a phone's own, where 2 drew
+   * two thirds of them and stretched the picture up, which read as blur. The frame budget
+   * (frame-budget.ts) holds 60 fps and the resolution governor still steps the buffers down on a
+   * phone that cannot keep up.
    */
   mobile: {
     scale: 100,
-    pixelRatio: 2,
+    pixelRatio: 3,
     antialias: "off",
     shadows: 1024,
     aoSamples: 0,
     aoResolution: 0.5,
     depthOfField: 0,
-    transmission: 0.5,
+    transmission: 0,
     anisotropy: 4,
   },
   performance: {
@@ -127,7 +129,7 @@ export function normalizeQuality(
     depthOfField: range(v.depthOfField, 0, 150, 5, fallback.depthOfField),
     transmission: member(
       v.transmission,
-      [0.25, 0.5, 0.75, 1],
+      [0, 0.25, 0.5, 0.75, 1],
       fallback.transmission,
     ),
     anisotropy: member(v.anisotropy, [1, 2, 4, 8, 16], fallback.anisotropy),

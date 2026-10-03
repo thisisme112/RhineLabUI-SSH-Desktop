@@ -4,7 +4,6 @@ type ScenePipeline = ReturnType<typeof createScenePipeline>;
 import * as THREE from "three";
 import { ArchiveVisibility } from "./archive-visibility";
 import { disposeThreeTree } from "./three-resources";
-import { isAndroid } from "../platform/android/android";
 import { PaletteFlip, type FlipSample } from "../features/theme/theme-motion";
 import { DESIGNS, REFERENCE_ROLES, type ThemeName } from "../features/theme/theme-design";
 const NO_FLIP: FlipSample = { lift: 0, tilt: 0, flash: 0, swap: 0 };
@@ -133,21 +132,46 @@ export class ArchiveScene {
   setSuperPerformance(enabled: boolean) {
     if (this.superPerformance === enabled) return;
     this.superPerformance = enabled;
+    this.syncLean();
+    this.resize();
+  }
+  /**
+   * Lean shading (super performance, or a quality whose transmission is 0): the rows are opaque and
+   * without their fasteners, which are half of a card's triangles and smaller than a pixel on a phone.
+   * They also join the transparent queue (at full opacity, still writing depth), so they are drawn
+   * after the raised file's glass instead of before it: the capture that glass refracts then holds
+   * that one file's insides and not a second drawing of every row.
+   */
+  private lean = false;
+  private syncLean(force = false) {
+    const lean = this.superPerformance || this.quality.transmission === 0;
+    if (lean === this.lean && !force) return;
+    this.lean = lean;
     for (const inst of this.instances) {
       const original = (inst.userData.fullMaterial ??= inst.material) as THREE.MeshPhysicalMaterial;
-      if (enabled && !inst.userData.fastMaterial) {
+      if (lean && !inst.userData.fastMaterial) {
         const fast = original.clone();
         fast.onBeforeCompile = original.onBeforeCompile;
         fast.customProgramCacheKey = original.customProgramCacheKey.bind(original);
         fast.transmission = 0;
         fast.clearcoat = 0;
         fast.roughness = Math.max(.45, original.roughness);
+        fast.transparent = true;
+        // Two-sided and transparent, Three would draw every row twice, back faces then front.
+        fast.forceSinglePass = true;
         inst.userData.fastMaterial = fast;
       }
-      inst.material = enabled ? inst.userData.fastMaterial : original;
-      inst.visible = !enabled || original.name.replace(/\.\d+$/, "") !== "Titanium_Fasteners";
+      inst.material = lean ? inst.userData.fastMaterial : original;
+      inst.visible = !lean || original.name.replace(/\.\d+$/, "") !== "Titanium_Fasteners";
     }
-    this.resize();
+  }
+  /**
+   * One pass straight to the canvas, which multisamples it: nothing after the scene pass is asked for
+   * (no occlusion, bokeh or SMAA), so the composer's targets and its blits are skipped. The poster then
+   * stays the page's own (posterComposited).
+   */
+  private get direct() {
+    return this.superPerformance || (this.lean && this.quality.aoSamples === 0 && this.quality.depthOfField === 0 && this.quality.antialias === "off");
   }
   /**
    * The theme's poster (theme-poster.ts) over the fogged far rows, composited by the
@@ -161,7 +185,7 @@ export class ArchiveScene {
   private posterShown = false;
   /** 0–1 toward posterShown over the page's own .6 s fade (theme.css .theme-poster). */
   private posterFade = 0;
-  get posterComposited() { return !this.superPerformance; }
+  get posterComposited() { return !this.direct; }
   setPoster(canvas: HTMLCanvasElement, shown: boolean, revision: number) {
     if (this.posterTexture?.image !== canvas) {
       this.posterTexture?.dispose();
@@ -560,9 +584,9 @@ export class ArchiveScene {
     private readonly lightingLook: LightingLook = "baseline",
   ) {
     this.renderer = new THREE.WebGLRenderer({
-      // Every frame goes through the composer's own targets, so the canvas's MSAA buffer is only
-      // its final blit: a phone's tiler pays for it in memory and bandwidth for nothing.
-      antialias: !isAndroid,
+      // A phone draws straight to the canvas (direct), where this is its only antialiasing and a tiler
+      // resolves it for next to nothing; the composed path pays for it in its final blit alone.
+      antialias: true,
       alpha: false,
       powerPreference: "high-performance",
     });
@@ -798,6 +822,8 @@ export class ArchiveScene {
     this.drawLabel(0);
     this.scene.add(this.model);
     this.model.position.copy(this.cellPosition(poolCell(this.selectedSlot)));
+    // The quality may have been set before there were rows to set it on.
+    this.syncLean(true);
     this.loaded = true;
   }
 
@@ -950,6 +976,7 @@ export class ArchiveScene {
     }
     this.light.shadow.needsUpdate = true;
     applyTextureQuality(this.scene, this.renderer, quality);
+    this.syncLean();
     this.resize();
   }
   private cellPosition(cell: ArchiveCell) {
@@ -1167,10 +1194,12 @@ export class ArchiveScene {
       this.quality,
       this.superPerformance,
       this.dynamicScale,
+      !this.direct,
     );
+    const occluded = this.direct ? 0 : this.quality.aoResolution;
     this.ao.setSize(
-      Math.max(1, Math.floor(dimensions.width * this.quality.aoResolution)),
-      Math.max(1, Math.floor(dimensions.height * this.quality.aoResolution)),
+      Math.max(1, Math.floor(dimensions.width * occluded)),
+      Math.max(1, Math.floor(dimensions.height * occluded)),
     );
     this.container.dataset.renderQuality = JSON.stringify({
       ...JSON.parse(this.container.dataset.renderQuality!),
@@ -2115,7 +2144,7 @@ export class ArchiveScene {
     const posterTarget = this.posterShown && this.posterTexture ? 1 : 0;
     this.posterFade = this.reduced ? posterTarget
       : posterTarget > this.posterFade ? Math.min(posterTarget, this.posterFade + dt / .6) : Math.max(posterTarget, this.posterFade - dt / .6);
-    const posterAmount = this.superPerformance ? 0 : THREE.MathUtils.smoothstep(this.posterFade, 0, 1) * (1 - this.sessionDeckFocus);
+    const posterAmount = this.direct ? 0 : THREE.MathUtils.smoothstep(this.posterFade, 0, 1) * (1 - this.sessionDeckFocus);
     this.far.on = this.posterPass.enabled = posterAmount > 0;
     this.posterPass.uniforms.amount.value = posterAmount;
     const farUniforms = this.far.material.uniforms;
@@ -2239,9 +2268,16 @@ export class ArchiveScene {
     const picture = this.pictureInputs(bokehUniforms.aperture.value, bokehUniforms.focus.value);
     if (settled && !ALWAYS_DRAW && this.showsPicture(picture)) return;
     this.rememberPicture(picture);
+    // The capture the raised file's glass refracts. With the rows opaque it holds that one file, so it can
+    // afford the picture's own size once the file is held up to read: its screen is read through the glass,
+    // and at half size a phone showed it soft.
+    if (this.quality.transmission === 0 && !this.superPerformance) {
+      const scale = this.detail > .5 ? 1 : .5;
+      if (this.renderer.transmissionResolutionScale !== scale) this.renderer.transmissionResolutionScale = scale;
+    }
     this.composedFrames++;
     this.renderer.info.reset();
-    if (this.superPerformance) this.renderer.render(this.scene, this.camera);
+    if (this.direct) this.renderer.render(this.scene, this.camera);
     else this.composer.render();
   }
   /** What the picture depends on beyond the instance buffers: camera, the selected file, theme, decryption, textures. */
@@ -2339,6 +2375,8 @@ export class ArchiveScene {
       contextLost: this.contextLost,
       drawCalls: this.renderer.info.render.calls,
       superPerformance: this.superPerformance,
+      lean: this.lean,
+      direct: this.direct,
       presentation: this.presence,
       triangles: this.renderer.info.render.triangles,
       archiveCount: this.drawnCells.length,

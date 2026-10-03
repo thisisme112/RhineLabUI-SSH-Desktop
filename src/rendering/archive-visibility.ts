@@ -56,6 +56,12 @@ export class ArchiveVisibility {
         cells.push(cell);
       }
     }
+    // Nearest first. Every card is one instance of the same few draws, so their order is the order the
+    // GPU shades them in: with the near rows down first, the far ones behind them fail the depth test
+    // before they are shaded instead of being shaded and then covered.
+    const e = source.matrixWorldInverse.elements;
+    const depth = (cell: ArchiveCell) => e[2] * ((cell.lane - 2) * COLUMN_SPACING - trackX) + e[10] * ((cell.row - 15.5) * ROW_SPACING + trackZ);
+    cells.sort((a, b) => depth(b) - depth(a));
     this.candidates=cells.length;
     return cells;
   }

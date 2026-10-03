@@ -41,6 +41,8 @@ export function resizeQuality(
   superPerformance = false,
   /** The frame governor's share of the resolution (ResolutionGovernor); 1 leaves the quality as chosen. */
   dynamicScale = 1,
+  /** False when the frame is drawn straight to the canvas: the composer's targets are let go instead of kept at full size. */
+  composed = true,
 ) {
   const width = Math.max(1, host.clientWidth),
     height = Math.max(1, host.clientHeight);
@@ -55,9 +57,11 @@ export function resizeQuality(
   );
   renderer.setPixelRatio(dimensions.ratio);
   renderer.setSize(width, height);
-  composer.setPixelRatio(dimensions.ratio);
-  composer.setSize(width, height);
-  renderer.transmissionResolutionScale = quality.transmission;
+  // A phone at three times density would hold two half-float targets of its whole screen for nothing.
+  composer.setPixelRatio(composed ? dimensions.ratio : 1);
+  composer.setSize(composed ? width : 1, composed ? height : 1);
+  // With the rows opaque (transmission 0) the capture holds the raised file alone: half size reads the same.
+  renderer.transmissionResolutionScale = quality.transmission || 0.5;
   host.dataset.renderQuality = JSON.stringify({
     ...dimensions,
     antialias: quality.antialias,

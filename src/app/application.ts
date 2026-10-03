@@ -87,7 +87,7 @@ import { audioSettingsMarkup } from "../features/settings/audio-settings";
 import { StartupGate } from "../features/boot/startup";
 import { isWallpaper, wallpaperHost, wallpaperFrame, type WallpaperProperties } from "../platform/wallpaper/wallpaper";
 import { isDesktop, desktopWindowParked, windowControlsHeight } from "../platform/desktop/desktop";
-import { isAndroid } from "../platform/android/android";
+import { isAndroid, isPhone } from "../platform/android/android";
 import { FrameBudget, ResolutionGovernor, ANDROID_RATES, DESKTOP_RATES } from "../rendering/frame-budget";
 import { hostLabel, hostSubtitle, SshHostCards } from "../features/ssh/host-cards";
 import {
@@ -388,7 +388,7 @@ const prefs = {
   ...storedPrefs,
   // A phone starts on the `mobile` preset and stays there until a preset or a control is picked in
   // settings (`renderingChosen`); older installs saved the desktop default without ever choosing it.
-  rendering: isAndroid && storedPrefs.renderingChosen !== true
+  rendering: isPhone && storedPrefs.renderingChosen !== true
     ? { ...qualityPresets.mobile }
     : normalizeQuality(storedPrefs.rendering, storedPrefs.quality !== false),
   theme: storedTheme,
@@ -1523,7 +1523,7 @@ let lastTime = 0,
 // unless ?frame-budget asks for the gate, and ?no-frame-budget turns it off; the wallpaper host paces itself.
 const budgetQuery = new URLSearchParams(location.search);
 const frameBudget = !isWallpaper && !budgetQuery.has("no-frame-budget") && (budgetQuery.has("frame-budget") || !navigator.webdriver)
-  ? new FrameBudget(isAndroid ? ANDROID_RATES : DESKTOP_RATES) : undefined;
+  ? new FrameBudget(isPhone ? ANDROID_RATES : DESKTOP_RATES) : undefined;
 if (frameBudget) {
   // Input is motion the eye follows: hold the full rate for two seconds after it.
   for (const type of ["pointerdown", "pointermove", "pointerup", "wheel", "keydown", "touchstart", "touchmove"])
@@ -1534,7 +1534,11 @@ const posterCanvas = desktopShell ? $<HTMLCanvasElement>("#theme-poster") : unde
 const poster = posterCanvas ? new ThemePoster(posterCanvas) : undefined;
 function updatePoster(time: number) {
   if (!poster || !posterCanvas) return;
-  const show = ready && (mode === "archive" || mode === "detail") && !sshSurfaceActive() && !viewer?.isOpen && !portals?.isPageOpen;
+  // Where the scene does not composite it (a phone draws straight to the canvas), the page's canvas lies over
+  // the far rows by a mask of its own (label-phone.css), which cannot keep it behind a file held up to read.
+  const overlaid = isPhone && scene !== undefined && !scene.posterComposited;
+  const show = ready && (mode === "archive" || mode === "detail") && !sshSurfaceActive() && !viewer?.isOpen && !portals?.isPageOpen
+    && (!overlaid || (mode === "archive" && labelPocket()));
   setData(posterCanvas, "on", String(show));
   // The scene lays the canvas over its far rows only (scene-pipeline.ts PosterShader);
   // the page shows it itself where the scene renders without its passes.
@@ -1668,7 +1672,7 @@ function updateLabel(time: number) {
   });
 }
 // A phone that cannot hold its budget renders smaller instead of stuttering (frame-budget.ts ResolutionGovernor).
-const governor = frameBudget && isAndroid ? new ResolutionGovernor() : undefined;
+const governor = frameBudget && isPhone ? new ResolutionGovernor() : undefined;
 let governedAt = 0;
 function governResolution(ms: number) {
   if (!governor || !frameBudget) return;
@@ -1696,7 +1700,8 @@ function frame(ms: number) {
   governResolution(ms);
   workbench?.tick();
   portals?.sync();
-  scene?.setPageCovered(Boolean(portals?.isPageOpen));
+  // A portal's page covers the window; so does a phone's host overview, whose sheet is opaque from the strip down.
+  scene?.setPageCovered(Boolean(portals?.isPageOpen) || (labelPocket() && labelPage() === "overview"));
   const time = ms / 1000;
   const theme = scene?.themeAmount ?? (DESIGNS[prefs.theme].dark ? 1 : 0);
   paintTheme(theme);
