@@ -37,6 +37,18 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
         reduced: () => shell.prefs.reduced,
         sound: cue => shell.audio.play(cue),
         openSession: session => { if (session.client.target) shell.openHostSession(session.client.target); },
+        reconnect: session => { void reconnect(session); },
+        close: session => requestStop(session, true),
+        exportSession: session => {
+          void session.client.exportRecord().then(result => {
+            if (result.ok && result.file) shell.notify(`会话记录已导出到 ${result.file}`);
+            else if (!result.ok && !result.canceled) shell.notify(`导出失败：${result.error ?? "未知原因"}`);
+          });
+        },
+        connect: alias => shell.connectHostAlias(alias),
+        openRecord: file => shell.openStoredRecord(file),
+        openOverview: () => { shell.setMode("archive"); shell.sshOverview?.setCollapsed(false); shell.sshOverview?.showPage("hosts"); },
+        hosts: () => hosts.items,
         home: () => shell.started && shell.mode === "archive" && !shell.modal && !shell.viewer?.isOpen && !shell.playground?.active
           && !shell.sshSurfaceActive() && !shell.sshTerminalPending && (shell.sshOverview?.isCollapsed ?? true),
       });

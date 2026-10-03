@@ -1,6 +1,7 @@
 import type {
   DesktopSessionBridge,
   CredentialState,
+  SavedCredential,
   SshKeyEntry,
   SshHostsResult,
   SshHostProfilesBridge,
@@ -67,6 +68,8 @@ export type PlatformBridge = {
       target: string;
       kind?: "password" | "passphrase";
     }): Promise<{ ok: boolean; state?: CredentialState; error?: string }>;
+    /** What is saved for whom — never a secret. Desktop only. */
+    list?(): Promise<{ ok: boolean; entries: SavedCredential[]; available?: boolean; error?: string }>;
   };
   keys?: {
     list(): Promise<{ ok: boolean; keys: SshKeyEntry[]; error?: string }>;

@@ -236,6 +236,28 @@ class CredentialVault {
       this.write(data);
     }
   }
+  /** What is saved for whom, for the vault page: never a secret, encrypted or not. */
+  list() {
+    const data = this.read(),
+      keys = new Map(data.keys.map((key) => [key.id, key.name]));
+    return Object.values(data.credentials).map((item) => {
+      let endpoint = null;
+      try {
+        const [host, port, user] = JSON.parse(item.binding);
+        endpoint = { host: String(host), port: Number(port), user: String(user) };
+      } catch {
+        /* An unreadable binding is shown as unknown. */
+      }
+      return {
+        target: item.target,
+        kind: item.kind,
+        endpoint,
+        fingerprint: item.fingerprint,
+        key: item.kind === "passphrase" ? keys.get(item.identity) ?? path.win32.basename(item.identity) : "",
+        invalid: item.invalid,
+      };
+    });
+  }
   remove(target, kind) {
     const data = this.read();
     for (const [id, item] of Object.entries(data.credentials))

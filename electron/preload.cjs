@@ -83,6 +83,7 @@ contextBridge.exposeInMainWorld("rhineDesktop", {
     status: target => ipcRenderer.invoke("credentials:status", target),
     save: request => ipcRenderer.invoke("credentials:save", request),
     remove: request => ipcRenderer.invoke("credentials:remove", request),
+    list: () => ipcRenderer.invoke("credentials:list"),
   },
   keys: {
     list: () => ipcRenderer.invoke("keys:list"),

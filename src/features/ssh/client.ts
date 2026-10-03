@@ -41,6 +41,17 @@ export type SshHostProfile = SshConnectionOptions & {
 };
 
 export type CredentialState = { password: "none" | "saved" | "needs-update"; passphrase: "none" | "saved" | "needs-update"; available: boolean };
+/** One vault entry as the vault page sees it: whose, for which endpoint and host key — never the secret. */
+export type SavedCredential = {
+  target: string;
+  kind: "password" | "passphrase";
+  endpoint: { host: string; port: number; user: string } | null;
+  /** The host key it was bound to after a successful login, or "" before. */
+  fingerprint: string;
+  /** For a key passphrase: the key's name in the vault, or its file name. */
+  key: string;
+  invalid: boolean;
+};
 export type SshKeyEntry = { id: string; name: string; source: "file" | "import"; file?: string; type: string; fingerprint: string; protected: boolean; missing?: boolean; hosts?: string[] };
 
 export type SshHostsResult = {

@@ -8,7 +8,7 @@ import {
 } from "./services";
 
 const ended = new Set(["completed", "failed", "canceled", "uncertain"]);
-const labels: Record<TransferJob["state"], string> = {
+export const transferStateLabels: Record<TransferJob["state"], string> = {
   queued: "等待传输",
   scanning: "扫描目录",
   transferring: "传输中",
@@ -151,7 +151,7 @@ export class TransferPanel {
     root.querySelector(".ssh-transfer-name")!.textContent = job.name;
     root.querySelector<HTMLElement>(".ssh-transfer-name")!.title =
       job.source + " → " + job.destination;
-    root.querySelector(".ssh-transfer-state")!.textContent = labels[job.state];
+    root.querySelector(".ssh-transfer-state")!.textContent = transferStateLabels[job.state];
     const cancel = root.querySelector<HTMLButtonElement>(
       '[data-transfer-action="cancel"]',
     )!;

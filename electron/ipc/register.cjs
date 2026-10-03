@@ -214,6 +214,10 @@ function registerSessionIpc() {
       return { ok: true, state: vault.status(request.target) };
     } catch (error) { return { ok: false, error: error.message }; }
   });
+  handle("credentials:list", () => {
+    try { return { ok: true, entries: vault.list(), available: runtimeContext.safeStorage.isEncryptionAvailable() }; }
+    catch (error) { return { ok: false, error: error.message, entries: [] }; }
+  });
   handle("credentials:remove", (_event, request) => {
     try {
       if (typeof request?.target !== "string" || !["password", "passphrase", undefined].includes(request.kind)) throw new Error("凭据请求无效");
