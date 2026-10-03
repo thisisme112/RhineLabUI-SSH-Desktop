@@ -135,6 +135,10 @@ assert.equal(
 );
 assert.equal(isEventLine("OpenSSH_for_Windows_9.5p2, LibreSSL 3.8.2"), true);
 assert.equal(isEventLine("Permission denied (publickey,password)."), true);
+// ConnectTimeout's two lines are notices too, so the failure reaches the record.
+assert.equal(isEventLine("Connection timed out during banner exchange"), true);
+assert.equal(isEventLine("Connection to UNKNOWN port 65535 timed out"), true);
+assert.equal(couldBecomeEvent("Connection timed out during ban"), true);
 assert.equal(
   isEventLine("operator@lab-node-07:~$"),
   false,

@@ -51,6 +51,7 @@ const TERMINAL: ReadonlySet<SshEventName> = new Set<SshEventName>([
   "dns.failed",
   "tcp.failed",
   "kex.reset",
+  "connect.timeout",
   "hostkey.mismatch",
   "auth.denied",
   "session.closed",

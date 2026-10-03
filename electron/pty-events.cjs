@@ -48,6 +48,8 @@ const NOTICES = [
   /^Connection to .+ closed\.$/,
   /^Connection closed by /,
   /^Shared connection to .+ closed\.$/,
+  /^Connection timed out during banner exchange$/,
+  /^Connection to .+ port -?\d+ timed out$/,
   /^WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED/,
 ];
 
@@ -64,6 +66,7 @@ const PREFIXES = [
   "Connection to ",
   "Connection closed by ",
   "Shared connection to ",
+  "Connection timed out during banner exchange",
   "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED",
 ];
 

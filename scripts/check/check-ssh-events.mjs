@@ -185,6 +185,17 @@ const PARSE_CASES = [
     "kex.reset",
     { reason: "Connection closed by remote host" },
   ],
+  // ConnectTimeout expiring during the banner wait, and the fatal line after it.
+  [
+    "Connection timed out during banner exchange",
+    "connect.timeout",
+    { stage: "banner exchange" },
+  ],
+  [
+    "Connection to UNKNOWN port 65535 timed out",
+    "connect.timeout",
+    { host: "UNKNOWN", port: "65535" },
+  ],
   [FAILURES.denied, "auth.denied", { methods: "publickey,password" }],
   [
     "Connection closed by 1.2.3.4 port 22",
@@ -431,6 +442,10 @@ assert.equal(
   parsePtyNotice("Host key verification failed.\r").name,
   "hostkey.mismatch",
   "CRLF is handled",
+);
+assert.equal(
+  parsePtyNotice("Connection to 10.20.30.41 port 22 timed out").name,
+  "connect.timeout",
 );
 
 // The pty also carries everything the shell prints. None of it may be mistaken

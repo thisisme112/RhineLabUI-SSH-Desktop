@@ -255,7 +255,8 @@ export async function initAndroidBridge() {
         c.state.active = true; emitServices({ sessionId: c.id, event: "snapshot", data: c.state });
         void c.agent.resize(c.cols, c.rows).catch(() => {}); c.auth = undefined; c.hops = undefined; break;
       case "failed": {
-        const name: SshEventName = /host key changed/i.test(event.detail) ? "hostkey.mismatch" : /authenticat|permission denied/i.test(event.detail) ? "auth.denied" : "tcp.failed";
+        const name: SshEventName = /host key changed/i.test(event.detail) ? "hostkey.mismatch" : /authenticat|permission denied/i.test(event.detail) ? "auth.denied"
+          : /timed? ?out/i.test(event.detail) ? "connect.timeout" : "tcp.failed";
         fact(c, name, { reason: event.detail, message: event.detail }, raw);
         if (name === "auth.denied" && !c.failedCredential) void failCredential(c);
         haptics.failure();

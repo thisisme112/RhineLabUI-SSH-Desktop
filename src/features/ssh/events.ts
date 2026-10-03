@@ -35,6 +35,7 @@ export type SshEventName =
   | "dns.failed"
   | "tcp.failed"
   | "kex.reset"
+  | "connect.timeout"
   | "hostkey.mismatch"
   | "auth.denied"
   | "session.closed";
@@ -233,6 +234,19 @@ const MATCHERS: Matcher[] = [
     detail: (m) => ({ reason: m[1] }),
   },
   {
+    // ConnectTimeout expiring while ssh waits for the server's banner. Through
+    // a jump host that wait includes the questions the jump host asks. OpenSSH
+    // then ends with the fatal line below (UNKNOWN port 65535 behind a proxy).
+    name: "connect.timeout",
+    re: /^Connection timed out during (banner exchange)$/,
+    detail: (m) => ({ stage: m[1] }),
+  },
+  {
+    name: "connect.timeout",
+    re: /^Connection to (.+?) port (-?\d+) timed out$/,
+    detail: (m) => ({ host: m[1], port: m[2] }),
+  },
+  {
     name: "auth.denied",
     re: /^Permission denied \((.+)\)\.$/,
     detail: (m) => ({ methods: m[1] }),
@@ -289,6 +303,7 @@ export const TERMINAL_EVENTS: ReadonlySet<SshEventName> = new Set<SshEventName>(
     "dns.failed",
     "tcp.failed",
     "kex.reset",
+    "connect.timeout",
     "hostkey.mismatch",
     "auth.denied",
     "session.closed",
@@ -311,6 +326,7 @@ const PTY_NOTICE_NAMES: ReadonlySet<SshEventName> = new Set<SshEventName>([
   "tcp.failed",
   "dns.failed",
   "kex.reset",
+  "connect.timeout",
 ]);
 
 const PTY_NOTICES: { re: RegExp; name: SshEventName }[] = [
