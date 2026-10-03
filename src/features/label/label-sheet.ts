@@ -4,6 +4,7 @@ import "./label-detail.css";
 import "./label-settings.css";
 import "./label-forms.css";
 import "./label-workspace.css";
+import "./label-overview-pages.css";
 import { setAttr, setData, setStyle } from "../../shared/dom-write";
 import {
   BAND, DECODE, FIELD, FOOT, SPINE, TOP,
