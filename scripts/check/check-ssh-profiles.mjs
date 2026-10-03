@@ -95,8 +95,7 @@ try {
       source.identityFile,
       "-J",
       source.jumpHost,
-      "-o",
-      "ConnectTimeout=12",
+      // Through a jump host ConnectTimeout would also run while it asks its questions.
       "-o",
       "ServerAliveInterval=0",
       "-o",

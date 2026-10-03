@@ -14,7 +14,7 @@ export async function checkNativeSessions({ config, directory, wait, passed }) {
     resolveLaunch: launch => ({ ok: true, launch, displayTarget: launch.target }),
     resolveEndpoint: effectiveEndpoint,
     logPathFor: (_target, id) => path.join(directory, id + ".log"),
-    command: (launch, logPath) => ({ file: resolveSshPath(), args: ["-F", config, ...buildSshArgs({ ...launch, logPath })] }),
+    command: (launch, logPath) => ({ file: resolveSshPath(), args: ["-F", config, ...buildSshArgs({ ...launch, logPath }, { config })] }),
     createPty: callbacks => new PtySession(callbacks),
     createServices: options => { const worker = new SshServices(options); workers.push(worker); return worker; },
     send: (_sender, channel, payload) => {

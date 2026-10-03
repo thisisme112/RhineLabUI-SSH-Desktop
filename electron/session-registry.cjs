@@ -44,8 +44,19 @@ class SessionRegistry {
         if (!entry.keyLease) throw new Error("密钥库不可用");
         checked.launch.identityFile = entry.keyLease.file;
       }
+      // The jump host next to the destination brings its own vault key the same way.
+      const proxyHop = checked.launch.proxyHop, keyHop = checked.hops?.find(hop => hop.proxy);
+      if (proxyHop?.keyId) {
+        entry.hopLease = this.options.vault?.acquire(proxyHop.keyId);
+        if (!entry.hopLease) throw new Error("密钥库不可用");
+        proxyHop.identityFile = entry.hopLease.file;
+        if (keyHop) keyHop.launch.identityFile = entry.hopLease.file;
+      }
       entry.target = descriptor.target.trim();
       const endpoint = await this.options.resolveEndpoint(checked.launch);
+      // Each saved jump host answers with its own secret, bound to its own endpoint.
+      const hops = await Promise.all((checked.hops ?? []).map(async hop =>
+        ({ ...hop, endpoint: await this.options.resolveEndpoint(hop.launch) })));
       if (entry.canceled || sender.isDestroyed() || this.entries.get(id) !== entry)
         throw new Error("连接已取消");
       entry.logPath = this.options.logPathFor(entry.target, id);
@@ -54,6 +65,7 @@ class SessionRegistry {
       entry.displayTarget = checked.displayTarget;
       const services = this.options.createServices({
         id, launch: checked.launch, endpoint, target: entry.target, vault: this.options.vault,
+        hops, label: checked.displayTarget || descriptor.displayName || entry.target,
         send: event => this.options.send(sender, "services:event", event),
       });
       entry.services = services;
@@ -68,7 +80,8 @@ class SessionRegistry {
           services.setPrimaryPrompt(prompt);
           const value = services.automaticPrimaryAnswer?.(prompt);
           if (value !== null && value !== undefined && pty.answer(prompt.id, value).ok) return;
-          this.emit(entry, "session:prompt", prompt ? { ...prompt, canRemember: services.canRememberPrimary?.(prompt) ?? false } : null);
+          this.emit(entry, "session:prompt", prompt ? { ...prompt, canRemember: services.canRememberPrimary?.(prompt) ?? false,
+            ...services.askingPrimary?.(prompt) } : null);
         },
         onAuthenticated: () => services.activate(),
         onExit: info => {
@@ -137,7 +150,8 @@ class SessionRegistry {
     // SFTP / monitor children can still be authenticating as the PTY exits.
     // Their last owner must finish before an imported private file is removed.
     void Promise.resolve(stopped).then(() => {
-      try { entry.keyLease?.release(); } catch { /* Startup cleanup retries locked files. */ }
+      for (const lease of [entry.keyLease, entry.hopLease])
+        try { lease?.release(); } catch { /* Startup cleanup retries locked files. */ }
     });
     if (this.entries.get(entry.id) === entry) this.entries.delete(entry.id);
   }

@@ -80,7 +80,7 @@ export class SshHostsPanel {
           <div class="ssh-host-wide ssh-host-membership" data-ssh-reveal><p class="ssh-host-membership-state" role="status"></p><div class="ssh-host-group-choices" role="group" aria-label="所属分组"></div></div>
           <details class="ssh-host-wide" data-ssh-reveal><summary>连接选项 <span>跳板机 · 超时 · 保活</span></summary><div class="ssh-host-fields ssh-host-advanced">
             <label class="ssh-host-wide">IDENTITY FILE / 已有私钥路径<input name="identityFile" placeholder="已有配置可继续使用；密钥库选择优先" spellcheck="false"></label>
-            <label class="ssh-host-wide">JUMP HOST / 跳板机<input name="jumpHost" placeholder="user@bastion:22，或配置别名" spellcheck="false"></label>
+            <label class="ssh-host-wide ssh-host-jump">JUMP HOST / 跳板机<select name="jumpHostId"><option value="">不经跳板机，直连</option></select><input name="jumpHost" placeholder="user@bastion:22，或配置别名；多个用逗号分隔" spellcheck="false" hidden><small>经由已保存的主机跳转时，每一跳都用它自己档案里的已存口令，紧挨目标的一跳还会用它自己的私钥。经由跳板机时不设连接超时：等待目标机期间也包括跳板机的提问。</small></label>
             <label>连接超时（秒）<input name="connectTimeout" type="number" min="1" max="600" step="1" placeholder="使用 SSH 配置"></label>
             <label>保活间隔（秒，0 为关闭）<input name="keepAliveInterval" type="number" min="0" max="3600" step="1" placeholder="使用 SSH 配置"></label>
             <label>保活重试次数<input name="keepAliveCountMax" type="number" min="1" max="30" step="1" placeholder="使用 SSH 配置"></label>
@@ -104,9 +104,7 @@ export class SshHostsPanel {
       this.root.querySelector(".ssh-host-credential > small")!.textContent = "由 Android 安全密钥库加密，下次连接自动使用。";
       this.root.querySelector('[data-source="config"]')!.remove();
       this.field("identityFile").closest("label")!.hidden = true;
-      this.field("jumpHost").placeholder = "选择已保存的跳板机，留空直连";
-      this.field("jumpHost").setAttribute("list", "ssh-jump-hosts");
-      const jumpList = document.createElement("datalist"); jumpList.id = "ssh-jump-hosts"; this.root.append(jumpList);
+      this.root.querySelector(".ssh-host-jump small")!.textContent = "每一跳都用它自己档案里的私钥与已存口令。";
       this.root.querySelector(".ssh-host-advanced")!.closest("details")!.querySelector("summary")!.textContent = "跳板机、超时与保活";
       this.root.querySelector(".ssh-host-editor-note")!.textContent = "导入手机中的私钥后可供多个主机使用。验证码每次单独输入。";
     }
@@ -121,6 +119,10 @@ export class SshHostsPanel {
       const name = target.name;
       if (name === "authMode") { this.field("credential").value = ""; this.syncAuthentication(); void this.refreshCredentials(); }
       if (name === "rememberCredential") this.field("credential").hidden = !this.field("rememberCredential").checked;
+      if (name === "jumpHostId") {
+        this.field("jumpHost").hidden = target.value !== "custom";
+        if (target.value === "custom") this.field("jumpHost").focus();
+      }
       // Matched on the data attribute, not `name`: these checkboxes are generated
       // per group and have no name to key on.
       if (target.dataset.groupMember) {
@@ -188,6 +190,7 @@ export class SshHostsPanel {
       this.form.reset();
       for (const name of ["name", "hostname", ...optionNames] as const)
         this.field(name).value = values[name] === undefined ? "" : String(values[name]);
+      this.renderJumpChoices(values);
       this.field("authMode").value = values.authMode || "auto";
       this.credentialTarget = host?.alias || "";
       this.syncAuthentication();
@@ -232,8 +235,7 @@ export class SshHostsPanel {
     if (request !== this.request) return result;
     if (result.ok) {
       this.hosts = result.hosts ?? [];
-      const jumps = this.root.querySelector("#ssh-jump-hosts");
-      if (jumps) jumps.replaceChildren(...this.hosts.map(host => new Option(hostLabel(host), host.alias)));
+      if (this.isEditing) this.renderJumpChoices(this.values(false));
       this.revision = result.revision ?? "";
       await this.options.loaded(result);
     }
@@ -319,7 +321,39 @@ export class SshHostsPanel {
       const value = this.field(key).value.trim();
       if (value !== "") options[key] = numeric.has(key) ? Number(value) : value;
     }
+    // A saved jump host or a typed address, never both.
+    const jump = this.field("jumpHostId").value;
+    if (jump !== "custom") delete options.jumpHost;
+    if (jump && jump !== "custom") options.jumpHostId = jump;
     return { ...(this.editing ? { id: this.editing } : {}), name: this.field("name").value.trim() || (fallbackName ? this.field("hostname").value.trim() : ""), hostname: this.field("hostname").value.trim(), ...options };
+  }
+  /**
+   * The saved hosts this one may jump through: never itself, nor one that
+   * already jumps through it (a loop the main process would refuse anyway).
+   */
+  private renderJumpChoices(values: SshHostProfile) {
+    const select = this.field("jumpHostId") as unknown as HTMLSelectElement;
+    const saved = this.hosts.filter(entry => entry.source === "saved" && entry.profile?.id);
+    const jumpsThrough = (id: string | undefined) => {
+      for (let at = id, step = 0; at && step <= saved.length; step++) {
+        if (at === values.id) return true;
+        at = saved.find(entry => entry.profile!.id === at)?.profile?.jumpHostId;
+      }
+      return false;
+    };
+    const choices = saved.filter(entry => !values.id || !jumpsThrough(entry.profile!.id));
+    select.replaceChildren(
+      new Option("不经跳板机，直连", ""),
+      ...choices.map(entry => new Option(`${hostLabel(entry)} · ${hostSubtitle(entry) || entry.hostname}`, entry.profile!.id!)),
+      // Android connects through saved hosts only.
+      ...(import.meta.env.MODE === "android" ? [] : [new Option("其他地址（SSH 配置别名或 user@host:port）", "custom")]),
+    );
+    select.value = values.jumpHostId || (values.jumpHost ? "custom" : "");
+    if (values.jumpHostId && select.value !== values.jumpHostId) {
+      select.add(new Option("原跳板机已不在主机档案中，请重新选择", values.jumpHostId));
+      select.value = values.jumpHostId;
+    }
+    this.field("jumpHost").hidden = select.value !== "custom";
   }
   private setBusy(value: boolean) {
     this.busy = value;

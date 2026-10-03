@@ -61,7 +61,7 @@ exports.run = async ({ win, sessions, app, report, problems }) => {
     bridge.session.onData(({sessionId,data}) => state.outputs[sessionId]=(state.outputs[sessionId]||'')+data);
     bridge.session.onPrompt(async ({sessionId,data}) => {
       if (!data) return;
-      state.prompts.push({sessionId,kind:data.kind,canRemember:data.canRemember,key:data.key});
+      state.prompts.push({sessionId,kind:data.kind,canRemember:data.canRemember,key:data.key,asking:data.asking,jump:data.jump});
       const entry=state.targets?.[sessionId];
       if (entry && data.kind==='password') state.lastStatus.push((await bridge.credentials.status(entry)).state?.password);
       const value=data.kind==='hostkey'?'yes':data.kind==='passphrase'?'fixture-passphrase':data.kind==='verification-code'?'314159':'fixture-password';
@@ -335,7 +335,102 @@ exports.run = async ({ win, sessions, app, report, problems }) => {
     pass(
       "wrong saved password falls back once to manual input and the corrected password replaces it after successful authentication",
     );
-    proof = { password, encrypted, unencrypted, unicode, key: imported.key.id };
+
+    // A saved host as the jump host: the fixture is both the jump
+    // (password@127.0.0.1) and the destination it forwards to (key@127.0.0.1).
+    const jump = await profile({
+      name: "跳板验证",
+      hostname: "127.0.0.1",
+      port: fixture.port,
+      user: "password",
+      authMode: "password",
+    });
+    const jumpSaved = await evaluate(
+      `rhineDesktop.credentials.save({target:${JSON.stringify(jump)},kind:'password',value:'fixture-password'})`,
+    );
+    assert(jumpSaved?.ok, jumpSaved?.error);
+    const jumped = await profile({
+      name: "经跳板目标",
+      hostname: "127.0.0.1",
+      port: fixture.port,
+      user: "key",
+      authMode: "key",
+      keyId: reference.key.id,
+      connectTimeout: 3,
+      jumpHostId: jump.slice("rhine-profile:".length),
+    });
+    const through = await start(jumped);
+    const argv = sessions.entries.get(through)?.argv || [];
+    assert.equal(argv[argv.indexOf("-J") + 1], `password@127.0.0.1:${fixture.port}`);
+    assert(!argv.some((value) => value.startsWith("ConnectTimeout=")));
+    assert.equal(await promptCount(through), 0);
+    assert.equal(await promptCount(through, "auxiliary"), 0);
+    await stop(through);
+    const jumpEntry = Object.values(vault.read().credentials).find((item) => item.target === jump);
+    assert.equal(jumpEntry.fingerprint, fixture.fingerprint);
+    assert.equal(vault.status(jumped).password, "none");
+    pass(
+      "a saved jump host's own password answers its hop for the shell, SFTP and monitor connections and is bound to that hop's host key",
+    );
+
+    const forgotten = await evaluate(
+      `rhineDesktop.credentials.remove({target:${JSON.stringify(jump)},kind:'password'})`,
+    );
+    assert(forgotten.ok);
+    const asked = await start(jumped);
+    const hopPrompts = (await evaluate("__credentialsProbe.prompts")).filter(
+      (item) => item.sessionId === asked && item.kind === "password",
+    );
+    assert.equal(hopPrompts.length, 1);
+    assert.equal(hopPrompts[0].jump, true);
+    assert.match(hopPrompts[0].asking, /^跳板机 跳板验证 · password@127\.0\.0\.1:/);
+    assert.equal(hopPrompts[0].canRemember, true);
+    assert.equal(await promptCount(asked, "auxiliary"), 0);
+    await stop(asked);
+    assert.equal(vault.status(jump).password, "saved");
+    assert.equal(vault.status(jumped).password, "none");
+    pass(
+      "an unsaved jump host password is asked once, names the jump host, and is remembered under the jump host after the destination authenticates",
+    );
+
+    // A jump host with its own (encrypted, imported) key runs as a ProxyCommand
+    // with that key; the destination behind it is a password host.
+    const keyJump = await profile({
+      name: "带钥跳板",
+      hostname: "127.0.0.1",
+      port: fixture.port,
+      user: "key",
+      authMode: "key",
+      keyId: imported.key.id,
+    });
+    const keySaved = await evaluate(
+      `rhineDesktop.credentials.save({target:${JSON.stringify(keyJump)},kind:'passphrase',value:'fixture-passphrase'})`,
+    );
+    assert(keySaved?.ok, keySaved?.error);
+    const behindKey = await profile({
+      name: "经带钥跳板",
+      hostname: "127.0.0.1",
+      port: fixture.port,
+      user: "password",
+      authMode: "password",
+      jumpHostId: keyJump.slice("rhine-profile:".length),
+    });
+    const behindSaved = await evaluate(
+      `rhineDesktop.credentials.save({target:${JSON.stringify(behindKey)},kind:'password',value:'fixture-password'})`,
+    );
+    assert(behindSaved?.ok, behindSaved?.error);
+    const keyed = await start(behindKey);
+    const keyedArgv = sessions.entries.get(keyed)?.argv || [];
+    assert(keyedArgv.some((value) => value.startsWith("ProxyCommand=") && value.includes("-i ")));
+    assert(!keyedArgv.includes("-J"));
+    assert.equal(await promptCount(keyed), 0);
+    assert.equal(await promptCount(keyed, "auxiliary"), 0);
+    await stop(keyed);
+    await wait("jump key runtime file cleanup", () => keyFiles().length === 0);
+    pass(
+      "a jump host with its own vault key runs as a ProxyCommand, unlocks it with that host's saved passphrase for every channel and removes the private runtime file",
+    );
+    proof = { password, encrypted, unencrypted, unicode, jumped, key: imported.key.id };
     fs.writeFileSync(proofFile, JSON.stringify(proof));
   } else {
     proof = JSON.parse(fs.readFileSync(proofFile, "utf8"));
@@ -378,6 +473,13 @@ exports.run = async ({ win, sessions, app, report, problems }) => {
     await stop(unicodeSession);
     pass(
       "the encrypted Unicode-path key reconnects without another passphrase after restart",
+    );
+    const jumpedSession = await start(proof.jumped);
+    assert.equal(await promptCount(jumpedSession), 0);
+    assert.equal(await promptCount(jumpedSession, "auxiliary"), 0);
+    await stop(jumpedSession);
+    pass(
+      "after restart the jump host's remembered password still answers its hop without a prompt",
     );
     const removed = await evaluate(
       `rhineDesktop.credentials.remove({target:${JSON.stringify(proof.password)},kind:'password'})`,

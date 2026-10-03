@@ -21,9 +21,11 @@ const attempt = async <T>(run: () => Promise<T>): Promise<ServiceResult<T>> => {
   try { return { ok: true, result: await run() }; } catch (error) { return { ok: false, error: errorText(error) }; }
 };
 const aliasOf = (host: HostProfile) => "rhine-profile:" + host.id;
+// Android stores a jump host as its alias; the shared editor speaks in profile ids.
+const jumpAlias = (input: { jumpHostId?: string; jumpHost?: string }) => input.jumpHostId ? "rhine-profile:" + input.jumpHostId : input.jumpHost;
 const profileOf = (host: HostProfile): SshHostProfile => ({ id: host.id, name: host.name, hostname: host.host, user: host.user, port: host.port,
   authMode: host.method === "publickey" ? "key" : host.method === "keyboard-interactive" ? "auto" : "password", keyId: host.keyId,
-  jumpHost: host.jumpHost, connectTimeout: host.connectTimeout, keepAliveInterval: host.keepAliveInterval, keepAliveCountMax: host.keepAliveCountMax });
+  jumpHostId: host.jumpHost?.replace(/^rhine-profile:/, "") || undefined, connectTimeout: host.connectTimeout, keepAliveInterval: host.keepAliveInterval, keepAliveCountMax: host.keepAliveCountMax });
 const stagedIdentity = (host: HostProfile) => JSON.stringify(["rhine-android-credential-pending-v1", host.id, host.host, host.port, host.user, host.method, host.keyId || ""]);
 const boundIdentity = (host: HostProfile, key: HostKey) => host.keyId ? credentialIdentity(host, key) + ":" + host.keyId : credentialIdentity(host, key);
 const keyIdentity = (id: string) => "rhine-android-key-v1:" + id;
@@ -227,7 +229,9 @@ export async function initAndroidBridge() {
         }).catch(() => receive(c, event));
         return;
       }
-      ask(c, { kind: event.promptKind, prompt: `${host.name} / ${host.user}@${host.host}\n${event.prompt}`, host: host.host, key: host.name, canRemember: available && event.promptKind !== "verification-code" } as Omit<SshPrompt, "id">, async (value, remember) => {
+      const jump = host.id !== c.profile?.id;
+      ask(c, { kind: event.promptKind, prompt: `${host.name} / ${host.user}@${host.host}\n${event.prompt}`, host: host.host, key: host.name, canRemember: available && event.promptKind !== "verification-code",
+        asking: `${jump ? "跳板机 " : ""}${host.name} · ${host.user}@${host.host}:${host.port}`, jump } as Omit<SshPrompt, "id">, async (value, remember) => {
         const auth = event.promptKind === "password" ? { method: "password" as const, password: value } : hop?.auth || c.auth;
         if (event.promptKind === "passphrase" && auth?.method === "publickey") auth.passphrase = value;
         if (hop && auth) { hop.auth = auth; hop.remember = remember; }
@@ -270,7 +274,7 @@ export async function initAndroidBridge() {
     const stored = findHost(descriptor.target);
     const split = descriptor.target.lastIndexOf("@");
     c.profile = stored ?? normalizeProfile({ id: c.id, name: descriptor.displayName || descriptor.target, host: descriptor.target.slice(split + 1), user: descriptor.user || (split >= 0 ? descriptor.target.slice(0, split) : ""), port: descriptor.port || 22,
-      method: descriptor.authMode === "key" ? "publickey" : descriptor.authMode === "auto" ? "keyboard-interactive" : "password", keyId: descriptor.keyId, jumpHost: descriptor.jumpHost, connectTimeout: descriptor.connectTimeout, keepAliveInterval: descriptor.keepAliveInterval, keepAliveCountMax: descriptor.keepAliveCountMax });
+      method: descriptor.authMode === "key" ? "publickey" : descriptor.authMode === "auto" ? "keyboard-interactive" : "password", keyId: descriptor.keyId, jumpHost: jumpAlias(descriptor), connectTimeout: descriptor.connectTimeout, keepAliveInterval: descriptor.keepAliveInterval, keepAliveCountMax: descriptor.keepAliveCountMax });
     c.cols = descriptor.cols || 80; c.rows = descriptor.rows || 24;
     await c.agent.start(); if (c.stopped) throw new Error("连接已取消");
     const chain = [c.profile], seen = new Set([c.profile.id]);
@@ -403,13 +407,18 @@ export async function initAndroidBridge() {
           if (expected && expected !== revision()) throw new Error("主机配置已变化，请重新读取后保存");
           if (input.id && activeHost(input.id)) throw new Error("请先结束此主机的活动连接再修改配置");
           if (input.identityFile) throw new Error("安卓请从密钥库选择私钥");
-          const seen = new Set([input.id]); let jump = input.jumpHost;
+          const jumpHost = jumpAlias(input);
+          const seen = new Set([input.id]); let jump = jumpHost;
           while (jump) { const hop = findHost(jump); if (!hop || seen.has(hop.id) || seen.size > 3) throw new Error("请选择有效跳板机，最多三层且不能循环引用"); seen.add(hop.id); jump = hop.jumpHost; }
-          const host = hosts.save({ id: input.id || crypto.randomUUID(), name: input.name, host: input.hostname, port: input.port || 22, user: input.user || "", method: input.authMode === "key" ? "publickey" : input.authMode === "auto" ? "keyboard-interactive" : "password", keyId: input.authMode === "key" ? input.keyId : undefined, jumpHost: input.jumpHost, connectTimeout: input.connectTimeout, keepAliveInterval: input.keepAliveInterval, keepAliveCountMax: input.keepAliveCountMax });
+          const host = hosts.save({ id: input.id || crypto.randomUUID(), name: input.name, host: input.hostname, port: input.port || 22, user: input.user || "", method: input.authMode === "key" ? "publickey" : input.authMode === "auto" ? "keyboard-interactive" : "password", keyId: input.authMode === "key" ? input.keyId : undefined, jumpHost, connectTimeout: input.connectTimeout, keepAliveInterval: input.keepAliveInterval, keepAliveCountMax: input.keepAliveCountMax });
           return { ok: true, profile: profileOf(host), revision: revision() };
         } catch (error) { return { ok: false, error: errorText(error) }; }
       },
-      async remove(id, expected) { try { if (expected && expected !== revision()) throw new Error("主机配置已变化，请重新读取"); if (activeHost(id)) throw new Error("请先结束此主机的活动连接"); hosts.remove(id); return { ok: true }; } catch (error) { return { ok: false, error: errorText(error) }; } },
+      async remove(id, expected) { try {
+        if (expected && expected !== revision()) throw new Error("主机配置已变化，请重新读取"); if (activeHost(id)) throw new Error("请先结束此主机的活动连接");
+        const dependent = hosts.hosts.find(host => host.jumpHost && findHost(host.jumpHost)?.id === id);
+        if (dependent) throw new Error(`「${dependent.name}」经由这台主机跳转，请先在它的连接配置里改掉跳板机`);
+        hosts.remove(id); return { ok: true }; } catch (error) { return { ok: false, error: errorText(error) }; } },
       async pickIdentity() { try { const result = await documents.pickKey(); if (result.canceled) return { ok: false, canceled: true }; const token = "android-key:" + crypto.randomUUID(); pickedKeys.clear(); pickedKeys.set(token, { name: result.name!, content: result.content! }); return { ok: true, file: token }; } catch (error) { return { ok: false, error: errorText(error) }; } },
     },
     credentials: {

@@ -157,7 +157,8 @@ class SshMigration {
           hostname: resolved.host,
           user: resolved.user,
           port: resolved.port,
-          jumpHost: checked.launch.jumpHost || resolved.proxyJump,
+          // A saved jump host is exported as a reference to its own entry.
+          jumpHost: checked.jumpAlias || checked.launch.jumpHost || resolved.proxyJump,
           unsupportedProxy: !!resolved.proxyCommand && !resolved.proxyJump,
           key,
         });

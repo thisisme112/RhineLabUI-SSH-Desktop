@@ -171,16 +171,38 @@ function validateLaunch(input) {
 }
 
 /**
- * @param {{target:string, logPath?:string, port?:number, identityFile?:string, extraArgs?:string[]}} launch
+ * A jump host that brings its own key, which -J cannot give a hop: it runs as
+ * a ProxyCommand with that key (any outer jump hosts as its own -J), verbose
+ * like the -J child so its questions are recognised the same way. `%` is
+ * ssh's own escape inside the command; `config` is forwarded as -J would.
  */
-function buildSshArgs(launch) {
+function proxyCommand(hop, config) {
+  const quote = (value) => `"${String(value).replaceAll("%", "%%")}"`;
+  return "ProxyCommand=" + [
+    quote(resolveSshPath()),
+    ...(config ? ["-F", quote(config)] : []),
+    "-v", "-i", quote(hop.identityFile), "-o", "IdentitiesOnly=yes",
+    ...(hop.user ? ["-l", hop.user] : []),
+    ...(hop.port !== undefined ? ["-p", String(hop.port)] : []),
+    ...(hop.jumpHost ? ["-J", hop.jumpHost] : []),
+    "-W", "[%h]:%p", hop.host,
+  ].join(" ");
+}
+
+/**
+ * @param {{target:string, logPath?:string, port?:number, identityFile?:string, extraArgs?:string[]}} launch
+ * @param {{config?:string}} [options] the `-F` file the caller passes, for a ProxyCommand hop
+ */
+function buildSshArgs(launch, options = {}) {
   const args = ["-v"];
   if (launch.authMode === "password") args.push("-o", "PubkeyAuthentication=no", "-o", "PreferredAuthentications=password,keyboard-interactive");
   if (launch.authMode === "key") args.push("-o", "IdentitiesOnly=yes", "-o", "PreferredAuthentications=publickey,keyboard-interactive", "-o", "PasswordAuthentication=no");
   if (launch.user) args.push("-l", launch.user);
   if (launch.port !== undefined) args.push("-p", String(launch.port));
   if (launch.identityFile) args.push("-i", launch.identityFile);
-  if (launch.jumpHost) args.push("-J", launch.jumpHost);
+  // Set only by the main process (HostProfiles.resolve), never by a descriptor.
+  if (launch.proxyHop?.identityFile) args.push("-o", proxyCommand(launch.proxyHop, options.config));
+  else if (launch.jumpHost) args.push("-J", launch.jumpHost);
   for (const [field, option] of [
     ["connectTimeout", "ConnectTimeout"],
     ["keepAliveInterval", "ServerAliveInterval"],

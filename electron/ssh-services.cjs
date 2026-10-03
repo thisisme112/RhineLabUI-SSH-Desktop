@@ -10,6 +10,7 @@ const { createHash } = require("node:crypto");
 const { StringDecoder } = require("node:string_decoder");
 const { buildSshArgs, resolveSshPath } = require("./ssh-args.cjs");
 const { SshCredentials } = require("./ssh-credentials.cjs");
+const { endpointKey } = require("./credential-vault.cjs");
 
 const RESOURCES = path.join(__dirname, "resources", "ssh-services");
 const OPTIONS = new Set(["-i", "-p", "-l", "-J", "-c", "-m", "-b", "-o"]);
@@ -47,7 +48,7 @@ function connectionArgs(launch) {
         filtered.push(flag, value);
     } else if (["-L", "-R", "-D", "-W", "-w", "-e"].includes(flag)) index++;
   }
-  const args = buildSshArgs({ ...launch, extraArgs: filtered });
+  const args = buildSshArgs({ ...launch, extraArgs: filtered }, { config: process.env.RHINE_SSH_CONFIG });
   if (process.env.RHINE_SSH_CONFIG)
     args.unshift("-F", process.env.RHINE_SSH_CONFIG);
   return args;
@@ -233,11 +234,14 @@ class SshServices {
     resources = RESOURCES,
     disabled = false,
     executable = resolveSshPath(),
-    vault, target, endpoint,
+    vault, target, endpoint, hops, label,
   }) {
     this.id = id;
     this.launch = launch;
-    this.credentialBroker = new SshCredentials({ vault, target, endpoint, launch });
+    this.credentialBroker = new SshCredentials({ vault, target, endpoint, launch, hops, label });
+    // Host keys the primary connection met on its way, per endpoint: a file or
+    // monitor connection is answered only by a host the shell already verified.
+    this.peerFingerprints = new Map();
     this.send = send;
     this.resources = resources;
     this.disabled = disabled;
@@ -284,12 +288,19 @@ class SshServices {
     const fingerprint = line.match(
       /Server host key: \S+ (SHA256:[A-Za-z0-9+/=]+)/,
     );
-    if (fingerprint) this.primaryFingerprint = fingerprint[1];
+    if (fingerprint) {
+      this.primaryFingerprint = fingerprint[1];
+      if (this.primaryPeer) this.peerFingerprints.set(endpointKey(this.primaryPeer), fingerprint[1]);
+    }
     const method = line.match(/Next authentication method: (\S+)/);
     if (method) this.primaryMethod = method[1];
   }
   setPrimaryPrompt(prompt) {
     this.primaryPrompt = prompt;
+  }
+  /** Who the shell's pending question comes from: a jump host or the destination. */
+  askingPrimary(prompt) {
+    return prompt ? this.credentialBroker.asking(prompt, this.primaryPeer) : null;
   }
   automaticPrimaryAnswer(prompt) {
     if (this.closed || this.authenticated || this.primaryMethod === "keyboard-interactive") return null;
@@ -484,7 +495,9 @@ class SshServices {
     } else if (event === "auth" && typeof data?.id === "string") {
       this.auth.set(data.id, data);
       data.canRemember = Boolean(data.fingerprint) && this.credentialBroker.identity(data, data.method, data.peer) !== null;
-      const value = data.fingerprint === this.primaryFingerprint
+      Object.assign(data, this.credentialBroker.asking(data, data.peer));
+      const verified = data.peer ? this.peerFingerprints.get(endpointKey(data.peer)) : undefined;
+      const value = data.fingerprint && data.fingerprint === verified
         ? this.credentialBroker.automatic(data, data.fingerprint, data.method, data.connection || data.source, data.peer)
         : null;
       if (value !== null) {
@@ -610,6 +623,7 @@ class SshServices {
     this.answeringAuth.clear();
     this.primaryPrompt = null;
     this.primaryFingerprint = "";
+    this.peerFingerprints.clear();
     this.state.prompt = null;
     for (const pending of this.pending.values()) {
       clearTimeout(pending.timer);

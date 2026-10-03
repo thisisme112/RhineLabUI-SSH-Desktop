@@ -30,6 +30,7 @@
 .ssh-host-fields summary { cursor: pointer; color: var(--theme-ink); }
 .ssh-host-fields summary span { font-size: 12px; color: var(--theme-muted); margin-left: 14px; }
 .ssh-host-advanced { margin-top: 18px; padding-bottom: 8px; }
+.ssh-host-fields .ssh-host-jump small { font-size: 12px; font-weight: 400; line-height: 1.6; letter-spacing: 0; color: var(--theme-muted); }
 .ssh-detail :is(.ssh-host-editor-note, .ssh-host-config-note, .ssh-host-editor-message) { font-size: 12px; line-height: 1.8; text-align: left; margin: 12px 0; color: var(--theme-muted); }
 .ssh-detail .ssh-host-editor-message { color: var(--ssh-text-accent, var(--theme-accent)); }
 .ssh-host-editor-message:empty { display: none; }

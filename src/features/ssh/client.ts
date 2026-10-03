@@ -25,7 +25,10 @@ export type SshConnectionOptions = {
   identityFile?: string;
   authMode?: "auto" | "password" | "key";
   keyId?: string;
+  /** Free-form ProxyJump: an ssh config alias or `user@host:port`, comma-separated. */
   jumpHost?: string;
+  /** A saved host to jump through (its profile id); it answers with its own secret. */
+  jumpHostId?: string;
   connectTimeout?: number;
   keepAliveInterval?: number;
   keepAliveCountMax?: number;
@@ -102,7 +105,12 @@ export type SshExitInfo = {
   elapsedMs?: number;
 };
 
-export type SshPrompt = { id: number; canRemember?: boolean } & (
+/**
+ * `asking` names who asks, from the authentication diagnostics: a jump host's
+ * question is not the destination's (`jump`), and a secret typed for one is
+ * remembered under that host.
+ */
+export type SshPrompt = { id: number; canRemember?: boolean; asking?: string; jump?: boolean } & (
   | { kind: "password"; prompt: string; host: string }
   | { kind: "passphrase"; prompt: string; key: string }
   | { kind: "hostkey"; prompt: string; host: string }

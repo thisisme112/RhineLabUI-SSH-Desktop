@@ -128,6 +128,9 @@ export type AuxiliaryAuthRequest = {
   fingerprint: string;
   diagnostics: string;
   canRemember?: boolean;
+  /** Who asks, as SshPrompt.asking: a jump host on the way, or the destination. */
+  asking?: string;
+  jump?: boolean;
 };
 export type ServicesState = {
   sessionId: string;

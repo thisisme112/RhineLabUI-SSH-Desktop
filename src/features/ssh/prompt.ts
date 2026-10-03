@@ -34,7 +34,14 @@ export type PromptRequest = (
       timeline: { label: string; at: number; duration: number }[];
       log: readonly string[];
     }
-) & { requestId?: number | string; source?: "sftp" | "monitor" | "tunnel"; canRemember?: boolean };
+) & {
+  requestId?: number | string;
+  source?: "sftp" | "monitor" | "tunnel";
+  canRemember?: boolean;
+  /** Who asks (SshPrompt.asking); `jump` when it is a jump host on the way. */
+  asking?: string;
+  jump?: boolean;
+};
 
 export type PromptActions = {
   /** `yes` / `no` written to the pty — the host key decision itself. */
@@ -172,6 +179,8 @@ export class SshPromptPanel {
           ? "MONITOR / 监控通道认证"
           : request.source === "tunnel"
             ? "TUNNEL / 端口转发认证"
+          : request.jump
+            ? "JUMP HOST / 跳板机认证"
           : "SSH / ACCESS REQUEST";
     this.root.dataset.kind = request.kind;
     this.root.querySelector<HTMLElement>(".ssh-prompt-kind")!.textContent =
@@ -370,10 +379,10 @@ export class SshPromptPanel {
           <details class="ssh-prompt-raw"><summary>原始输出</summary><pre>${escape(request.raw)}</pre></details>`;
       case "password":
         return `
-          <p class="ssh-prompt-lead">${escape(request.host)} 要求输入登录口令。${request.canRemember ? "连接后文件与监控通道会复用此次认证。" : "此请求单独认证。"}</p>
+          <p class="ssh-prompt-lead">${escape(request.asking || request.host)} 要求输入登录口令。${request.jump ? "这是途经的跳板机，口令只用于这一跳。" : ""}${request.canRemember ? "连接后文件与监控通道会复用此次认证。" : "此请求单独认证。"}</p>
           <label class="ssh-prompt-field"><span>口令</span>
             <input type="password" autocomplete="off" spellcheck="false" /></label>
-          ${request.canRemember ? '<label class="ssh-remember"><input type="checkbox" data-remember>记住此主机的密码 <small>当前 Windows 账户加密保存</small></label>' : ""}
+          ${request.canRemember ? `<label class="ssh-remember"><input type="checkbox" data-remember>记住${request.jump ? "这台跳板机" : "此主机"}的密码 <small>当前 Windows 账户加密保存</small></label>` : ""}
           <div class="ssh-prompt-actions">
             <button type="button" data-action="submit-secret" class="solid-button">AUTHENTICATE<span>发送口令 →</span></button>
             <button type="button" data-action="cancel" class="export-button">中止连接</button>
@@ -381,7 +390,7 @@ export class SshPromptPanel {
           <details class="ssh-prompt-raw"><summary>原始提示</summary><pre>${escape(request.prompt)}</pre></details>`;
       case "passphrase":
         return `
-          <p class="ssh-prompt-lead">私钥 <code>${escape(request.key)}</code> 需要解锁。</p>
+          <p class="ssh-prompt-lead">${request.asking ? `${escape(request.asking)} 的` : ""}私钥 <code>${escape(request.key)}</code> 需要解锁。</p>
           <label class="ssh-prompt-field"><span>私钥口令</span>
             <input type="password" autocomplete="off" spellcheck="false" /></label>
           ${request.canRemember ? '<label class="ssh-remember"><input type="checkbox" data-remember>记住私钥口令 <small>当前 Windows 账户加密保存</small></label>' : ""}

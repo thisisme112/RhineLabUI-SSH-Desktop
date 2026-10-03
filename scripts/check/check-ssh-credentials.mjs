@@ -571,3 +571,141 @@ test("session registry retains imported key leases until auxiliary processes sto
   await Promise.resolve();
   assert.equal(released, 1);
 });
+
+const hopEndpoint = { host: "bastion.example", port: 22, user: "jump" };
+const hopPrompt = { kind: "password", prompt: "jump@bastion.example's password:" };
+const hopFingerprint = "SHA256:HOPFIXTURE";
+function jumpBroker(vault) {
+  return new SshCredentials({
+    vault,
+    target: "profile",
+    endpoint: { ...endpoint, viaProxy: true },
+    launch: { jumpHost: "jump@bastion.example:22" },
+    hops: [{ target: "hop", label: "堡垒机", endpoint: hopEndpoint, launch: {} }],
+    label: "节点",
+  });
+}
+
+test("each saved jump host answers with its own secret and never with another's", (t) => {
+  const { vault } = fixture(t);
+  vault.put("profile", "password", "target-secret", endpoint);
+  vault.put("hop", "password", "hop-secret", hopEndpoint);
+  const broker = jumpBroker(vault);
+  assert.equal(broker.automatic(hopPrompt, hopFingerprint, "password", "primary", hopEndpoint), "hop-secret");
+  // The destination's account asked by the jump host's handshake, and the
+  // jump host's account asked by the destination's, belong to nobody.
+  assert.equal(broker.automatic(prompt, hopFingerprint, "password", "primary", hopEndpoint), null);
+  assert.equal(broker.automatic(hopPrompt, fingerprint, "password", "primary", endpoint), null);
+  assert.equal(broker.automatic(prompt, fingerprint, "password", "primary", endpoint), "target-secret");
+  broker.authenticated();
+  const bound = Object.fromEntries(Object.values(vault.read().credentials).map((item) => [item.target, item.fingerprint]));
+  assert.deepEqual(bound, { profile: fingerprint, hop: hopFingerprint });
+  // A hop answer that failed is tried once and then invalidated for that hop only.
+  const retry = jumpBroker(vault);
+  assert.equal(retry.automatic(hopPrompt, hopFingerprint, "password", "primary", hopEndpoint), "hop-secret");
+  assert.equal(retry.automatic(hopPrompt, hopFingerprint, "password", "primary", hopEndpoint), null);
+  assert.equal(vault.status("hop").password, "needs-update");
+  assert.equal(vault.status("profile").password, "saved");
+});
+
+test("a secret typed for a jump host is saved under that host once the destination authenticates", (t) => {
+  const { vault } = fixture(t);
+  const broker = jumpBroker(vault);
+  assert.equal(broker.remember(hopPrompt, "typed-hop-secret", hopFingerprint, "password", true, "primary", "primary", hopEndpoint), true);
+  assert.equal(vault.status("hop").password, "none");
+  broker.authenticated();
+  assert.equal(vault.get("hop", "password", hopEndpoint, "", hopFingerprint), "typed-hop-secret");
+  assert.equal(vault.status("profile").password, "none");
+});
+
+test("prompts name the jump host that asks", (t) => {
+  const { vault } = fixture(t);
+  const broker = jumpBroker(vault);
+  assert.deepEqual(broker.asking(hopPrompt, hopEndpoint), { asking: "跳板机 堡垒机 · jump@bastion.example:22", jump: true });
+  assert.deepEqual(broker.asking(prompt, endpoint), { asking: "节点 · operator@node.example:2222", jump: false });
+  // Before the handshake line is read, the password prompt's account decides.
+  assert.deepEqual(broker.asking(hopPrompt, undefined), { asking: "跳板机 堡垒机 · jump@bastion.example:22", jump: true });
+  // A free-form jump host is named by its address.
+  const relay = { host: "relay.example", port: 2200, user: "relay" };
+  assert.deepEqual(broker.asking({ kind: "password", prompt: "relay@relay.example's password:" }, relay), { asking: "跳板机 relay@relay.example:2200", jump: true });
+});
+
+test("saved jump hosts resolve into one -J chain with each hop's own scope", (t) => {
+  const { directory } = fixture(t);
+  const { HostProfiles } = require("../../electron/host-profiles.cjs");
+  const profiles = new HostProfiles(path.join(directory, "ssh-hosts.json"));
+  const save = (profile) => profiles.save(profile, profiles.read().revision).profile;
+  const outer = save({ name: "外层", hostname: "outer.example", user: "o", port: 2201, authMode: "password", jumpHost: "corp-gw" });
+  const inner = save({ name: "内层", hostname: "fe80::1", user: "i", authMode: "password", jumpHostId: outer.id });
+  const target = save({ name: "目标", hostname: "node.example", user: "operator", port: 2222, authMode: "password", connectTimeout: 10, jumpHostId: inner.id });
+  const resolved = profiles.resolve({ target: "rhine-profile:" + target.id });
+  assert(resolved.ok, resolved.error);
+  assert.equal(resolved.launch.jumpHost, "corp-gw,o@outer.example:2201,i@[fe80::1]");
+  assert.equal(resolved.launch.connectTimeout, undefined);
+  assert.deepEqual(resolved.hops.map((hop) => [hop.target, hop.label, hop.launch.target, hop.launch.user]),
+    [["rhine-profile:" + outer.id, "外层", "outer.example", "o"], ["rhine-profile:" + inner.id, "内层", "fe80::1", "i"]]);
+  assert.equal(resolved.jumpAlias, "rhine-profile:" + inner.id);
+  assert.match(profiles.entries().hosts.find((host) => host.profile.id === target.id).raw, /^ProxyJump corp-gw → 外层 → 内层$/m);
+  // A temporary connection may go through a saved jump host too.
+  const quick = profiles.resolve({ target: "admin@quick.example", jumpHostId: outer.id, connectTimeout: 9 });
+  assert.equal(quick.launch.jumpHost, "corp-gw,o@outer.example:2201");
+  assert.equal(quick.hops.length, 1);
+  // A free-form jump host naming a saved one is that saved host.
+  const named = save({ name: "按名称", hostname: "named.example", jumpHost: "外层" });
+  assert.equal(profiles.resolve({ target: "rhine-profile:" + named.id }).launch.jumpHost, "corp-gw,o@outer.example:2201");
+  const addressed = save({ name: "按地址", hostname: "addressed.example", jumpHost: "o@outer.example:2201" });
+  assert.equal(profiles.resolve({ target: "rhine-profile:" + addressed.id }).hops[0].label, "外层");
+});
+
+test("the jump host next to the destination brings its own key through a ProxyCommand", (t) => {
+  const { directory } = fixture(t);
+  const { HostProfiles } = require("../../electron/host-profiles.cjs");
+  const { buildSshArgs, resolveSshPath } = require("../../electron/ssh-args.cjs");
+  const profiles = new HostProfiles(path.join(directory, "ssh-hosts.json"));
+  const save = (profile) => profiles.save(profile, profiles.read().revision).profile;
+  const outer = save({ name: "外层", hostname: "outer.example", user: "o" });
+  const keyed = save({ name: "带钥", hostname: "keyed.example", user: "k", port: 2202, authMode: "key", identityFile: "C:/keys 100%/hop key", jumpHostId: outer.id });
+  const target = save({ name: "目标", hostname: "node.example", user: "operator", authMode: "password", jumpHostId: keyed.id });
+  const resolved = profiles.resolve({ target: "rhine-profile:" + target.id });
+  assert.deepEqual(resolved.hops.map((hop) => [hop.label, hop.proxy ?? false, hop.launch.identityFile]),
+    [["外层", false, undefined], ["带钥", true, "C:/keys 100%/hop key"]]);
+  const args = buildSshArgs(resolved.launch, { config: "C:/cfg/ssh config" });
+  assert(!args.includes("-J"));
+  assert.equal(args.find((value) => value.startsWith("ProxyCommand=")),
+    `ProxyCommand="${resolveSshPath()}" -F "C:/cfg/ssh config" -v -i "C:/keys 100%%/hop key" -o IdentitiesOnly=yes -l k -p 2202 -J o@outer.example -W [%h]:%p keyed.example`);
+  // A vault key waits for the session's lease; until then the hop still goes through -J.
+  const vaultKeyed = save({ ...keyed, identityFile: undefined, keyId: "657ac171-2345-4321-abcd-12abcdef7890" });
+  const leased = profiles.resolve({ target: "rhine-profile:" + target.id });
+  assert.equal(vaultKeyed.keyId, leased.launch.proxyHop.keyId);
+  const unleased = buildSshArgs(leased.launch);
+  assert(!unleased.some((value) => value.startsWith("ProxyCommand=")));
+  assert.equal(unleased[unleased.indexOf("-J") + 1], "o@outer.example,k@keyed.example:2202");
+  assert.equal(leased.hops[1].launch.keyId, vaultKeyed.keyId);
+  // A password hop never runs as a ProxyCommand, whatever its key file.
+  save({ ...vaultKeyed, keyId: undefined, identityFile: "C:/keys/unused", authMode: "password" });
+  assert.equal(profiles.resolve({ target: "rhine-profile:" + target.id }).launch.proxyHop, undefined);
+});
+
+test("jump chains refuse loops, a fourth hop, missing hosts and removing a host in use", (t) => {
+  const { directory } = fixture(t);
+  const { HostProfiles } = require("../../electron/host-profiles.cjs");
+  const file = path.join(directory, "ssh-hosts.json");
+  const profiles = new HostProfiles(file);
+  const save = (profile) => profiles.save(profile, profiles.read().revision).profile;
+  const a = save({ name: "A", hostname: "a.example" });
+  const b = save({ name: "B", hostname: "b.example", jumpHostId: a.id });
+  assert.throws(() => save({ ...a, jumpHostId: b.id }), /循环/);
+  assert.throws(() => save({ ...a, jumpHostId: a.id }), /自己/);
+  const c = save({ name: "C", hostname: "c.example", jumpHostId: b.id });
+  const d = save({ name: "D", hostname: "d.example", jumpHostId: c.id });
+  assert.equal(profiles.resolve({ target: "rhine-profile:" + d.id }).hops.length, 3);
+  assert.throws(() => save({ name: "E", hostname: "e.example", jumpHostId: d.id }), /超过 3 跳/);
+  assert.throws(() => profiles.remove(a.id, profiles.read().revision), /「B」经由这台主机跳转/);
+  // A reference broken outside the app is reported when connecting.
+  const data = JSON.parse(fs.readFileSync(file, "utf8"));
+  data.profiles = data.profiles.filter((profile) => profile.id !== a.id);
+  fs.writeFileSync(file, JSON.stringify(data));
+  const broken = profiles.resolve({ target: "rhine-profile:" + b.id });
+  assert.equal(broken.ok, false);
+  assert.match(broken.error, /「B」的跳板机已不在主机档案中/);
+});

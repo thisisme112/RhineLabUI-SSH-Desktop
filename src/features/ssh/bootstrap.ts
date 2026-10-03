@@ -592,8 +592,8 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
         if (auxiliaryKey !== handledPrompt) {
           handledPrompt = auxiliaryKey;
           auxiliaryRequest = { id: auxiliary.id, sessionId: services.sessionId };
-          const shared = { requestId: auxiliaryKey, source: auxiliary.source, canRemember: auxiliary.canRemember };
-          if (auxiliary.kind === "hostkey") showPrompt({ ...shared, kind: "hostkey", host: client.displayTarget || client.target || "", keyType: "", fingerprint: auxiliary.fingerprint, raw: auxiliary.diagnostics + "\n" + auxiliary.prompt });
+          const shared = { requestId: auxiliaryKey, source: auxiliary.source, canRemember: auxiliary.canRemember, asking: auxiliary.asking, jump: auxiliary.jump };
+          if (auxiliary.kind === "hostkey") showPrompt({ ...shared, kind: "hostkey", host: auxiliary.asking || client.displayTarget || client.target || "", keyType: "", fingerprint: auxiliary.fingerprint, raw: auxiliary.diagnostics + "\n" + auxiliary.prompt });
           else if (auxiliary.kind === "password") showPrompt({ ...shared, kind: "password", host: client.displayTarget || client.target || "", prompt: auxiliary.prompt });
           else if (auxiliary.kind === "passphrase") showPrompt({ ...shared, kind: "passphrase", key: auxiliary.prompt.match(/['\"]([^'\"]+)['\"]/)?.[1] || "SSH 私钥", prompt: auxiliary.prompt });
           else showPrompt({ ...shared, kind: "verification-code", prompt: auxiliary.prompt });
@@ -610,7 +610,9 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
           showPrompt({
             kind: "hostkey",
             requestId: pending.id,
-            host: status.facts.host?.value ?? pending.host,
+            // A jump host's key is asked about before the destination is reached.
+            host: (pending.jump && pending.asking) || (status.facts.host?.value ?? pending.host),
+            jump: pending.jump,
             keyType: status.facts.hostKeyType?.value ?? "",
             fingerprint,
             raw: client.rawLog.slice(-6).join("\n"),
@@ -618,12 +620,13 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
         }
       } else if (pending && key !== handledPrompt) {
         handledPrompt = key;
+        const asking = { asking: pending.asking, jump: pending.jump };
         if (pending.kind === "password") {
-          showPrompt({ kind: "password", host: pending.host, prompt: pending.prompt, requestId: pending.id, canRemember: pending.canRemember });
+          showPrompt({ kind: "password", host: pending.host, prompt: pending.prompt, requestId: pending.id, canRemember: pending.canRemember, ...asking });
         } else if (pending.kind === "passphrase") {
-          showPrompt({ kind: "passphrase", key: pending.key, prompt: pending.prompt, requestId: pending.id, canRemember: pending.canRemember });
+          showPrompt({ kind: "passphrase", key: pending.key, prompt: pending.prompt, requestId: pending.id, canRemember: pending.canRemember, ...asking });
         } else {
-          showPrompt({ kind: "verification-code", prompt: pending.prompt, requestId: pending.id });
+          showPrompt({ kind: "verification-code", prompt: pending.prompt, requestId: pending.id, ...asking });
         }
       }
       // Failures get their own surface, with the raw lines that prove them.

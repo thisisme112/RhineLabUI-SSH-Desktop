@@ -42,6 +42,7 @@
   content: "→"; flex: none; width: 41px; height: 41px; display: grid; place-items: center; background: var(--signal); color: var(--on-signal); font-size: 20px;
 }
 #viewport[data-design="label"] .ssh-host-editor :is(.ssh-host-editor-note, .ssh-credential-state, .ssh-host-credential small) { color: rgba(var(--theme-ink-rgb), .62); }
+#viewport[data-design="label"] .ssh-host-editor .ssh-host-jump small { color: rgba(var(--theme-ink-rgb), .62); font-size: 12px; font-weight: 400; letter-spacing: 0; }
 
 /* 03 会话记录: a table, one ruled row per session. */
 #viewport[data-design="label"] .host-sessions { margin: 10px 0 0; padding: 0; list-style: none; border-top: 2px solid var(--ink); }

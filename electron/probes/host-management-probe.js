@@ -17,7 +17,11 @@ window.__hostManagementProbe = (() => {
     node.click();
   };
   const change = (node, value) => { node.value = String(value); node.dispatchEvent(new Event("input", { bubbles: true })); };
-  const fill = values => { for (const [name, value] of Object.entries(values)) change(field(name), value); };
+  const fill = values => {
+    // A typed jump host is the editor's 其他地址 choice.
+    if ("jumpHost" in values) { field("jumpHostId").value = "custom"; field("jumpHostId").dispatchEvent(new Event("change", { bubbles: true })); }
+    for (const [name, value] of Object.entries(values)) change(field(name), value);
+  };
   const rows = () => [...document.querySelectorAll(".ssh-hosts-row")];
   const text = () => q(".ssh-terminal .xterm-rows")?.textContent || "";
   const detailReady = async () => {
@@ -104,6 +108,9 @@ window.__hostManagementProbe = (() => {
     },
     async staleEditor() {
       await edit(alias);
+      checks["the jump host choice keeps the typed address and never offers the host itself"] =
+        field("jumpHostId").value === "custom" && field("jumpHost").value === "jump@bastion:2200" && !field("jumpHost").hidden &&
+        ![...field("jumpHostId").options].some(option => option.value === saved.id);
       const input = field("name");
       fill({ name: "尚未保存的本地修改" });
       const revision = (await bridge.hosts()).revision;
@@ -123,7 +130,8 @@ window.__hostManagementProbe = (() => {
       saved = (await bridge.hosts()).hosts.find(host => host.alias === alias).profile;
       argv = client.buildRecord().argv;
       checks["save and connect preserves the card through rename"] = saved.name === firstRename && ui.cardOf(alias) === card && client.target === alias;
-      checks["saved profile launches all selected options"] = argv[1].endsWith("fake-ssh.mjs") && JSON.stringify(argv.slice(2)) === JSON.stringify(["-v", "-l", "operator", "-p", "2222", "-i", "C:/keys with spaces/开发.pem", "-J", "jump@bastion:2200", "-o", "ConnectTimeout=12", "-o", "ServerAliveInterval=0", "-o", "ServerAliveCountMax=5", "labnode"]);
+      // Through a jump host ConnectTimeout would also run while the jump host asks its questions.
+      checks["saved profile launches all selected options"] = argv[1].endsWith("fake-ssh.mjs") && JSON.stringify(argv.slice(2)) === JSON.stringify(["-v", "-l", "operator", "-p", "2222", "-i", "C:/keys with spaces/开发.pem", "-J", "jump@bastion:2200", "-o", "ServerAliveInterval=0", "-o", "ServerAliveCountMax=5", "labnode"]);
       checks["saved profile opens the packaged 3D terminal"] = q(".ssh-terminal").dataset.presentation === "deck" && window.rhine.stats().sessionDeck?.ready;
       checks["terminal uses the friendly host name"] = q(".ssh-terminal-target").textContent === firstRename && client.displayTarget === firstRename;
       checks["terminal paints actual authentication and PTY output"] = text().includes("debug1:") && text().includes("operator@labnode");
@@ -199,7 +207,7 @@ window.__hostManagementProbe = (() => {
       await terminalOpen(); quickArgv = client.buildRecord().argv;
       checks["native Enter starts an unsaved temporary connection"] = client.target === "quicknode" && !(await bridge.hosts()).hosts.some(host => host.source === "saved");
       checks["temporary connection uses its display name"] = client.displayTarget === "临时维护" && q(".ssh-terminal-target").textContent === "临时维护";
-      checks["temporary connection applies all supplied parameters"] = quickArgv[1].endsWith("fake-ssh.mjs") && JSON.stringify(quickArgv.slice(2)) === JSON.stringify(["-v", "-l", "admin", "-p", "2244", "-i", "C:/keys with spaces/临时.pem", "-J", "relay:2201", "-o", "ConnectTimeout=15", "-o", "ServerAliveInterval=20", "-o", "ServerAliveCountMax=4", "quicknode"]);
+      checks["temporary connection applies all supplied parameters"] = quickArgv[1].endsWith("fake-ssh.mjs") && JSON.stringify(quickArgv.slice(2)) === JSON.stringify(["-v", "-l", "admin", "-p", "2244", "-i", "C:/keys with spaces/临时.pem", "-J", "relay:2201", "-o", "ServerAliveInterval=20", "-o", "ServerAliveCountMax=4", "quicknode"]);
       checks["temporary connection has an operable terminal"] = ui.hasFocus;
     },
     async quickReconnect() {

@@ -44,8 +44,6 @@ const endpoint = (host: { hostname: string; user?: string; port?: number }) =>
     host.user || "",
     host.port || 22,
   ]);
-const remoteAddress = (h: PortableHost) =>
-  `${h.user}@${h.hostname.includes(":") ? `[${h.hostname}]` : h.hostname}:${h.port}`;
 const number = (n: unknown, min: number, max: number) =>
   Number.isInteger(n) && Number(n) >= min && Number(n) <= max;
 
@@ -375,24 +373,15 @@ export async function importWorkspaceBackup(
       const authMode = authModeFor(host);
       if (authMode === "key" && !keyId)
         throw new Error(`${host.name} 的私钥未包含在备份中，请先导入对应私钥`);
-      let jumpHost: string | undefined;
-      if (host.jump) {
-        if (bridge.platform === "android") jumpHost = hostMap[host.jump];
-        else {
-          const chain: PortableHost[] = [];
-          let next = backup.hosts.find((h) => h.alias === host.jump);
-          while (next) {
-            chain.unshift(next);
-            next = backup.hosts.find((h) => h.alias === next!.jump);
-          }
-          jumpHost = chain.map(remoteAddress).join(",");
-        }
-      }
+      // Jump hosts are imported first (orderedHosts) and referenced by id, so
+      // each keeps its own key and secret on both platforms.
+      const jumpHostId = host.jump ? hostMap[host.jump]?.replace(/^rhine-profile:/, "") : undefined;
+      if (host.jump && !jumpHostId) throw new Error(`${host.name} 的跳板机未能导入`);
       const existing = local.hosts.find(
         (e) =>
           e.source === "saved" &&
           endpoint(e.profile!) === endpoint(host) &&
-          (e.profile?.jumpHost || "") === (jumpHost || "") &&
+          (e.profile?.jumpHostId || "") === (jumpHostId || "") &&
           (e.profile?.authMode || "auto") === (authMode || "auto") &&
           (!keyId || e.profile?.keyId === keyId),
       );
@@ -409,7 +398,7 @@ export async function importWorkspaceBackup(
         port: host.port,
         authMode,
         keyId: keyId || undefined,
-        jumpHost,
+        jumpHostId,
         connectTimeout: host.connectTimeout,
         keepAliveInterval: host.keepAliveInterval,
         keepAliveCountMax: host.keepAliveCountMax,

@@ -40,9 +40,9 @@ function registerSessionIpc() {
     },
     command: (launch, logPath) => {
       const { file, prefixArgs } = runtimeContext.resolveSshCommand();
-      return { file, args: [...prefixArgs,
-        ...(((!runtimeContext.SESSION_SMOKE && !runtimeContext.SMOKE) || runtimeContext.CREDENTIAL_SMOKE) && process.env.RHINE_SSH_CONFIG ? ["-F", process.env.RHINE_SSH_CONFIG] : []),
-        ...runtimeContext.buildSshArgs({ ...launch, logPath })] };
+      const config = ((!runtimeContext.SESSION_SMOKE && !runtimeContext.SMOKE) || runtimeContext.CREDENTIAL_SMOKE) && process.env.RHINE_SSH_CONFIG || undefined;
+      return { file, args: [...prefixArgs, ...(config ? ["-F", config] : []),
+        ...runtimeContext.buildSshArgs({ ...launch, logPath }, { config })] };
     },
   });
   // Exercise the real IPC/preload in smoke runs without touching the user's
