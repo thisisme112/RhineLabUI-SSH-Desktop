@@ -22,6 +22,9 @@
   z-index: 25;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  /* One column of the surface's own width. Left to `auto` it grows to its widest band: the phone's key bar is
+     901 px of keys that scroll sideways, and a 360 px terminal was laid out 901 px wide, its right side off screen. */
+  grid-template-columns: minmax(0, 1fr);
   background: var(--terminal-bg);
   color: var(--terminal-fg);
   font-family: MiSans, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;

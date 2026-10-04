@@ -18,7 +18,8 @@
 #viewport[data-design="label-phone"] {
   --label-top: 48px;
   --label-head: calc(var(--label-top) + env(safe-area-inset-top, 0px));
-  --label-edge: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  /* --cutout-*: the camera cutout as the Android shell reports it (MainActivity), for a WebView whose env() stays 0. */
+  --label-edge: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px), var(--cutout-left, 0px), var(--cutout-right, 0px));
   --label-low: env(safe-area-inset-bottom, 0px);
   --label-foot: calc(104px + var(--label-low));
   --label-field: 232px;
@@ -284,6 +285,36 @@
 #viewport[data-design="label-phone"] .ssh-terminal-target { font-size: 13px; }
 #viewport[data-design="label-phone"] .ssh-terminal-close { height: 32px; min-height: 32px; padding: 0 10px 0 14px; font-size: 12px; clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px); }
 #viewport[data-design="label-phone"] .ssh-metric-value { font-size: 44px; }
+/* The bands round the terminal are kept thin: on a phone they were 246 px of an 800 px screen, and 206 px of 360
+   on its side (nine rows of terminal). The bar is one line (the session's state is on its tab below, and the way
+   back says only 收起), a session's tab is one line, and on its side the pages sit in the bar and the keys share
+   a line with the status. */
+#viewport[data-design="label-phone"] .has-workspace .ssh-terminal-bar { flex-wrap: wrap; gap: 0 8px; min-height: 0; padding: 4px 8px; }
+#viewport[data-design="label-phone"] .has-workspace .ssh-terminal-target { flex: 1; max-width: none; }
+#viewport[data-design="label-phone"]:not([data-fit="compact"]) .ssh-terminal-phase { display: none; }
+#viewport[data-design="label-phone"] .ssh-terminal :is(.ssh-terminal-settings, .ssh-terminal-search-all) { min-height: 32px; padding: 4px 6px; font-size: 12px; }
+#viewport[data-design="label-phone"] .ssh-terminal .ssh-terminal-close { margin-left: 0; font-size: 0; }
+#viewport[data-design="label-phone"] .ssh-terminal .ssh-terminal-close::before { content: "收起"; font-size: 12px; }
+#viewport[data-design="label-phone"] .ssh-workspace-tabs { justify-content: center; min-height: 0; }
+#viewport[data-design="label-phone"] .ssh-session-navigation { min-height: 0; }
+#viewport[data-design="label-phone"] .ssh-session-tab [role="tab"] { grid-template-columns: 5px minmax(40px, auto) auto; padding: 7px 4px 7px 10px; }
+#viewport[data-design="label-phone"] .ssh-session-tab small { grid-column: 3; font-size: 11px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .has-workspace .ssh-terminal-bar { flex-wrap: nowrap; padding-block: 2px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .has-workspace .ssh-terminal-target { flex: 0 1 auto; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-phase { font-size: 11px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-workspace-tabs { order: 0; flex: none; width: auto; margin-left: auto; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-workspace-tabs button { min-height: 28px; padding-block: 2px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal .ssh-terminal-close { height: 28px; min-height: 28px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal :is(.ssh-terminal-settings, .ssh-terminal-search-all) { min-height: 28px; padding-block: 2px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-session-tab [role="tab"] { padding-block: 4px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-foot { display: flex; flex-wrap: wrap; align-items: stretch; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-foot > * { flex: 0 0 100%; box-sizing: border-box; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-foot > .ssh-mobile-selection { order: 1; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-foot > .ssh-terminal-tools { order: 2; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-foot > .ssh-mobile-keys { order: 3; flex: 1 1 0; min-width: 0; border-bottom: 0; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-foot > .ssh-mobile-keys button { min-height: 34px; }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-foot > .ssh-terminal-status { order: 4; flex: none; min-height: 0; border-left: 1px solid var(--terminal-line); }
+#viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal[data-workspace-page="terminal"] .ssh-terminal-stat:not(.ssh-terminal-exit) { display: none; }
 
 /* ── Dialogs: the settings sheet and the archive index fill the screen ─────────
    (the modal root is beside the stage, so the classic sheet keeps a desk's margins and padding here) */
