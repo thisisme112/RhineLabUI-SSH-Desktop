@@ -207,8 +207,11 @@ export class SshOverview {
       this.focusAlias = row.dataset.hostAlias!;
       // The row answers the hand at once; its archive follows once the pointer has stayed 60 ms
       // (the Unreal build's TickHomeChrome), so a sweep across the list does not drag the array along.
+      // The row stays the focused one until its archive is the raised one. The wait is long on purpose: it used to
+      // be half a second, shorter than the archive took to follow, and the reverse print went back to the row the
+      // hand had left and then came again. It only runs out when no archive follows at all (a dialog is up).
       this.pendingFocus = this.focusAlias;
-      this.pendingUntil = performance.now() + 500;
+      this.pendingUntil = performance.now() + 2000;
       this.setFocus(this.focused);
       clearTimeout(this.timer);
       this.timer = window.setTimeout(() => {
@@ -348,7 +351,7 @@ export class SshOverview {
     )?.focus({ preventScroll: true });
   }
   private focused = "";
-  /** The row the pointer has just reached, shown as focused until its archive is the raised one (or half a second). */
+  /** The row the pointer has just reached, shown as focused until its archive is the raised one (or two seconds, when none follows). */
   private pendingFocus = "";
   private pendingUntil = 0;
   /** The host whose archive stands raised: the label design prints its row in reverse. */
