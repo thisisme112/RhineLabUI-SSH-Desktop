@@ -83,14 +83,16 @@ export async function checkOverviewPerformance({
   await sleep(1600);
   await evaluate(`window.__previewSelections=[];window.__previewCheck=setInterval(()=>__previewSelections.push(rhine.stats().selectedIndex),16);
     document.querySelector('.ssh-overview-host[data-host-alias="perf-255"]').dispatchEvent(new PointerEvent('pointerover',{bubbles:true}))`);
-  await sleep(260);
+  // Under the 60 ms a row waits before its archive follows: a hand that only passes a row selects nothing.
+  // (A hand that rests on it does select it, at once: scripts/check/check-overview-hover.mjs.)
+  await sleep(30);
   await evaluate(
     `document.querySelector('.ssh-overview-host[data-host-alias="perf-0"]').dispatchEvent(new PointerEvent('pointerover',{bubbles:true}))`,
   );
   await sleep(1300);
   await evaluate(`clearInterval(__previewCheck)`);
   await check(
-    "returning hover to the starting host interrupts the old preview without intermediate selections",
+    "a hand that passes a row and returns to the starting host selects nothing on the way",
     `__previewSelections.length>10 && __previewSelections.every(index=>index===__perfCards[0]) && rhine.stats().selectedIndex===__perfCards[0] && rhineSshUi.sessions.length===0`,
   );
 }

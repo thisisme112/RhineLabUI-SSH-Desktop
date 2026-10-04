@@ -31,6 +31,7 @@
     "check:ssh-deck-teardown": "node scripts/lib/run-check.mjs check:ssh-deck-teardown",
     "check:ssh-overview-collapse": "node scripts/lib/run-check.mjs check:ssh-overview-collapse",
     "check:ssh-overview-actions": "node scripts/lib/run-check.mjs check:ssh-overview-actions",
+    "check:ssh-overview-hover": "node scripts/lib/run-check.mjs check:ssh-overview-hover",
     "check:ssh-terminal-deck": "node scripts/lib/run-check.mjs check:ssh-terminal-deck",
     "check:ssh-session-agent": "node scripts/lib/run-check.mjs check:ssh-session-agent",
     "check:android-ssh-driver": "node scripts/lib/run-check.mjs check:android-ssh-driver",

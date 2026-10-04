@@ -18,6 +18,7 @@
   "check:ssh-deck-teardown": "node scripts/check/check-deck-teardown.mjs",
   "check:ssh-overview-collapse": "node scripts/check/check-overview-collapse.mjs",
   "check:ssh-overview-actions": "node scripts/check/check-overview-actions.mjs",
+  "check:ssh-overview-hover": "node scripts/check/check-overview-hover.mjs",
   "check:ssh-terminal-deck": "node scripts/check/check-terminal-deck.mjs --out .artifacts/checks/terminal-deck",
   "check:ssh-session-agent": "node --experimental-strip-types scripts/check/check-ssh-session-agent.mjs",
   "check:android-ssh-driver": "node --experimental-strip-types scripts/check/check-android-ssh-driver.mjs",
