@@ -17,9 +17,9 @@ import { motifOf } from "../features/theme/theme-design";
  *     stops, the stretch swings back through a slight squash before the card
  *     rounds off (an under-damped spring on the stretch alone: the place itself
  *     never overshoots);
- *   - its title is larger than the rows it explains, the detail the row's own
- *     size (any larger and the card hides the list round it), and it sits on a
- *     large soft shadow.
+ *   - it is a note on the row, not a panel over the list: its title one size over
+ *     the row, the detail one under (larger, it hid the list round it), and it
+ *     sits on a large soft shadow.
  *
  * Both springs take their exact step over the frame's time, so a slow frame
  * cannot throw the card. Each motif still dresses it its own way (hover-card.css).
