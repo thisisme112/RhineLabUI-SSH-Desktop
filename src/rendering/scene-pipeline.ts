@@ -113,6 +113,46 @@ const PosterShader = {
     }`,
 };
 
+/** A rectangle of the frame in the canvas's CSS pixels, y down. */
+export type SceneWindow = { x: number; y: number; width: number; height: number };
+
+/**
+ * Keeps every pass to one rectangle of the frame, or gives them all of it back (`null`).
+ *
+ * Behind the label overview the scene shows through the shelf's window, a quarter of the frame;
+ * the sheets round it are opaque. Shading, ambient occlusion, depth of field and anti-aliasing all
+ * cost by the pixel, and with a hand moving down the host list the full frame kept the GPU at 85%
+ * for a strip (2026-10-04). A scissor is all it takes: no buffer changes size and no projection
+ * changes, so switching it costs nothing and every pixel stays where it was. Each target has its
+ * own scissor (three resets it with the target's size, so it is set again every frame), in its own
+ * pixels, with GL's origin at the lower left. The capture three makes for transmission is its own
+ * and stays whole.
+ */
+export function applySceneWindow(
+  renderer: THREE.WebGLRenderer,
+  composer: EffectComposer,
+  passes: { ao: SSAOPass; bokeh: BokehPass; smaa: SMAAPass; far: { target: THREE.WebGLRenderTarget } },
+  rect: SceneWindow | null,
+  width: number,
+  height: number,
+) {
+  const inner = (pass: object, key: string) => (pass as Record<string, THREE.WebGLRenderTarget | undefined>)[key];
+  const targets = [
+    composer.renderTarget1, composer.renderTarget2, passes.far.target,
+    passes.ao.normalRenderTarget, passes.ao.ssaoRenderTarget, passes.ao.blurRenderTarget,
+    inner(passes.bokeh, "_renderTargetDepth"), inner(passes.smaa, "_edgesRT"), inner(passes.smaa, "_weightsRT"),
+  ];
+  for (const target of targets) {
+    if (!target) continue;
+    target.scissorTest = Boolean(rect);
+    if (!rect) continue;
+    const sx = target.width / Math.max(1, width), sy = target.height / Math.max(1, height);
+    target.scissor.set(Math.floor(rect.x * sx), Math.floor((height - rect.y - rect.height) * sy), Math.ceil(rect.width * sx), Math.ceil(rect.height * sy));
+  }
+  renderer.setScissorTest(Boolean(rect));
+  if (rect) renderer.setScissor(rect.x, height - rect.y - rect.height, rect.width, rect.height);
+}
+
 export function createScenePipeline(
   renderer: THREE.WebGLRenderer,
   scene: THREE.Scene,

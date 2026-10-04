@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeTree } from "../../rendering/three-resources";
+import { textureContext } from "../../shared/texture-canvas";
 import type { SshClient } from "./client";
 import type { SshTerminalPanel } from "./terminal";
 import { paintTerminalBuffer, TERMINAL_FONT } from "./terminal-screen";
@@ -51,6 +52,8 @@ export class TerminalDeck {
   private disposed = false;
   private preview: { key: string; title: string; lines: string[] } | null = null;
   private lastPaint = -Infinity;
+  /** The content a fresh card's screen is waiting one frame to paint (update). */
+  private heldKey = "";
   private backlight = -1;
   private failedLight = false;
   private lightRevision = 0;
@@ -102,7 +105,7 @@ export class TerminalDeck {
     this.canvas.height = Math.round(
       (this.canvas.width * this.screenSize.height) / this.screenSize.width,
     );
-    this.ctx = this.canvas.getContext("2d")!;
+    this.ctx = textureContext(this.canvas);
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
     // Match the Blender-exported glTF UV orientation for the live canvas.
@@ -192,7 +195,7 @@ export class TerminalDeck {
       if (source.map?.image instanceof HTMLCanvasElement) {
         const canvas = document.createElement("canvas");
         canvas.width = source.map.image.width; canvas.height = source.map.image.height;
-        canvas.getContext("2d")!.drawImage(source.map.image, 0, 0);
+        textureContext(canvas).drawImage(source.map.image, 0, 0);
         // Texture.clone() shares its Source; replacing image there would freeze
         // the live deck as well. Every returning canvas needs its own Source.
         const texture = new THREE.CanvasTexture(canvas);
@@ -254,6 +257,10 @@ export class TerminalDeck {
     // has reached, so a new milestone — not a new log line — is what repaints.
     const key = `${this.host}:${this.preview?.key}:${this.client.generation}:${phase}:${status?.timeline.length ?? 0}:${own ? (this.client.pendingPrompt?.id ?? "") : ""}:${own ? this.terminal.screenRevision : 0}:${this.terminal.screenTheme.background}:${Math.round(opening * 100)}:${own && phase === "interactive" && !reduced ? Math.floor(time * 1.6) : 0}`;
     if (key === this.painted || time - this.lastPaint < 1 / 15) return;
+    // A screen that has just been handed another card is painted one frame later: the frame of a selection already
+    // draws and uploads the card's printed label, and a second canvas in that frame was half of a 50 ms stall.
+    if (this.painted === "" && this.heldKey !== key) { this.heldKey = key; return; }
+    this.heldKey = "";
     this.lastPaint = time;
     this.painted = key;
     this.paint(time, reduced, own);

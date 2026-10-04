@@ -1531,7 +1531,7 @@ if (frameBudget) {
 }
 // The far-layer poster (theme-poster.ts): the theme's flat graphic behind the archive and its detail page.
 const posterCanvas = desktopShell ? $<HTMLCanvasElement>("#theme-poster") : undefined;
-const poster = posterCanvas ? new ThemePoster(posterCanvas) : undefined;
+const poster = posterCanvas ? new ThemePoster(posterCanvas, !isPhone) : undefined;
 function updatePoster(time: number) {
   if (!poster || !posterCanvas) return;
   // Where the scene does not composite it (a phone draws straight to the canvas), the page's canvas lies over
@@ -1560,6 +1560,8 @@ function posterState(time: number): PosterState {
     group: archiveColumns[lane],
     time,
     reduced: prefs.reduced,
+    // Behind the host overview the figure just changes: the hand goes from row to row there.
+    swap: labelPage() === "overview",
   };
 }
 /** Whether the label design is on screen: its preference, a desktop layout, and not during the opening film. */
@@ -1572,6 +1574,8 @@ function labelPocket() {
   return Boolean(labelSheet) && prefs.design !== "classic" && ready && mode !== "boot" && (layout === "portrait" || layout === "compact");
 }
 let labelShown = false, labelMarksAt = 0, labelTurnPage: LabelPage | "" = "", labelTurnTab = "";
+/** The label page that is up, and since when it has been at rest (no page turn, no operating view): updateLabel. */
+let labelRestPage: LabelPage | "" = "", labelRestSince = 0;
 /** The document tabs as the page turn names them (MakeLabelWipe TabNames). */
 const TAB_NAMES: Record<string, string> = { overview: "OVERVIEW / 概述", config: "CONNECTION / 连接配置", notes: "SESSIONS / 会话记录", history: "EVENT LOG / 事件日志" };
 /**
@@ -1634,22 +1638,30 @@ function updateLabel(time: number) {
   const page = labelPage();
   const inset = windowControlsHeight() / stageScale;
   scene?.setLabelLayout(active ? page === "overview" ? "shelf" : page === "archive" ? "home" : "" : "", inset);
-  if (!active && !pocket) { labelShown = false; labelTurnPage = ""; return; }
-  if (!labelShown) { labelShown = true; labelSheet.arrive(time); }
+  if (!active && !pocket) { labelShown = false; labelTurnPage = ""; scene?.setLabelWindowed(false); return; }
+  if (!labelShown) { labelShown = true; labelSheet.arrive(time); labelRestSince = time + 3; }
   // The operating terminal is the workspace's own page: the sheet steps aside while it is up.
-  setData(labelSheet.root, "covered", String((scene?.sessionDeckFocus ?? 0) > .05 || Boolean(sshTerminal?.isOpen) || sshTerminalPending));
+  const covered = (scene?.sessionDeckFocus ?? 0) > .05 || Boolean(sshTerminal?.isOpen) || sshTerminalPending;
+  setData(labelSheet.root, "covered", String(covered));
   const session = sshBank?.active;
   if (session?.client.target) {
     const card = hostCards?.resourceCard("session", session.key);
     const serial = (card !== undefined ? records[card]?.id : undefined) ?? "S-000";
     session.panel.setLabel(serial.replace("-", "—"), hostMark(session.descriptor?.target ?? session.client.target));
   }
+  let turning = false;
   if (active) {
     const turn = labelTurn(page, inset);
     if (turn) labelWipe?.begin(turn, time);
     // A turning page runs at the full rate.
-    if (labelWipe?.draw(time, stageScale, labelSheet.hullPoints)) frameBudget?.busy(time * 1000, 300);
+    turning = Boolean(labelWipe?.draw(time, stageScale, labelSheet.hullPoints));
+    if (turning) frameBudget?.busy(time * 1000, 300);
   } else labelTurnPage = "";
+  // The scene is drawn in the shelf's window alone once the overview has been in place, unturned, for a second
+  // (its sheets are opaque by then, and three seconds after the label first arrives); any change of page, a page
+  // turn or the operating view gives the scene the whole frame back at once (scene.ts sceneWindow).
+  if (page !== labelRestPage || turning || covered) { labelRestPage = page; labelRestSince = Math.max(labelRestSince, time); }
+  scene?.setLabelWindowed(active && page === "overview" && !covered && time - labelRestSince > 1);
   // Once a second: a session that has verified its host's key gives that host its mark.
   if (time - labelMarksAt > 1) {
     labelMarksAt = time;

@@ -1,4 +1,5 @@
-import { createScenePipeline } from "./scene-pipeline";
+import { createScenePipeline, applySceneWindow, type SceneWindow } from "./scene-pipeline";
+import { TOP as LABEL_TOP } from "../features/label/label-kit";
 import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
 type ScenePipeline = ReturnType<typeof createScenePipeline>;
 import * as THREE from "three";
@@ -11,6 +12,8 @@ const NO_FLIP: FlipSample = { lift: 0, tilt: 0, flash: 0, swap: 0 };
 const PICTURE_EPSILON = 1e-5;
 /** ?always-draw turns the settled-frame skip off, to compare against or rule it out. */
 const ALWAYS_DRAW = typeof location !== "undefined" && new URLSearchParams(location.search).has("always-draw");
+/** ?no-scene-window draws the whole frame behind the overview too, to compare against or rule the window out. */
+const NO_SCENE_WINDOW = typeof location !== "undefined" && new URLSearchParams(location.search).has("no-scene-window");
 /** How far the label sheet moves the array on the stage, right and down (Unreal LabelShift). */
 const LABEL_SHIFT = { x: 640, y: 30 };
 /** The overview's shelf: how much farther the camera stands, and where the raised archive's middle sits
@@ -25,6 +28,7 @@ import { normalizeQuality, type RenderQuality } from "./render-quality";
 import { applyTextureQuality, resizeQuality } from "./quality-renderer";
 import { CardAppearance } from "./appearance";
 import { configureInternalOptics } from "./internal-optics";
+import { textureContext } from "../shared/texture-canvas";
 import { DecryptionController } from "../features/archives/decryption";
 import { archiveColumns, rebaseArchiveRows, resetArchiveRows, fileLocation, records } from "../features/archives/data";
 import {
@@ -392,7 +396,7 @@ export class ArchiveScene {
   /** Frames actually drawn; a settled frame keeps the previous picture instead (showsPicture). */
   private composedFrames = 0;
   /** The inputs and card matrices of the last drawn frame. */
-  private picture = new Float64Array(32);
+  private picture = new Float64Array(34);
   private drawnMatrices = new Float32Array(0);
   private pictureValid = false;
   private archivePreview?: { index: number; cell: ArchiveCell; started: number; x: number; z: number; vx: number; vz: number; targetX: number; targetZ: number };
@@ -404,6 +408,10 @@ export class ArchiveScene {
       lane: Math.round(this.columnCamera.value / COLUMN_SPACING + 2),
       row: Math.round((-this.rail.value - 2.17) / ROW_SPACING + 15.5),
     });
+    // The label overview's shelf answers a hovered row at once, as the Unreal build does (FocusHost): the archive is
+    // selected now and rises while the rail brings it over. Travelling first and selecting .75 s later left the old
+    // archive standing for most of a second after the hand had moved on.
+    if (this.labelLayout === "shelf") { this.archivePreview = undefined; this.onPreviewCommit?.(index, cell); return; }
     const target = this.cellPosition(cell);
     this.archivePreview = { index, cell, started: this.clock, x: this.columnCamera.value, z: this.rail.value,
       vx: this.columnCamera.velocity, vz: this.rail.velocity, targetX: target.x, targetZ: -2.17 - target.z };
@@ -438,6 +446,26 @@ export class ArchiveScene {
     this.labelLayout = layout;
     this.labelInset = inset;
     this.restLift = layout === "home" ? 1.12 : layout === "shelf" ? 1.9 : .4;
+  }
+  /**
+   * The overview's sheets are in place and opaque (application.ts updateLabel says when): the scene can then
+   * be drawn in the shelf's window alone (scene-pipeline.ts applySceneWindow).
+   */
+  private labelWindowed = false;
+  setLabelWindowed(on: boolean) { this.labelWindowed = on; }
+  /**
+   * What the overview leaves of the scene, in the canvas's CSS pixels: the shelf's window (label-sheet.ts layout:
+   * right of the 512 side column, down to 232 under the strip) and everything above it, where the raised archive
+   * stands up across the strip, with 32 px to spare for the passes that read their neighbours (blur, depth of field).
+   * `null` is the whole frame: any other page, a file being read, the operating view, a window taller than wide.
+   */
+  private sceneWindow(): SceneWindow | null {
+    if (NO_SCENE_WINDOW || !this.labelWindowed || this.labelLayout !== "shelf" || this.targetDetail || this.sessionDeckFocus > 0) return null;
+    const width = this.container.clientWidth, height = this.container.clientHeight;
+    if (width <= height || height < 1) return null;
+    const k = height / 1080, pad = 32;
+    const x = Math.max(0, Math.floor(512 * k) - pad);
+    return { x, y: 0, width: width - x, height: Math.min(height, Math.ceil((this.labelInset + LABEL_TOP + 232) * k) + pad) };
   }
   private probeVector = new THREE.Vector3();
   private probeCorners: [number, number][] = [];
@@ -865,7 +893,7 @@ export class ArchiveScene {
     const canvas = document.createElement("canvas");
     canvas.width = this.labelCanvas.width;
     canvas.height = this.labelCanvas.height;
-    canvas.getContext("2d")!.drawImage(this.labelCanvas, 0, 0);
+    textureContext(canvas).drawImage(this.labelCanvas, 0, 0);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
@@ -887,7 +915,7 @@ export class ArchiveScene {
     return {
       model,
       syncLabel: () => {
-        canvas.getContext("2d")!.drawImage(this.labelCanvas, 0, 0);
+        textureContext(canvas).drawImage(this.labelCanvas, 0, 0);
         texture.needsUpdate = true;
       },
       setClarity: (value: number) => this.appearance.setClarity(model, value),
@@ -1036,7 +1064,10 @@ export class ArchiveScene {
       : { lane: canonical.lane, row: canonical.row };
     const changed = !sameCell(cell, this.selectedCell);
     if (this.looping && changed && this.loaded && this.lift.value > 0.0001) {
-      const batched = this.lift.value < .06 &&
+      // On the overview's shelf the archive handing its place over goes straight back into the rows' shared batch, as
+      // in the Unreal build: a full copy of the model, its label and its terminal screen for every row the hand
+      // rests on was two new textures and four canvas uploads in the frame of the change (a 40 ms stall on the GPU).
+      const batched = (this.lift.value < .06 || this.labelLayout === "shelf") &&
         !this.rotation && !this.openBlend && this.decryption.clarity < .001;
       const group = new THREE.Group();
       group.position.copy(this.model.position);
@@ -1053,7 +1084,7 @@ export class ArchiveScene {
         const canvas = document.createElement("canvas");
         canvas.width = 1024;
         canvas.height = 440;
-        canvas.getContext("2d")!.drawImage(this.labelCanvas, 0, 0);
+        textureContext(canvas).drawImage(this.labelCanvas, 0, 0);
         const map = new THREE.CanvasTexture(canvas);
         map.colorSpace = THREE.SRGBColorSpace;
         label.material = new THREE.MeshBasicMaterial({
@@ -1122,7 +1153,7 @@ export class ArchiveScene {
   }
   private drawLabel(index: number) {
     if (!this.labelTexture) return;
-    const c = this.labelCanvas.getContext("2d")!;
+    const c = textureContext(this.labelCanvas);
     c.fillStyle = "#e6e2d9";
     c.fillRect(0, 0, 1024, 440);
     c.fillStyle = "#171713";
@@ -1666,8 +1697,10 @@ export class ArchiveScene {
     damp(this.laneFocus, selectedLane, this.reduced ? 35 : 4, dt);
     // A held or freely coasting plane owns both tracks; selection cannot pull it.
     if (!this.holdingArchive && !momentum && !this.archivePreview) {
-      damp(this.columnCamera, chosen.x, this.reduced ? 35 : 3.7, dt);
-      damp(this.rail, cinematic ? 0 : -2.17 - chosen.z, this.reduced ? 35 : 3.7, dt);
+      // Under the label overview the array answers a hovered row: it travels there in a third of the time (Unreal: 11).
+      const track = this.reduced ? 35 : this.labelLayout === "shelf" ? 11 : 3.7;
+      damp(this.columnCamera, chosen.x, track, dt);
+      damp(this.rail, cinematic ? 0 : -2.17 - chosen.z, track, dt);
     }
     const preview = this.archivePreview;
     if (preview && !cinematic) {
@@ -1833,11 +1866,14 @@ export class ArchiveScene {
               : this.coastCell ? 0 : this.restLift * this.targetReveal * (1 - this.flatMix),
           this.reduced
             ? 35
-            : this.deferSelectionPulse &&
-                !this.targetDetail &&
-                this.lift.value < this.restLift
-              ? 7.6
-              : 4.2,
+            // On the shelf the archive stands up with the hand, not after it (Unreal: 14 up).
+            : this.labelLayout === "shelf" && !this.targetDetail
+              ? 14
+              : this.deferSelectionPulse &&
+                  !this.targetDetail &&
+                  this.lift.value < this.restLift
+                ? 7.6
+                : 4.2,
           dt,
         );
       }
@@ -1877,7 +1913,7 @@ export class ArchiveScene {
         o.lift.value = o.returnY - baseY;
         o.lift.velocity = 0;
         if (o.group.rotation.y === 0 && !o.openBlend) o.returnY = null;
-      } else damp(o.lift, 0, this.reduced ? 35 : 4.5, dt);
+      } else damp(o.lift, 0, this.reduced ? 35 : this.labelLayout === "shelf" ? 18 : 4.5, dt);
       o.group.position.set(
         p.x - trackX,
         baseY + o.lift.value + hoverLift(o.cell) - this.presentationDrop(o.cell),
@@ -2156,8 +2192,13 @@ export class ArchiveScene {
     // Build and compact the instance set only after the actual damped camera
     // is final for this frame. Picking uses the same packed index-to-cell map.
     const fixed = (Boolean(cinematic) || !this.looping) && !responsiveOpening;
+    // Behind the overview only the cards that reach into the shelf's window are drawn at all, with room below it for
+    // the ones whose shadows fall into it.
+    const window = cinematic ? null : this.sceneWindow();
+    const clientWidth = this.container.clientWidth, clientHeight = this.container.clientHeight;
     this.cells = fixed ? Array.from({ length: 160 }, (_, i) => poolCell(i))
-      : this.visibility.update(this.camera, fog.far, trackX, entryZ + this.rail.value, this.extraCoverage);
+      : this.visibility.update(this.camera, fog.far, trackX, entryZ + this.rail.value, this.extraCoverage,
+        window && { x: window.x, y: window.y, width: window.width, height: Math.min(clientHeight - window.y, window.height * 1.3), fullWidth: clientWidth, fullHeight: clientHeight });
     const returning = new Map(this.outgoing.filter(o => o.batched).map(o => [cellNumber(o.cell), o]));
     const hidden = new Set(this.outgoing.filter(o => !o.batched).map(o => cellNumber(o.cell)));
     hidden.add(cellNumber(this.selectedCell));
@@ -2265,9 +2306,10 @@ export class ArchiveScene {
     const settled = !cinematic && !this.changing && !flipping && !flashDirty && !themeDirty && !this.outgoing.length &&
       !this.pulses.length && !this.hoverLifts.size && !this.relayLifts.size && !play.enabled &&
       this.idleGain === 0 && time > this.redrawUntil;
-    const picture = this.pictureInputs(bokehUniforms.aperture.value, bokehUniforms.focus.value);
+    const picture = this.pictureInputs(bokehUniforms.aperture.value, bokehUniforms.focus.value, window);
     if (settled && !ALWAYS_DRAW && this.showsPicture(picture)) return;
     this.rememberPicture(picture);
+    applySceneWindow(this.renderer, this.composer, { ao: this.ao, bokeh: this.bokeh, smaa: this.smaa, far: this.far }, window, clientWidth, clientHeight);
     // The capture the raised file's glass refracts. With the rows opaque it holds that one file, so it can
     // afford the picture's own size once the file is held up to read: its screen is read through the glass,
     // and at half size a phone showed it soft.
@@ -2281,9 +2323,11 @@ export class ArchiveScene {
     else this.composer.render();
   }
   /** What the picture depends on beyond the instance buffers: camera, the selected file, theme, decryption, textures. */
-  private pictureInputs(aperture: number, focus: number) {
+  private pictureInputs(aperture: number, focus: number, window: SceneWindow | null) {
     const c = this.camera, m = this.model;
     return [
+      // A frame drawn through a window is not the frame the whole canvas needs, nor the other way round.
+      window ? window.x : -1, window ? window.height : -1,
       c.position.x, c.position.y, c.position.z, c.quaternion.x, c.quaternion.y, c.quaternion.z, c.quaternion.w, c.fov,
       m.position.x, m.position.y, m.position.z, m.quaternion.x, m.quaternion.y, m.quaternion.z, m.quaternion.w,
       this.themeAmount, this.renderer.toneMappingExposure, this.detail, this.openBlend, this.reveal, this.rotation,
@@ -2385,6 +2429,8 @@ export class ArchiveScene {
       archiveCapacity: this.instanceCapacity,
       archiveCoverage: this.extraCoverage ? "extra" : "standard",
       returningFiles: this.outgoing.length,
+      /** The part of the frame being drawn ("x,y,width,height" in CSS pixels), or "full". */
+      sceneWindow: (window => window ? `${window.x},${window.y},${window.width},${window.height}` : "full")(this.sceneWindow()),
       selectionPhase: this.pendingPulse
         ? "lifting"
         : this.pulses.length

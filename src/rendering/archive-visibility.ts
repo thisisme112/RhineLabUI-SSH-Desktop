@@ -15,9 +15,18 @@ export class ArchiveVisibility {
   private cells: ArchiveCell[] = [];
   private pool: ArchiveCell[] = [];
   candidates = 0;
-  update(source: THREE.PerspectiveCamera, far: number, trackX: number, trackZ: number, extra: boolean): ArchiveCell[] {
+  /**
+   * `window`: the part of the frame the page lets the scene show through (the label overview's shelf), in pixels of a
+   * `fullWidth` x `fullHeight` frame, y down. The pool is then the cards that reach into that part: the rest of the
+   * frustum is behind opaque sheets, and a card there was still drawn in every pass (the scene, its normals, its
+   * depth, the transmission capture and the shadow map).
+   */
+  update(source: THREE.PerspectiveCamera, far: number, trackX: number, trackZ: number, extra: boolean,
+    window?: { x: number; y: number; width: number; height: number; fullWidth: number; fullHeight: number } | null): ArchiveCell[] {
     this.camera.copy(source, false);
     this.camera.far = Math.min(source.far, Math.max(source.near + 1, far + 8));
+    if (window) this.camera.setViewOffset(window.fullWidth, window.fullHeight, window.x, window.y, window.width, window.height);
+    else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
     // Screen-space overscan plus the complete card bounds keep silhouettes and
     // off-screen shadow casters alive before they reach an edge.

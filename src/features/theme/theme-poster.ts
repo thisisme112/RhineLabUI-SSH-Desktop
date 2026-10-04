@@ -1,4 +1,5 @@
 import { sigil } from "../../shared/sigil";
+import { textureContext } from "../../shared/texture-canvas";
 import { TRANSIT_LINES, type Motif } from "./theme-design";
 
 type Rgb = readonly number[];
@@ -27,6 +28,12 @@ export type PosterState = {
   group: string;
   time: number;
   reduced: boolean;
+  /**
+   * A new record's figure is set at once, not turned over: behind the host overview the poster is a strip in the
+   * shelf, and its .6 s change-over was a full canvas drawn and uploaded every frame for every row the hand rested
+   * on (Unreal: UpdatePoster, "one redraw, not 0.6 s of them").
+   */
+  swap?: boolean;
 };
 
 const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -49,6 +56,9 @@ export class ThemePoster {
   private previous = "";
   private changeStart = -10;
   private drawnAt = -10;
+  /** A record whose poster is waiting for the hand to rest (PosterState.swap), and since when. */
+  private waiting = "";
+  private waitingSince = 0;
   private family = "";
   /** The canvas's CSS size, kept by a ResizeObserver: reading it off the element each frame forced a layout. */
   private cssWidth = 0;
@@ -56,8 +66,9 @@ export class ThemePoster {
   /** Counts the drawings, so the scene uploads the canvas only when it changed (ArchiveScene.setPoster). */
   revision = 0;
 
-  constructor(readonly canvas: HTMLCanvasElement) {
-    this.ctx = canvas.getContext("2d");
+  /** `texture`: the scene composites this canvas (a texture source, kept in memory); a phone's page shows the canvas itself. */
+  constructor(readonly canvas: HTMLCanvasElement, texture = false) {
+    this.ctx = texture ? textureContext(canvas) : canvas.getContext("2d");
     new ResizeObserver(([entry]) => {
       this.cssWidth = Math.round(entry.contentRect.width);
       this.cssHeight = Math.round(entry.contentRect.height);
@@ -71,8 +82,15 @@ export class ThemePoster {
     const ctx = this.ctx;
     // Not laid out yet, or not rendered at all (an observed 0 × 0).
     if (!ctx || !this.cssWidth || !this.cssHeight) return;
+    // Behind the overview a new record's poster waits until the hand has rested on its row for a moment: a sweep down
+    // the list draws nothing, and the drawing does not land in the frame that already changes the archive.
+    if (state.swap && this.code && state.code !== this.code) {
+      if (this.waiting !== state.code) { this.waiting = state.code; this.waitingSince = state.time; }
+      if (state.time - this.waitingSince < .18) return;
+    }
+    this.waiting = "";
     if (state.code !== this.code) {
-      this.previous = this.code; this.code = state.code; this.changeStart = this.previous ? state.time : -10;
+      this.previous = state.swap ? "" : this.code; this.code = state.code; this.changeStart = this.previous ? state.time : -10;
     }
     const change = state.reduced ? 1 : clamp((state.time - this.changeStart) / CHANGE_TIME);
     const dpr = Math.min(2, window.devicePixelRatio || 1);
