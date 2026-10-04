@@ -44,8 +44,9 @@ export async function initNativeShell(goBack: () => boolean, hasActiveSession: (
   });
 
   // Android WebView does not consistently publish status-bar safe-area env
-  // values. Keep the system bar outside the content instead of covering inputs.
-  await StatusBar.setOverlaysWebView({ overlay: false });
+  // values, so the system bar stays outside the content instead of covering inputs.
+  // MainActivity keeps it there upright and hides it on a phone held sideways, where
+  // the page takes the whole screen and is told the camera cutout (--cutout-left / -right).
   const paint = () => {
     const dark = document.documentElement.dataset.darkSurface === "true";
     void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light });

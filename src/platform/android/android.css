@@ -8,6 +8,8 @@
   touch-action: pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
 }
 [data-native-shell="true"] .ssh-terminal-screen { touch-action: none; }
+/* A phone on its side: the page runs under the camera cutout (MainActivity), the terminal's ground with it, its content clear of it. */
+[data-native-shell="true"] .ssh-terminal { box-sizing: border-box; padding-left: max(env(safe-area-inset-left, 0px), var(--cutout-left, 0px)); padding-right: max(env(safe-area-inset-right, 0px), var(--cutout-right, 0px)); }
 [data-native-shell="true"] .ssh-mobile-selection { display: flex; align-items: center; justify-content: space-around; gap: 4px; padding: 4px; border-bottom: 1px solid var(--terminal-line); }
 [data-native-shell="true"] .ssh-mobile-selection[hidden] { display: none; }
 [data-native-shell="true"] .ssh-mobile-selection span { font-size: 11px; color: var(--terminal-muted); }
