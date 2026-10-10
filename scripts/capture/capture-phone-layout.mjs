@@ -14,6 +14,9 @@ const root = process.cwd(), dist = path.join(root, "dist-android");
 const outFlag = process.argv.indexOf("--out");
 const out = path.resolve(root, outFlag >= 0 ? process.argv[outFlag + 1] : artifactPath("android-phone"));
 const checking = process.argv.includes("--check");
+// `--only tablet,tablet-dense` keeps a run to the named viewports.
+const onlyFlag = process.argv.indexOf("--only");
+const only = onlyFlag >= 0 ? process.argv[onlyFlag + 1].split(",") : undefined;
 await mkdir(out, { recursive: true });
 if (!existsSync(path.join(dist, "index.html"))) throw new Error("dist-android is missing: run `npm run build:android` first");
 
@@ -121,15 +124,22 @@ try {
   const viewports = [
     { name: "portrait", width: 360, height: 800 },
     { name: "landscape", width: 800, height: 360 },
-  ];
+    // A 2560 × 1600 tablet on its side, at the two densities such a panel ships with.
+    { name: "tablet", width: 1280, height: 800, density: 2 },
+    { name: "tablet-dense", width: 1024, height: 640, density: 2.5 },
+  ].filter((v) => !only || only.includes(v.name));
   const screens = [
     ["home", `1`],
     ["overview", `(window.rhineSshUi && document.querySelector('.ssh-overview')) ? 1 : 1`],
-    ["host-editor", `document.querySelector('.ssh-overview [data-overview-action="host-add"], .ssh-overview [data-action="add-host"], .ssh-overview-add')?.click(), 1`],
     ["settings", `rhine.settings(), 1`],
+    // The array under the overview, the space entries over it, a file read; then back out to the overview.
+    ["archive", `(async () => { await new Promise(r => setTimeout(r, 900)); document.querySelector('[data-label-action="primary"]')?.click(); })()`],
+    ["portals", `document.querySelector('[data-label-action="portals"]')?.click(), 1`],
+    ["detail", `(async () => { document.querySelector('[data-label-action="portals"]')?.click(); await new Promise(r => setTimeout(r, 600)); document.querySelector('[data-label-action="read"]')?.click(); })()`],
+    ["host-editor", `(async () => { for (let i = 0; i < 2; i++) { document.querySelector('[data-label-action="primary"]')?.click(); await new Promise(r => setTimeout(r, 1200)); } document.querySelector('.ssh-overview [data-overview-action="host-add"], .ssh-overview [data-action="add-host"], .ssh-overview-add')?.click(); })()`],
   ];
   for (const viewport of viewports) {
-    await send("Emulation.setDeviceMetricsOverride", { width: viewport.width, height: viewport.height, deviceScaleFactor: 3, mobile: true, screenOrientation: { type: viewport.width > viewport.height ? "landscapePrimary" : "portraitPrimary", angle: 0 } });
+    await send("Emulation.setDeviceMetricsOverride", { width: viewport.width, height: viewport.height, deviceScaleFactor: viewport.density ?? 3, mobile: true, screenOrientation: { type: viewport.width > viewport.height ? "landscapePrimary" : "portraitPrimary", angle: 0 } });
     await send("Page.navigate", { url: `http://127.0.0.1:${port}/?scene=archive` });
     for (let i = 0; i < 160 && !(await evaluate("!!window.rhine?.stats().ready").catch(() => false)); i++) await sleep(250);
     await sleep(2500);
@@ -138,7 +148,8 @@ try {
     await evaluate(`(() => { document.documentElement.dataset.nativeShell = "true"; if (!document.querySelector("link[data-phone-css]")) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "/assets/${androidCss}"; l.dataset.phoneCss = ""; document.head.append(l); } })()`);
     await sleep(600);
     for (const [name, action] of screens) {
-      await evaluate(action).catch(() => {});
+      const answer = await evaluate(action).catch((error) => String(error));
+      if (typeof answer === "string") console.log(`${viewport.name}/${name}: ${answer}`);
       await sleep(1600);
       await shot(`${viewport.name}-${name}`);
       await audit(name, viewport.name);

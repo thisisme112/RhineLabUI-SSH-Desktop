@@ -139,9 +139,11 @@ try {
   const viewports = [
     { name: "portrait", width: 360, height: 800 },
     { name: "landscape", width: 800, height: 360 },
+    // A 2560 × 1600 tablet on its side: the terminal beside its files.
+    { name: "tablet", width: 1280, height: 800, density: 2 },
   ];
   for (const viewport of viewports) {
-    await send("Emulation.setDeviceMetricsOverride", { width: viewport.width, height: viewport.height, deviceScaleFactor: 3, mobile: true, screenOrientation: { type: viewport.width > viewport.height ? "landscapePrimary" : "portraitPrimary", angle: 0 } });
+    await send("Emulation.setDeviceMetricsOverride", { width: viewport.width, height: viewport.height, deviceScaleFactor: viewport.density ?? 3, mobile: true, screenOrientation: { type: viewport.width > viewport.height ? "landscapePrimary" : "portraitPrimary", angle: 0 } });
     await send("Page.navigate", { url: `http://127.0.0.1:${port}/?scene=archive` });
     for (let i = 0; i < 160 && !(await evaluate("!!window.rhine?.stats().ready").catch(() => false)); i++) await sleep(250);
     await sleep(2500);

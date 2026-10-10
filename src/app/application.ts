@@ -51,7 +51,7 @@ import "@kitlangton/rolling-number/styles.css";
 import "./style.css";
 import "../features/settings/quality-settings.css";
 import "./responsive.css";
-import { viewportLayout, openingLayout } from "../rendering/viewport-layout";
+import { viewportLayout, openingLayout, type PageLayout } from "../rendering/viewport-layout";
 import { assetUrl } from "../shared/asset-url";
 import { initPwa, pwaSettingsMarkup } from "../platform/pwa/pwa";
 import { initNativeShell } from "../platform/android/native";
@@ -624,6 +624,8 @@ let previousLayout = "";
 let resizeTimer = 0;
 /** The stage in its own units (1080 tall on a desktop layout), as fit() last set it. */
 let stageWidth = 1920, stageScale = 1;
+/** The viewport and its layout as fit() last saw them with no software keyboard up. */
+let restLayout: { width: number; height: number; kind: PageLayout } | undefined;
 /**
  * Re-measure the WebGL targets. A phone's soft keyboard slides in over a few
  * frames and each of them changes the viewport: reallocating the composer's
@@ -640,12 +642,23 @@ function fit() {
   const viewport = $("#viewport");
   const coarse = matchMedia("(pointer: coarse)").matches;
   const reference = reviewParams.has("time") || reviewParams.get("review") === "1";
+  // A software keyboard takes height, not width, while a field has the focus: the page keeps the layout it had
+  // (a tablet would turn from the desktop sheet to the compact one and back), and a desktop sheet its size.
+  const clientWidth = viewport.clientWidth, clientHeight = viewport.clientHeight;
+  const field = document.activeElement;
+  const typing = coarse && field instanceof HTMLElement && (field.isContentEditable || field.matches("input, textarea, select"));
+  const keyboard = typing && restLayout !== undefined && restLayout.width === clientWidth && clientHeight < restLayout.height;
+  const held = keyboard ? restLayout!.kind : undefined;
+  const layoutHeight = held === "desktop" ? restLayout!.height : clientHeight;
   const { width, height, scale, kind } = mode === "boot" && !reference
-    ? openingLayout(viewport.clientWidth, viewport.clientHeight)
-    : viewportLayout(viewport.clientWidth, viewport.clientHeight, coarse, mode === "boot");
+    ? openingLayout(clientWidth, clientHeight)
+    : viewportLayout(clientWidth, layoutHeight, coarse, mode === "boot", held);
+  if (!keyboard) restLayout = kind === "portrait" || kind === "compact" || kind === "desktop" ? { width: clientWidth, height: clientHeight, kind } : undefined;
+  // A held desktop sheet stays under the top edge: the keyboard covers its foot.
+  const lift = (layoutHeight - clientHeight) / 2;
   stage.style.width = `${width}px`;
   stage.style.height = `${height}px`;
-  stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  stage.style.transform = `translate(-50%, -50%) translateY(${lift}px) scale(${scale})`;
   stage.dataset.layout = kind;
   stageWidth = width;
   stageScale = scale;
@@ -658,7 +671,7 @@ function fit() {
   stage.dataset.openingPortrait = String(width < height);
   // The software keyboard resizes dialogs without recomposing the 3D scene.
   const visible = window.visualViewport;
-  const stageTop = (viewport.clientHeight - height * scale) / 2;
+  const stageTop = (viewport.clientHeight - height * scale) / 2 + lift;
   stage.style.setProperty("--modal-top", `${Math.max(0, (visible?.offsetTop ?? 0) - stageTop) / scale}px`);
   stage.style.setProperty("--modal-height", `${Math.min(height, (visible?.height ?? viewport.clientHeight) / scale)}px`);
   $("#viewport").style.setProperty("--scale", String(scale));

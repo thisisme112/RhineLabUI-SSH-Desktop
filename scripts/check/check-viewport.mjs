@@ -24,6 +24,15 @@ for (const [w,h,touch] of [[1920,1080,false],[2560,1080,false],[1280,1024,false]
   assert.ok(render.width*render.height<=8294400+5000);
 }
 assert.deepEqual(viewportLayout(1920,1080,false),{width:1920,height:1080,scale:1,kind:'desktop'});
+// A tablet on its side reads the compact layout at its own size; the same window under a mouse keeps the desk's sheet.
+assert.equal(viewportLayout(1280,800,true).kind,'compact');
+assert.equal(viewportLayout(1280,800,true).scale,1);
+assert.equal(viewportLayout(1280,800,false).kind,'desktop');
+assert.equal(viewportLayout(1366,1024,true).kind,'desktop');
+// A software keyboard takes height and leaves the layout the page had.
+assert.equal(viewportLayout(1366,1024,true,false,'desktop').scale,viewportLayout(1366,1024,true).scale);
+assert.equal(viewportLayout(1366,620,true).kind,'compact');
+assert.equal(viewportLayout(768,700,true,false,'portrait').kind,'portrait');
 assert.equal(archiveFraming(1920,1080,7.33,1,false).span,5.9);
 assert.equal(archiveFraming(1920,1080,7.33,1,false).detailX,550/1920);
 console.log('Viewport, reference framing and render resolution checks passed.');

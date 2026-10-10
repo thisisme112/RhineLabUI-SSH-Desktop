@@ -86,9 +86,23 @@
 #stage[data-design="label-phone"] .label-keys span { margin: 0 auto 0 8px; }
 #stage[data-design="label-phone"] .label-keys span:last-child { margin-right: 0; }
 
-/* The portals fold out under the strip's 04. */
-#stage[data-design="label-phone"] .portal-drawer { z-index: 9; }
-#stage[data-design="label-phone"] .portal-card { background: var(--ground); border: 0; box-shadow: inset 0 0 0 2px var(--ink); }
+/* The portals fold out under the strip's 04: a column down the right edge, a row where the page is wide enough for three. */
+#stage[data-design="label-phone"] .portal-drawer { z-index: 9; left: auto; right: var(--label-edge); top: calc(var(--label-head) + 10px); flex-direction: column; gap: 8px; }
+#stage[data-design="label-phone"] .portal-card { width: 204px; height: 132px; padding: 12px; background: var(--ground); border: 0; box-shadow: inset 0 0 0 2px var(--ink); transform: translateY(-16px) scale(.94); }
+#stage[data-design="label-phone"].portals-open .portal-card { transform: none; }
+#stage[data-design="label-phone"] .portal-card-mark { width: 44px; height: 44px; }
+#stage[data-design="label-phone"] .portal-card[data-portal="3"] .portal-card-mark { width: 34px; }
+#stage[data-design="label-phone"] .portal-card small { font-size: 10px; }
+@media (min-width: 700px) {
+  #stage[data-design="label-phone"] .portal-drawer { flex-direction: row; gap: 10px; }
+}
+/* A phone on its side: three that clear the label's column. */
+@media (min-width: 700px) and (max-height: 480px) {
+  #stage[data-design="label-phone"] .portal-card { width: 160px; height: 112px; padding: 10px; }
+  #stage[data-design="label-phone"] .portal-card-mark { width: 32px; height: 32px; }
+  #stage[data-design="label-phone"] .portal-card[data-portal="3"] .portal-card-mark { width: 25px; }
+  #stage[data-design="label-phone"] .portal-card strong { font-size: 14px; }
+}
 #stage[data-design="label-phone"] .portal-card::after { background: var(--signal); }
 
 /* ── 主机总览: the timetable as one column ─────────────────────────────────── */
@@ -135,6 +149,11 @@
   order: 3; flex: none; display: flex; gap: 0; height: 44px; box-sizing: content-box; padding: 0 var(--label-edge);
   border: 0; border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink);
   overflow-x: auto; scrollbar-width: none; counter-reset: tab; pointer-events: auto;
+}
+/* The strip scrolls with its scrollbar hidden: a tab cut by the right edge fades out, which is the only sign there are more. */
+#viewport[data-design="label-phone"] .ssh-overview-nav::after {
+  content: ""; position: sticky; right: 0; flex: none; align-self: stretch; width: var(--label-edge); margin-right: calc(-1 * var(--label-edge));
+  background: linear-gradient(90deg, transparent, var(--ground)); pointer-events: none;
 }
 #viewport[data-design="label-phone"] .ssh-overview-nav::-webkit-scrollbar { display: none; }
 #viewport[data-design="label-phone"] .ssh-overview-nav button {
@@ -371,4 +390,44 @@
 
 #viewport[data-design="label-phone"][data-fit="compact"] #stage .detail-ui::before { left: calc(50% - 14px); top: var(--label-head); border-top: 0; border-left: 3px solid var(--ink); }
 #viewport[data-design="label-phone"][data-fit="compact"] #stage .detail-content { left: 50%; top: var(--label-head); padding-top: 10px; }
+
+/* ── A tablet on its side (the compact layout at a desk's height): the label at a reading size, its services back ── */
+@media (min-height: 560px) {
+  #viewport[data-design="label-phone"][data-fit="compact"] { --label-top: 48px; --label-foot: calc(64px + var(--label-low)); --label-field: 340px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-brand { font-size: 15px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-nav button { margin-left: 26px; font-size: 14px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-nav button b { font-size: 16px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field { --cut: 40px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field-kicker { top: 22px; font-size: 12px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field-prefix { top: 50px; --px: 26px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field-figure { top: 82px; --px: 124px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field-sigil { top: 86px; width: 60px; height: 60px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field-name { top: 226px; height: 40px; font-size: 30px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field-address { top: 274px; font-size: 14px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field-chips { top: 306px; gap: 10px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-chip { height: 34px; padding: 0 14px; font-size: 15px; letter-spacing: 1px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-field-services { display: flex; left: var(--label-edge); top: 364px; gap: 10px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-read { bottom: 16px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-read-text { height: 56px; padding: 0 20px 0 28px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-read-text b { font-size: 19px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-read-go { width: 56px; height: 56px; font-size: 30px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-foot { grid-template-rows: 61px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-foot-count .label-figure { --px: 46px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-ruler button, #stage[data-design="label-phone"][data-layout="compact"] .label-key { width: 44px; min-width: 44px; height: 44px; }
+  #stage[data-design="label-phone"][data-layout="compact"] .label-keys { font-size: 14px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-glass { grid-template-columns: 300px minmax(0, 1fr); }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-count { --px: 120px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-group-count { font-size: 17px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-stats dt { --px: 28px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-stats dd { font-size: 13px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-overview-add-block { height: 56px; font-size: 18px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] :is(.ssh-overview-nav, .ssh-overview-nav button) { height: 48px; }
+  /* The terminal's bars at a finger's height: there is room for them here. */
+  #viewport[data-design="label-phone"][data-fit="compact"] .has-workspace .ssh-terminal-bar { padding-block: 4px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-workspace-tabs button { min-height: 40px; padding-block: 6px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal .ssh-terminal-close { height: 40px; min-height: 40px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal :is(.ssh-terminal-settings, .ssh-terminal-search-all) { min-height: 40px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-session-tab [role="tab"] { padding-block: 9px; }
+  #viewport[data-design="label-phone"][data-fit="compact"] .ssh-terminal-foot > .ssh-mobile-keys button { min-height: 44px; font-size: 15px; }
+}
 

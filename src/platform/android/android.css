@@ -19,7 +19,16 @@
 [data-native-shell="true"] .ssh-mobile-keys button { flex: 1 0 auto; min-height: 40px; min-width: 44px; padding: 3px 10px; color: var(--terminal-fg); background: transparent; border: 0; font: 13px MiSans, sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 [data-native-shell="true"] .ssh-mobile-keys button[aria-pressed="true"] { color: var(--terminal-accent); background: color-mix(in srgb, var(--terminal-accent) 15%, transparent); }
 [data-native-shell="true"] .ssh-mobile-keys button[data-locked="true"] { font-weight: 700; box-shadow: inset 0 -2px 0 var(--terminal-accent); }
-[data-native-shell="true"] .ssh-terminal:not([data-workspace-page="terminal"]) .ssh-mobile-keys { display: none; }
+/* A phone shows one page at a time; a tablet keeps the terminal beside the files, and its keys with it. */
+[data-native-shell="true"] .ssh-terminal:not([data-workspace-page="terminal"], [data-workspace="split"]) .ssh-mobile-keys { display: none; }
+/* The workspace beside the terminal is drawn for a pointer: under a finger its controls take a finger's size. */
+[data-native-shell="true"] .ssh-file-toolbar { flex-wrap: wrap; gap: 4px; }
+[data-native-shell="true"] .ssh-file-toolbar button { width: 36px; min-height: 40px; }
+[data-native-shell="true"] .ssh-files-path-form { grid-template-columns: 40px minmax(0, 1fr) 40px; }
+[data-native-shell="true"] .ssh-files-path-form :is(button, input) { min-height: 40px; }
+[data-native-shell="true"] .ssh-files-menu button { min-height: 40px; padding: 8px 14px; }
+[data-native-shell="true"] .ssh-side-divider { width: 20px; }
+[data-native-shell="true"] .ssh-utility-surface button { min-height: 40px; padding: 8px 12px; }
 @media (max-width: 840px) {
   [data-native-shell="true"] .ssh-overview-columns { display: none; }
   [data-native-shell="true"] .ssh-overview-scroll { padding: 0 0 8px; touch-action: pan-y; }

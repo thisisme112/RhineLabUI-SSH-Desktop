@@ -69,4 +69,8 @@
 #stage[data-design="label"] .detail-content .solid-button > span { margin-left: auto; padding-right: 18px; color: rgba(var(--theme-paper-rgb), .62); }
 #stage[data-design="label"] .detail-content .solid-button::after { content: "→"; flex: none; width: 41px; height: 41px; display: grid; place-items: center; background: var(--signal); color: var(--on-signal); font-size: 20px; }
 #stage[data-design="label"] .detail-content .export-button { color: var(--ink); font-weight: 600; }
+/* The host directory reads as the overview's rows do: names in ink, addresses in the mono, the rest a tint of ink. */
+#stage[data-design="label"] .detail-content :is(.category-filters button, .result-name small) { color: rgba(var(--theme-ink-rgb), .62); }
+#stage[data-design="label"] .detail-content :is(.category-filters button.active, .result-row) { color: var(--ink); }
+#stage[data-design="label"] .detail-content .result-name small { font-family: var(--mono); }
 #stage[data-design="label"] .detail-content .detail-footnote { color: rgba(var(--theme-ink-rgb), .62); font-size: 10px; }

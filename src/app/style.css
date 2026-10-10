@@ -1109,7 +1109,7 @@ button {
 }
 .category-filters button {
   font-size: 12px;
-  color: #8c8373;
+  color: #6b6457;
   transition: color 0.2s;
   display: inline-flex;
   align-items: center;
@@ -1188,7 +1188,7 @@ button {
   display: block;
   font-size: 9px;
   letter-spacing: 0.7px;
-  color: #9b907e;
+  color: #6b6457;
   margin-top: 7px;
 }
 .result-name > i {
