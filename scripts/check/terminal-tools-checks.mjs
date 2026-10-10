@@ -315,7 +315,8 @@ export async function checkTerminalTools({
   );
   await check(
     "font controls affect terminal text and its PTY dimensions",
-    `getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '15px' && localStorage.getItem('rhine.ssh.terminal-appearance') !== null && JSON.parse(localStorage.getItem('rhine.ssh.terminal-appearance')).size === 15`,
+    // The setting is 15; the paper theme sets its terminal half a pixel over the reference (terminal-appearance.ts THEME_TYPE).
+    `getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '15.5px' && localStorage.getItem('rhine.ssh.terminal-appearance') !== null && JSON.parse(localStorage.getItem('rhine.ssh.terminal-appearance')).size === 15`,
   );
   await evaluate(
     `for (let i = 0; i < 20; i++) document.querySelector('[data-terminal-tool="larger"]').click()`,
@@ -381,7 +382,7 @@ export async function checkTerminalTools({
   );
   await check(
     "reconnection preserves font preference and a single fresh terminal",
-    `document.querySelectorAll('.ssh-terminal .xterm').length === 1 && getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '15px'`,
+    `document.querySelectorAll('.ssh-terminal .xterm').length === 1 && getComputedStyle(document.querySelector('.xterm-rows')).fontSize === '15.5px'`,
   );
   await evaluate(
     // Each theme has a fixed brightness now (theme-design.ts); night is the dark one.

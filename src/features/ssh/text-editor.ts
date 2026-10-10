@@ -168,11 +168,8 @@ export class RemoteTextEditor {
     }
   }
   private appearance() {
-    const a = terminalAppearance.value;
-    this.root.style.setProperty(
-      "--ssh-editor-font",
-      TERMINAL_FONTS[a.font].family,
-    );
+    const a = terminalAppearance.resolved;
+    this.root.style.setProperty("--ssh-editor-font", a.family);
     this.root.style.setProperty(
       "--ssh-editor-size",
       Math.max(11, a.size) + "px",
