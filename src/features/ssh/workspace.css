@@ -394,7 +394,11 @@
   color: var(--terminal-muted);
   font-size: 12px;
   letter-spacing: 0.025em;
-  overflow-wrap: anywhere;
+  min-height: 18px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .ssh-files-state[data-state="error"],
 .ssh-files-feedback {

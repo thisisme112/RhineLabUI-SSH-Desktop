@@ -9,7 +9,10 @@
  *   otherwise                            → dist-desktop/index.html built with
  *                                          `vite build --mode desktop`
  */
-const { app, BrowserWindow, clipboard, dialog, ipcMain, screen, shell, safeStorage } = require("electron");
+const { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, screen, shell, safeStorage } = require("electron");
+// Electron's default menu stays live behind autoHideMenuBar: its Ctrl+R reloads the page, which ends every
+// SSH session without the question closing the window asks. A packaged build has no menu; development keeps it.
+if (app.isPackaged) Menu.setApplicationMenu(null);
 const path = require("node:path");
 const fs = require("node:fs");
 const os = require("node:os");

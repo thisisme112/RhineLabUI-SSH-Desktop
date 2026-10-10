@@ -445,6 +445,7 @@ export class SftpPanel {
         event.preventDefault();
         this.dragDepth = 0;
         delete root.dataset.drop;
+        if (event.dataTransfer?.files.length && (!this.ready || this.loading)) this.feedback("目录尚未就绪，文件未上传");
         if (this.ready && !this.loading && event.dataTransfer?.files.length) {
           const id = this.sessionId;
           void this.services
@@ -1076,7 +1077,7 @@ export class SftpPanel {
       }
     } else if (entry.kind === "directory") await this.load(entry.path);
     else if (entry.kind === "file") {
-      if (entry.size > 1048576) { this.feedback("文本编辑限 1 MiB，大文件请下载后编辑"); return; }
+      if (entry.size > 4194304) { this.feedback("文本编辑限 4 MiB，大文件请下载后编辑"); return; }
       const { RemoteTextEditor } = await import("./text-editor");
       if (this.disposed) return;
       this.textEditor ??= new RemoteTextEditor(this.services, this.reduced);

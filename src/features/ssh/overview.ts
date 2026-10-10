@@ -455,8 +455,9 @@ export class SshOverview {
     rail.addEventListener("pointerup", finish);
     rail.addEventListener("pointercancel", finish);
     rail.addEventListener("lostpointercapture", finish);
-    window.addEventListener("resize", () => this.setPosition(this.position.x, this.position.y));
+    window.addEventListener("resize", this.keepPosition);
   }
+  private keepPosition = () => this.setPosition(this.position.x, this.position.y);
   private restorePosition() {
     try {
       const value = JSON.parse(localStorage.getItem(POSITION_KEY) || "null");
@@ -671,7 +672,7 @@ export class SshOverview {
       row.className = "ssh-overview-host";
       row.dataset.hostAlias = host.alias;
       row.innerHTML =
-        '<button type="button" class="ssh-overview-connect" data-overview-action="connect"><span class="ssh-overview-host-no label-figure" data-slit aria-hidden="true"></span><svg class="ssh-overview-host-sigil label-sigil" viewBox="0 0 5 5" aria-hidden="true"></svg><span class="ssh-overview-host-name"><b></b><span><strong></strong><small></small></span></span><span class="ssh-overview-host-state"><i></i><em></em></span><span class="ssh-overview-host-load"></span><span class="ssh-overview-host-meters" aria-hidden="true"><span><i>CPU</i><span class="label-cells"></span><b>—</b></span><span><i>MEM</i><span class="label-cells"></span><b>—</b></span><span><i>GPU</i><span class="label-cells"></span><b>—</b></span></span><span class="ssh-overview-host-go" aria-hidden="true">→</span></button><div class="ssh-overview-host-actions" role="group" aria-label="主机操作"><button type="button" class="primary" data-overview-action="reconnect" title="结束当前连接并重新连接"><span>连接</span> ↻</button><button type="button" data-overview-action="disconnect" title="断开连接，保留记录">断开</button><button type="button" data-overview-action="duplicate" title="复制为新主机（不含已保存的口令）">复制</button><button type="button" class="danger" data-overview-action="remove" title="从主机档案中移除（再点一次确认）">删除</button><i aria-hidden="true"></i><button type="button" data-overview-action="inspect" title="查看这台主机的详情">详情</button><button type="button" data-overview-action="new" title="另开一个会话">＋</button><button type="button" data-overview-action="edit">编辑</button></div>';
+        '<button type="button" class="ssh-overview-connect" data-overview-action="connect"><span class="ssh-overview-host-no label-figure" data-slit aria-hidden="true"></span><svg class="ssh-overview-host-sigil label-sigil" viewBox="0 0 5 5" aria-hidden="true"></svg><span class="ssh-overview-host-name"><b></b><span><strong></strong><small></small></span></span><span class="ssh-overview-host-state"><i></i><em></em></span><span class="ssh-overview-host-load"></span><span class="ssh-overview-host-meters" aria-hidden="true"><span><i>CPU</i><span class="label-cells"></span><b>—</b></span><span><i>MEM</i><span class="label-cells"></span><b>—</b></span><span><i>GPU</i><span class="label-cells"></span><b>—</b></span></span><span class="ssh-overview-host-go" aria-hidden="true">→</span></button><div class="ssh-overview-host-actions" role="group" aria-label="主机操作"><button type="button" class="primary" data-overview-action="reconnect" title="结束当前连接并重新连接"><span>连接</span> ↻</button><button type="button" data-overview-action="disconnect" title="断开连接，保留记录">断开</button><button type="button" data-overview-action="duplicate" title="复制为新主机（不含已保存的口令）">复制</button><button type="button" class="danger" data-overview-action="remove" title="从主机档案中移除（再点一次确认）">删除</button><i aria-hidden="true"></i><button type="button" data-overview-action="inspect" title="查看这台主机的详情">详情</button><button type="button" data-overview-action="new" title="另开一个会话" aria-label="另开一个会话">＋</button><button type="button" data-overview-action="edit">编辑</button></div>';
       this.rows.set(host.alias, row);
       if (host.alias === this.focused) row.dataset.focus = "true";
     }
@@ -739,10 +740,14 @@ export class SshOverview {
       const node = row.querySelector(selector)!;
       if (node.textContent !== value) node.textContent = value;
     }
+    const reconnect = row.querySelector<HTMLElement>('[data-overview-action="reconnect"]')!;
+    const hint = session?.client.active ? "结束当前连接并重新连接" : "连接这台主机";
+    if (reconnect.title !== hint) reconnect.title = hint;
     return row;
   }
   dispose() {
     clearTimeout(this.timer);
+    window.removeEventListener("resize", this.keepPosition);
     this.keys.unmount();
     this.transition.dispose();
     this.contentTransition.cancel();

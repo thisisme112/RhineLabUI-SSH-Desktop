@@ -58,9 +58,7 @@ export class RemoteTextEditor {
     this.root.setAttribute("role", "dialog");
     this.root.setAttribute("aria-modal", "true");
     this.root.setAttribute("aria-label", "远端文本编辑器");
-    this.root.innerHTML = `<header><div><small>SFTP / TEXT EDITOR</small><strong class="ssh-editor-path"></strong></div><button type="button" data-editor="close">返回 · 保留草稿</button></header><nav><button type="button" data-editor="save">保存 · Ctrl+S</button><button type="button" data-editor="diff">比较修改</button><button type="button" data-editor="remote">读取远端对照</button><button type="button" data-editor="use-remote" hidden>采用远端内容</button><button type="button" data-editor="reviewed" hidden>已核对 · 以本地内容保存</button></nav><p class="ssh-editor-status" role="status"></p><div class="ssh-code-editor"></div><footer>UTF-8 · 最大 1 MiB · 草稿仅保留到应用关闭</footer>`;
-    this.root.querySelector("footer")!.textContent =
-      "UTF-8 · 最大 1 MiB · 草稿保留到移出会话或关闭应用";
+    this.root.innerHTML = `<header><div><small>SFTP / TEXT EDITOR</small><strong class="ssh-editor-path"></strong></div><button type="button" data-editor="close">返回 · 保留草稿</button></header><nav><button type="button" data-editor="save">保存 · Ctrl+S</button><button type="button" data-editor="diff">比较修改</button><button type="button" data-editor="remote">读取远端对照</button><button type="button" data-editor="use-remote" hidden>采用远端内容</button><button type="button" data-editor="reviewed" hidden>已核对 · 以本地内容保存</button></nav><p class="ssh-editor-status" role="status"></p><div class="ssh-code-editor"></div><footer>UTF-8 · 最大 4 MiB · 草稿保留到移出会话或关闭应用</footer>`;
     const stage = document.querySelector<HTMLElement>("#stage")!;
     this.scope = new SurfaceScope(stage, this.root, stage.parentElement!);
     this.transition = new SurfaceTransition(this.root, undefined, 250, 180);
@@ -378,6 +376,12 @@ export class RemoteTextEditor {
     const draft = this.draft;
     if (draft.owner !== this.services.state?.sessionId) {
       this.status("连接已变化，请先读取远端对照；本地草稿仍保留");
+      return;
+    }
+    // The service refuses a text over 4 MiB (text.go maxTextBytes); its refusal reads as a version conflict.
+    const bytes = new TextEncoder().encode(draft.text).length;
+    if (bytes > 4194304) {
+      this.status(`内容 ${(bytes / 1048576).toFixed(2)} MiB，超过文本编辑的 4 MiB 上限，未写入；本地草稿仍保留。`, "failed");
       return;
     }
     this.keepDraft();

@@ -104,7 +104,6 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
           if (shell.mode === "detail") shell.patchHostState(shell.selected);
           // Wait for the camera and cover to return before focusing the
           // original controls; their DOM and scroll position stay intact.
-          restoreTerminalFocus = false;
           restoreTerminalFocus = true;
         }
       });
@@ -781,7 +780,7 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
       const request = pendingTunnels.get(context.key);
       if (!request) return;
       if (context.client.generation !== request.generation || context.manualStop || context.client.exit) { pendingTunnels.delete(context.key); return; }
-      if (!context.client.active || context.client.status().phase !== "interactive" || !context.services.state || ["waiting", "closed"].includes(context.services.state.sftp.state)) return;
+      if (!context.client.active || context.client.status().phase !== "interactive" || !context.services.state || ["waiting", "stopped"].includes(context.services.state.sftp.state)) return;
       pendingTunnels.delete(context.key);
       void tunnelPanel.start(context, request.shortcut);
     }
@@ -1075,6 +1074,10 @@ export function initSshWorkspace(shell: SshWorkspaceContext) {
     if (import.meta.hot) import.meta.hot.dispose(() => {
       workspaceSettings.dispose(); tunnelPanel.dispose(); quickSearch.dispose(); health.dispose(); clearTimeout(catalogTimer); offBank(); overview.dispose(); shell.desktopModalScope?.dispose(); library.dispose(); eventAudio.dispose(); bank.dispose(); prompt.dispose(); audit.dispose(); hosts.dispose(); inspectionTicket++;
     });
+  }).catch(error => {
+    // A chunk that did not load leaves the archive without its SSH surfaces: say so, rather than a page that just lacks them.
+    console.error(error);
+    shell.notify(`SSH 工作区未能加载：${error instanceof Error ? error.message : String(error)}`);
   });
 
 }

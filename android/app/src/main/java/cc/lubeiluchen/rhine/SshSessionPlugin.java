@@ -162,7 +162,7 @@ public class SshSessionPlugin extends RhinePlugin {
             Running running = processes.get(call.getString("id", ""));
             String line = call.getString("line", "");
             if (running == null || !running.id.equals(call.getString("id"))) { call.reject("会话已经改变"); return; }
-            if (line.length() > 8 * 1024 * 1024 || line.indexOf('\n') >= 0 || line.indexOf('\r') >= 0) { call.reject("无效的 SSH 请求"); return; }
+            if (line.length() > 32 * 1024 * 1024 || line.indexOf('\n') >= 0 || line.indexOf('\r') >= 0) { call.reject("无效的 SSH 请求"); return; }
             try {
                 if (!running.connection && "connect".equals(new JSONObject(line).optString("method"))) { running.connection = true; updateForeground(); }
                 running.process.getOutputStream().write((line + "\n").getBytes(StandardCharsets.UTF_8));

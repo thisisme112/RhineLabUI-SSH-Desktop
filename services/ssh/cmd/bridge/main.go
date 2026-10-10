@@ -51,7 +51,7 @@ func main() {
 	defer cancel()
 	var work sync.WaitGroup
 	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Buffer(make([]byte, 65536), 8*1024*1024)
+	scanner.Buffer(make([]byte, 65536), 32*1024*1024)
 	for scanner.Scan() {
 		var message request
 		if err := json.Unmarshal(scanner.Bytes(), &message); err != nil {

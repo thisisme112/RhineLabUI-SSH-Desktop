@@ -364,7 +364,7 @@ class SshServices {
       worker.stdout.on("data", (chunk) => {
         if (this.worker !== worker || this.closed) return;
         buffer += decoder.write(chunk);
-        if (buffer.length > 8 * 1024 * 1024) {
+        if (buffer.length > 32 * 1024 * 1024) {
           worker.kill();
           return;
         }
@@ -422,6 +422,13 @@ class SshServices {
               "写入期间后台服务中断，请检查目标与下方恢复文件，再重新选择文件传输";
           }
           this.publish("transfer", job);
+        }
+        // The listeners lived in the worker: its forwards are gone with it.
+        for (const tunnel of this.state.tunnels || []) {
+          if (tunnel.state === "closed") continue;
+          tunnel.state = "closed";
+          tunnel.connections = 0;
+          this.publish("tunnel", tunnel);
         }
         this.publish("auth", null);
         if (!this.closed) {

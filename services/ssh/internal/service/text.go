@@ -16,7 +16,7 @@ import (
 	"rhine.local/sshservices/internal/native"
 )
 
-const maxTextBytes = 1024 * 1024
+const maxTextBytes = 4 * 1024 * 1024
 
 type TextDocument struct {
 	Path        string `json:"path"`
@@ -38,7 +38,7 @@ func readTextFile(client *sftp.Client, name string) (*TextDocument, os.FileInfo,
 		return nil, nil, errors.New("仅支持普通文本文件，请打开链接的实际目标")
 	}
 	if before.Size() > maxTextBytes {
-		return nil, nil, errors.New("文本编辑限 1 MiB；大文件请下载后编辑")
+		return nil, nil, errors.New("文本编辑限 4 MiB；大文件请下载后编辑")
 	}
 	file, err := client.Open(name)
 	if err != nil {
@@ -50,7 +50,7 @@ func readTextFile(client *sftp.Client, name string) (*TextDocument, os.FileInfo,
 		return nil, nil, err
 	}
 	if len(body) > maxTextBytes || !utf8.Valid(body) || strings.ContainsRune(string(body), 0) {
-		return nil, nil, errors.New("仅支持 1 MiB 以内的 UTF-8 文本文件")
+		return nil, nil, errors.New("仅支持 4 MiB 以内的 UTF-8 文本文件")
 	}
 	after, err := client.Lstat(name)
 	if err != nil {

@@ -44,12 +44,11 @@ export class TunnelPanel {
   }
   async start(session: WorkspaceSession, shortcut: ArchiveShortcut) {
     const tunnels = getPlatformBridge()?.tunnels;
-    if (
-      !shortcut.tunnel ||
-      !tunnels ||
-      !session.client.active
-    )
+    if (!shortcut.tunnel) return;
+    if (!tunnels || !session.client.active) {
+      this.notify(tunnels ? "会话未连接，转发未打开" : "此设备不支持端口转发");
       return;
+    }
     const spec = shortcut.tunnel;
     const existing = session.services.state?.tunnels?.find(
       (t) =>
@@ -105,7 +104,12 @@ export class TunnelPanel {
         copy.type = "button";
         copy.textContent = "复制本地地址";
         copy.onclick = () => {
-          void getPlatformBridge()?.clipboard?.writeText(tunnel.localAddress);
+          const clipboard = getPlatformBridge()?.clipboard;
+          if (!clipboard) { this.notify("复制失败"); return; }
+          void Promise.resolve(clipboard.writeText(tunnel.localAddress)).then(
+            () => this.notify(`已复制 ${tunnel.localAddress}`),
+            () => this.notify("复制失败"),
+          );
         };
         const stop = document.createElement("button");
         stop.type = "button";

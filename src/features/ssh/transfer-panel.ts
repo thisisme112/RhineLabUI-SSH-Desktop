@@ -83,7 +83,6 @@ export class TransferPanel {
   show(focus = false) {
     if (!this.open) {
       this.open = true;
-      this.root.inert = false;
       this.toggle.setAttribute("aria-expanded", "true");
       this.transition.show(this.reduced());
       this.motion.reveal(this.root, this.reduced());
@@ -94,7 +93,8 @@ export class TransferPanel {
   hide(immediate = false) {
     const restore = this.root.contains(document.activeElement);
     this.open = false;
-    this.root.inert = true;
+    // Not `inert`: a surface that opens while the drawer is shut snapshots that (surface.ts) and
+    // restores it over a drawer opened meanwhile, which then shows and takes no click.
     this.toggle.setAttribute("aria-expanded", "false");
     this.transition.hide(immediate || this.reduced(), () => {
       this.motion.cancel();

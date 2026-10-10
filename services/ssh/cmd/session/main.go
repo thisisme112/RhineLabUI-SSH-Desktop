@@ -202,8 +202,9 @@ func main() {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	// A screen repaint or a paste arrives base64-encoded in one line and can be
-	// hundreds of kilobytes.
-	scanner.Buffer(make([]byte, 65536), 8*1024*1024)
+	// hundreds of kilobytes; a 4 MiB text (service maxTextBytes) is several times
+	// that once JSON has escaped it. The limit is the bridge's (cmd/bridge/main.go).
+	scanner.Buffer(make([]byte, 65536), 32*1024*1024)
 	for scanner.Scan() {
 		var message request
 		if err := json.Unmarshal(scanner.Bytes(), &message); err != nil {

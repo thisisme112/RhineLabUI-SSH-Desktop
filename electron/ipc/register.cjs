@@ -366,7 +366,7 @@ function registerSessionIpc() {
   for (const method of ["readText", "writeText"]) handle("sftp:" + method, (_event, data) => {
     const service = serviceFor(data?.sessionId);
     if (!service) return servicesChanged();
-    if (!validRemote(data.path) || (method === "writeText" && (typeof data.text !== "string" || Buffer.byteLength(data.text, "utf8") > 1048576 || typeof data.revision !== "string" || !/^[a-f0-9]{64}$/.test(data.revision)))) return { ok: false, error: "文本或文件版本无效" };
+    if (!validRemote(data.path) || (method === "writeText" && (typeof data.text !== "string" || Buffer.byteLength(data.text, "utf8") > 4194304 || typeof data.revision !== "string" || !/^[a-f0-9]{64}$/.test(data.revision)))) return { ok: false, error: "文本或文件版本无效" };
     return service.call(data.sessionId, method, { path: data.path, text: data.text, revision: data.revision });
   });
   for (const [action, method] of [["list", "tunnels"], ["start", "startTunnel"], ["stop", "stopTunnel"]]) handle("tunnels:" + action, (_event, data) => {
@@ -445,6 +445,7 @@ function registerSessionIpc() {
 function registerShellIpc() {
   // The theme change-over captures the window as it is, to break it up over the new theme.
   runtimeContext.ipcMain.handle("shell:capture", async (event) => {
+    if (!runtimeContext.trustedSender(event)) return null;
     const image = await event.sender.capturePage();
     return image.isEmpty() ? null : image.toJPEG(90);
   });
