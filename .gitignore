@@ -50,3 +50,6 @@ prototypes/
 # Historical frame-by-frame captures remain local; keep reports and key shots.
 docs/history/verification/**/seq-*/
 docs/history/verification/**/recording/
+
+# Design review notes written by the impeccable skill.
+.impeccable/
