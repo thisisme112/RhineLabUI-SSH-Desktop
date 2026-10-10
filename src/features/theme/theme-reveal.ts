@@ -11,7 +11,7 @@ import { TRANSIT_LINES, type Motif } from "./theme-design";
  *   shutters  twelve columns close left to right, each wiped from its left edge
  *   tide      ten bands go down from the bottom up, a waterline at each edge
  *   hazard    72 px blocks in diagonal bands, alternate stripes first
- *   frames    64 px squares close towards their centres from the middle out
+ *   frames    forty strips run off the wall from the top at uneven speeds, a red run at each edge, after two stutters of the light
  *   orbit     squares close outward from the origin (the selected card), in rings
  *   plates    a 30 px halftone that drops out in scattered order over a second plate
  *   transit   eight bands leave from alternating ends, a station and a train of one line's colour at each edge
@@ -121,8 +121,22 @@ async function run(o: RevealOptions) {
         squares(72, (x, y) => (x + y) * .018 + ((x + y) % 2) * .09, .3, t, false);
         break;
       case "frames": {
-        const reach = Math.hypot(width / 2, height / 2);
-        squares(64, (_x, _y, cx, cy) => Math.hypot(cx - width / 2, cy - height / 2) / reach * .5, .34, t, false);
+        // The old picture runs off the wall: narrow strips let go from the top at uneven moments and
+        // speeds, a red run at each falling edge; the tube overhead stutters twice as it starts.
+        const n = 40, w = width / n;
+        const hash = (i: number, k: number) => (((Math.imul(i + 1, 73856093) ^ Math.imul(k, 19349663)) >>> 0) % 1000) / 1000;
+        for (let i = 0; i < n; i++) {
+          const e = cubicIn((t - .1 - hash(i, 1) * .34) / (.3 + hash(i, 2) * .24));
+          if (e >= 1) continue;
+          const edge = height * e;
+          piece(i * w, edge, (i + 1) * w + .5, height);
+          if (e <= 0) continue;
+          const run = 26 + hash(i, 3) * 120;
+          ctx.fillStyle = o.accent;
+          ctx.fillRect(i * w, edge - 2, w + .5, 3);
+          ctx.fillRect((i + .5) * w - 1.5, Math.max(0, edge - run), 3, Math.min(edge, run));
+        }
+        if (t < .03 || (t > .06 && t < .085)) { ctx.fillStyle = "#fff"; ctx.globalAlpha = .4; ctx.fillRect(0, 0, width, height); ctx.globalAlpha = 1; }
         break;
       }
       case "orbit": {

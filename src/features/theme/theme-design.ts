@@ -55,11 +55,13 @@ export const DESIGNS: Record<ThemeName, ThemeDesign> = {
     roles: { shell: "#3b3d42", cover: "#2e3035", core: "#1c1d20", metal: "#c8ccd0", mark: "#ffd12a", label: "#e8e4d8" },
   },
   clinic: {
-    motif: "frames", label: "医疗 · 无菌", latin: "CLINICAL / STERILE", caption: "冷白 · 纯黑 · 信号橙 — 无菌舱室", dark: false,
-    // 1.55 / .95 / .55 against paper's 1.6 / .9 / .6.
-    room: { exposure: .969, env: 1.056, fill: .917, tint: "#eef3f7" },
-    scene: { background: "#f2f4f5", fog: "#f0f3f4", floor: "#e6eaec" },
-    roles: { shell: "#f3f5f6", cover: "#f6f8f9", core: "#dde3e6", metal: "#a9b2b8", mark: "#ff5a1f", label: "#ffffff" },
+    motif: "frames", label: "医疗 · 隔离", latin: "CLINICAL / QUARANTINE", caption: "手术白 · 墨黑 · 动脉红 — 隔离病区", dark: false, signal: "#c4161c",
+    // A ward under tube light: hotter than paper and with little fill, so the white burns and the shadows
+    // stay hard; a green cast, and far rows that sink into a grey-green haze (RhineTheme.cpp: 1.72 / .68 / .22
+    // against paper's 1.6 / .9 / .6).
+    room: { exposure: 1.1, env: .72, fill: .34, tint: "#cfe8dc" },
+    scene: { background: "#e3eae8", fog: "#a4b3ad", floor: "#cbd5d1" },
+    roles: { shell: "#e2e9e8", cover: "#ecf1f0", core: "#b7c2c0", metal: "#869292", mark: "#c4161c", label: "#ffffff" },
   },
   orbit: {
     motif: "orbit", label: "轨道 · 遥测", latin: "ORBITAL / TELEMETRY", caption: "深海军蓝 · 电光蓝 — 轨道遥测", dark: true,

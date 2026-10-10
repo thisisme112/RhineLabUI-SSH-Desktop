@@ -188,16 +188,31 @@ export class ThemePoster {
         text(`ZONE ${index}`, bx + 60, by + 40, 11, 400, 2, rgba(ink, .45));
         break;
       }
-      case "frames": { // sterile sheet: registration crosses (kept off the document column), a hairline figure in Z
-        for (let y = 90; y < H; y += 90) for (let x = 60; x < W; x += 90) {
-          if (clearOf(x, y)) continue;
-          box(x - 5, y, 11, 1, rgba(ink, .14)); box(x, y - 5, 1, 11, rgba(ink, .14));
+      case "frames": { // quarantine ward: wall tile, a red line run along the top, the containment notice and the figure in Z
+        for (let x = 60; x < W; x += 90) box(x, 0, 1, H, rgba(ink, .05));
+        for (let y = 90; y < H; y += 90) box(0, y, W, 1, rgba(ink, .05));
+        box(0, 18, W, 5, rgba(accent, .7));
+        // Runs from the line down the wall: hairlines of uneven length, each ending in a bead; short over the document column.
+        for (let k = 0; k < 22; k++) {
+          const x = 40 + ((k * 0.61803) % 1) * (W - 80), over = x > W * .6;
+          const length = (30 + ((k * 0.3819) % 1) * 250) * (over ? .35 : 1);
+          box(x, 23, 2, length, rgba(accent, .5));
+          disc(x + 1, 23 + length, 3.5, rgba(accent, .6));
         }
-        figure(zx, zy - 10, 150, 300, -4, ink, .08, 0, 170);
-        box(zx + zw - 260, zy + 30, 18, 18, rgba(accent, .8));
-        box(zx + zw - 232, zy + 39, 232, 1, rgba(cyan, .6));
-        text("STERILE FIELD / CLASS A", zx + zw - 232, zy + 48, 11, 600, 2.6, rgba(ink, .5));
-        text(`FILE ${s.code}   ${index}`, zx + zw - 232, zy + 66, 11, 400, 2, rgba(ink, .4));
+        figure(zx, zy - 10, 150, 700, -4, accent, .2, 0, 170);
+        const bx = zx + zw - 300, by = zy + 22, cx = bx + 35, cy = by + 36, r = 24;
+        box(bx, by, 70, 70, rgba(accent, .9));
+        // The biohazard sign, cut out of the block in the wall's white: three open rings and the hub.
+        for (let k = 0; k < 3; k++) {
+          const a = -Math.PI / 2 + k * Math.PI * 2 / 3;
+          ring(cx + r * .46 * Math.cos(a), cy + r * .46 * Math.sin(a), r * .56, r * .17, rgba(paper, .95));
+        }
+        disc(cx, cy, r * .2, rgba(accent, 1));
+        ring(cx, cy, r * .4, r * .11, rgba(paper, .95));
+        box(bx + 82, by, 218, 2, rgba(accent, .8));
+        text("QUARANTINE / LEVEL 4", bx + 82, by + 12, 14, 700, 2.4, rgba(ink, .6));
+        text(`SPECIMEN : ${s.code}`, bx + 82, by + 36, 11, 400, 2, rgba(ink, .45), 0, MONO);
+        text(`WARD : ${index}`, bx + 82, by + 54, 11, 400, 2, rgba(ink, .45), 0, MONO);
         break;
       }
       case "orbit": { // solid Bauhaus bodies in Z: one disc with a satellite on its orbit, a bar, the figure

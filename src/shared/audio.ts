@@ -43,7 +43,7 @@ export const VOICES: Record<Motif, Voice> = {
   shutters: PAPER_VOICE, // paper: the web's warm glass
   tide: { ...PAPER_VOICE, pitch: .841, decay: 1.35, air: 1.5, gain: .9, band: .8 }, // night: lower, longer, breathier
   hazard: { ...PAPER_VOICE, pitch: .72, decay: .6, air: .6, wave: 1, click: true, modes: 3 }, // hazard: a relay's clack
-  frames: { ...PAPER_VOICE, pitch: 1.5, decay: .45, air: .3, modes: 1, gain: .85 }, // clinic: a clean monitor beep
+  frames: { ...PAPER_VOICE, pitch: .6, decay: 1.9, air: 2.1, gain: .9, chirp: .93, band: .5, modes: 2, double: true }, // clinic: a low tone that sags and beats against itself, in a ward's hiss
   orbit: { ...PAPER_VOICE, pitch: 1.1, decay: 1.1, wave: 2, chirp: 1.08, band: 1.3 }, // orbit: an FM telemetry chirp
   plates: { ...PAPER_VOICE, pitch: .95, decay: .8, air: 1.2, band: .6, double: true }, // print: a pluck, then its second plate
   transit: { ...PAPER_VOICE, pitch: 1.26, decay: .85, air: .12, gain: .88, modes: 2, double: true }, // transit: the two-note station chime

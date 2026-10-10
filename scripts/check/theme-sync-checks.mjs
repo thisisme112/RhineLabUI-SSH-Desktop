@@ -55,15 +55,14 @@ export async function checkThemeSync({ evaluate, until, check, shot, send, sleep
   const during = await state();
   await check("a theme change leaves its corner card", `${during.mark !== null}`);
   // The count follows THEMES.length (theme-mark.ts), which changes as themes are added or retired.
-  await check("the card carries the theme number and Latin name", `${/THEME \d{2} \/ \d{2} · CLINICAL \/ STERILE/.test(during.mark?.text ?? "")}`);
+  await check("the card carries the theme number and Latin name", `${/THEME \d{2} \/ \d{2} · CLINICAL \/ QUARANTINE/.test(during.mark?.text ?? "")}`);
   await check("the card carries the motif glyph", `${during.mark?.glyph === true}`);
-  await check("the card's name turns over to the new theme", `${during.mark?.name === "医疗 · 无菌"}`);
+  await check("the card's name turns over to the new theme", `${during.mark?.name === "医疗 · 隔离"}`);
   await check("the palette itself changed", `${during.palette === "clinic"}`);
   await sleep(2400);
   const after = await state();
   await check("the corner card fades away after 1.7 s", `${after.mark === null}`);
   await check("the flip wave has ended and the rows are at rest", `${(await evaluate(`window.rhine.stats().flipping`)) === false}`);
-
   const clinic = await state();
   await check("the poster follows the theme (redrawn after the change)", `${clinic.posterDrawn > 50}`);
   await shot("theme-sync-clinic-home");
