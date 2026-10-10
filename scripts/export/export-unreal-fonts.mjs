@@ -159,4 +159,13 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     writeFileSync(path.join(mono, `jetbrains-mono-latin-${weight}.ttf`), woffToOpenType(readFileSync(source)));
   }
   console.log(`JetBrains Mono 400/700 -> ${path.relative(root, mono)}`);
+  // A second terminal face for the Unreal themes that set their shell in it (RhineTheme::TerminalType).
+  const plex = path.join(path.dirname(target), "IBMPlexMono");
+  rmSync(plex, { recursive: true, force: true });
+  mkdirSync(plex, { recursive: true });
+  for (const weight of [400, 700]) {
+    const source = path.join(root, "node_modules", "@fontsource", "ibm-plex-mono", "files", `ibm-plex-mono-latin-${weight}-normal.woff`);
+    writeFileSync(path.join(plex, `ibm-plex-mono-latin-${weight}.ttf`), woffToOpenType(readFileSync(source)));
+  }
+  console.log(`IBM Plex Mono 400/700 -> ${path.relative(root, plex)}`);
 }

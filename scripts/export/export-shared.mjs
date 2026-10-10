@@ -37,6 +37,7 @@ tree(path.join(root, "art/exports/unreal-brand"), "brand");
 for (const [abi, architecture] of [["arm64-v8a", "arm64"], ["armeabi-v7a", "armv7"], ["x86_64", "amd64"]]) add(`android/${abi}/librhine-session.so`, path.join(resourceDir, `rhine-session-android-${architecture}.so`));
 add("licenses/project.txt", path.join(root, "LICENSE")); tree(path.join(root, "public/licenses"), "licenses/assets");
 add("licenses/jetbrains-mono.txt", path.join(root, "node_modules/@fontsource/jetbrains-mono/LICENSE"));
+add("licenses/ibm-plex-mono.txt", path.join(root, "node_modules/@fontsource/ibm-plex-mono/LICENSE"));
 const sourceCommit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
 const manifest = { schemaVersion: 1, version, sourceCommit, protocol: 1, files: Object.fromEntries([...files].sort(([a], [b]) => a.localeCompare(b)).map(([name, bytes]) => [name, { size: bytes.length, sha256: sha256(bytes) }])) };
 files.set("manifest.json", Buffer.from(JSON.stringify(manifest, null, 2) + "\n"));
