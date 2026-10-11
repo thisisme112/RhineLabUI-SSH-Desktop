@@ -2,11 +2,15 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,6 +26,9 @@ type Config struct {
 	SessionID string        `json:"sessionId"`
 	SSH       native.Config `json:"ssh"`
 	Resources string        `json:"resources"`
+	// "agent": every service is a channel of one OpenSSH login to the remote agent (native/agent.go).
+	// Empty or "openssh": a login per service, as before.
+	Transport string `json:"transport"`
 }
 type Event struct {
 	Event     string `json:"event"`
@@ -71,7 +78,54 @@ func New(config Config, emit func(Event), auth func(native.Challenge) (string, b
 		cancel()
 		return nil, err
 	}
-	return &Service{Config: config, Emit: emit, ctx: ctx, cancel: cancel, Broker: broker, jobs: make(map[string]*Job), slots: make(chan struct{}, 2), listings: make(map[string]listing)}, nil
+	s := &Service{Config: config, Emit: emit, ctx: ctx, cancel: cancel, Broker: broker, jobs: make(map[string]*Job), slots: make(chan struct{}, 2), listings: make(map[string]listing)}
+	if config.Transport == "agent" {
+		binaries, err := agentBinaries(config.Resources)
+		if err != nil {
+			s.capability("transport", "unsupported", "服务端程序缺失，改为每项服务单独登录："+err.Error())
+		} else {
+			broker.UseAgent(binaries, func(state, message string) { s.capability("transport", state, message) })
+		}
+	}
+	return s, nil
+}
+
+// agentBinaries reads the Linux agent builds from manifest.json and checks each against its SHA-256.
+func agentBinaries(resources string) (map[string]native.AgentBinary, error) {
+	data, err := os.ReadFile(filepath.Join(resources, "manifest.json"))
+	if err != nil {
+		return nil, err
+	}
+	var assets manifest
+	if err := json.Unmarshal(data, &assets); err != nil {
+		return nil, err
+	}
+	result := map[string]native.AgentBinary{}
+	for _, arch := range []string{"amd64", "arm64"} {
+		entry, found := assets.Files["agent/linux/"+arch]
+		if !found || len(entry.SHA) != 64 || filepath.Base(entry.Name) != entry.Name || entry.Size <= 0 {
+			continue
+		}
+		path := filepath.Join(resources, entry.Name)
+		file, err := os.Open(path)
+		if err != nil {
+			return nil, err
+		}
+		digest := sha256.New()
+		size, err := io.Copy(digest, file)
+		file.Close()
+		if err != nil {
+			return nil, err
+		}
+		if size != entry.Size || hex.EncodeToString(digest.Sum(nil)) != strings.ToLower(entry.SHA) {
+			return nil, fmt.Errorf("%s 与清单不符", entry.Name)
+		}
+		result[arch] = native.AgentBinary{Path: path, SHA256: strings.ToLower(entry.SHA), Size: entry.Size}
+	}
+	if len(result) == 0 {
+		return nil, errors.New("清单中没有 agent/linux 构建")
+	}
+	return result, nil
 }
 
 // Shares the desktop file / transfer / monitor implementation with Android;

@@ -42,6 +42,7 @@ type AuthPeer struct {
 }
 type Broker struct {
 	client      *ssh.Client
+	agent       *agentTransport
 	listener    net.Listener
 	name        string
 	token       string
@@ -96,6 +97,9 @@ func NewBroker(handler func(Challenge) (string, bool)) (*Broker, error) {
 }
 func (b *Broker) Close() {
 	b.cancel()
+	if b.agent != nil {
+		b.agent.close()
+	}
 	if b.listener != nil {
 		_ = b.listener.Close()
 	}
@@ -196,10 +200,26 @@ func (c *Connection) observeAuthentication(line string) {
 	}
 }
 
+// Start opens one service connection: a channel of Android's transport, a channel of the single
+// connection to the remote agent when the desktop uses it, else its own OpenSSH login.
 func (b *Broker) Start(parent context.Context, config Config, source, command string, subsystem bool) (*Connection, error) {
 	if b.client != nil {
-		return b.startAuthenticated(parent, source, command, subsystem)
+		return b.startAuthenticated(b.client, parent, source, command, subsystem)
 	}
+	if b.agent != nil {
+		client, err := b.agent.dial(parent, config)
+		if err == nil {
+			return b.startAuthenticated(client, parent, source, command, subsystem)
+		}
+		// Only a server the agent cannot run on falls back to a login per service.
+		if !errors.Is(err, ErrAgentUnsupported) {
+			return nil, err
+		}
+	}
+	return b.startOpenSSH(parent, config, source, command, subsystem)
+}
+
+func (b *Broker) startOpenSSH(parent context.Context, config Config, source, command string, subsystem bool) (*Connection, error) {
 	if len(config.Args) == 0 || config.Executable == "" {
 		return nil, fmt.Errorf("missing SSH command")
 	}

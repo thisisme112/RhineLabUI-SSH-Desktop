@@ -30,7 +30,7 @@ function sourceDigest() {
           .update(fs.readFileSync(file));
     }
   };
-  for (const directory of ["internal", "cmd/bridge", "cmd/monitor", "cmd/session"])
+  for (const directory of ["internal", "cmd/agent", "cmd/bridge", "cmd/monitor", "cmd/session"])
     walk(path.join(source, directory));
   for (const file of [
     "go.mod",
@@ -59,6 +59,8 @@ function currentResources() {
         "bridge/" + os + "/" + arch,
         "monitor/linux/amd64",
         "monitor/linux/arm64",
+        "agent/linux/amd64",
+        "agent/linux/arm64",
         // Listed so that a resource directory built before the Android agent
         // existed is rebuilt rather than quietly kept.
         "session/android/arm64",
@@ -194,6 +196,9 @@ export async function buildServices() {
     ],
     ["linux", "amd64", "monitor"],
     ["linux", "arm64", "monitor"],
+    // The resident server half of the single-connection mode (cmd/agent), uploaded once per version.
+    ["linux", "amd64", "agent"],
+    ["linux", "arm64", "agent"],
   ];
   for (const [os, arch, command] of targets) {
     const name =
@@ -237,7 +242,7 @@ export async function buildServices() {
     JSON.stringify(manifest, null, 2) + "\n",
   );
   console.log(
-    "[ssh] Desktop bridge and Linux collectors built and checksummed",
+    "[ssh] Desktop bridge, Linux collectors and agents built and checksummed",
   );
 }
 

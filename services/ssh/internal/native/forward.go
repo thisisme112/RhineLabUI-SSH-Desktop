@@ -2,6 +2,7 @@ package native
 
 import (
 	"context"
+	"errors"
 	"io"
 )
 
@@ -24,11 +25,21 @@ func (s *forwardStream) CloseWrite() error           { return s.connection.Stdin
 // Android reuses its authenticated transport. Desktop uses a managed OpenSSH
 // direct-tcpip channel, preserving SSH config, agent and native credential flow.
 // -W opens no remote shell and cannot inherit configured listener sockets.
+// With the remote agent every forwarded connection is a direct-tcpip channel of its one login.
 func (b *Broker) OpenForward(ctx context.Context, config Config, address string) (io.ReadWriteCloser, error) {
 	if b.client != nil {
 		return b.client.DialContext(ctx, "tcp", address)
 	}
-	connection, err := b.Start(ctx, config, "tunnel", address, false)
+	if b.agent != nil {
+		client, err := b.agent.dial(ctx, config)
+		if err == nil {
+			return client.DialContext(ctx, "tcp", address)
+		}
+		if !errors.Is(err, ErrAgentUnsupported) {
+			return nil, err
+		}
+	}
+	connection, err := b.startOpenSSH(ctx, config, "tunnel", address, false)
 	if err != nil {
 		return nil, err
 	}

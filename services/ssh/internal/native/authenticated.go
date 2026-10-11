@@ -13,13 +13,16 @@ func NewAuthenticatedBroker(client *ssh.Client) *Broker {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Broker{client: client, ctx: ctx, cancel: cancel, connections: make(map[string]*Connection)}
 }
-func (b *Broker) startAuthenticated(parent context.Context, source, command string, subsystem bool) (*Connection, error) {
+
+// startAuthenticated opens a session channel on an authenticated client: Android's own transport, or the
+// desktop's single connection to the remote agent (agent.go).
+func (b *Broker) startAuthenticated(client *ssh.Client, parent context.Context, source, command string, subsystem bool) (*Connection, error) {
 	ctx, cancel := context.WithCancel(parent)
 	unhook := context.AfterFunc(b.ctx, cancel)
 	var remote *ssh.Session
 	var err error
 	ready := make(chan struct{})
-	go func() { remote, err = b.client.NewSession(); close(ready) }()
+	go func() { remote, err = client.NewSession(); close(ready) }()
 	select {
 	case <-ctx.Done():
 		go func() {
