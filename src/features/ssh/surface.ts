@@ -26,6 +26,8 @@ function stackFor(host: HTMLElement): Stack {
   const isolate = (event: Event) => {
     const top = stack.active.at(-1);
     if (!top) return;
+    // A companion (the maid's panel) works beside whatever surface is up: neither swallowed nor made inert.
+    if (event.target instanceof Element && event.target.closest("[data-surface-companion]")) return;
     if (
       !(event.target instanceof Node) ||
       !top.element.contains(event.target)
@@ -128,7 +130,7 @@ export class SurfaceScope {
       );
       const background = [...this.host.children, ...(this.host.parentElement?.children ?? [])];
       for (const child of background)
-        if (child instanceof HTMLElement && child !== this.host && !surfaces.has(child))
+        if (child instanceof HTMLElement && child !== this.host && !surfaces.has(child) && !child.hasAttribute("data-surface-companion"))
           this.stack.baseline.set(child, child.inert);
     }
     if (this.element.parentElement !== this.mount)

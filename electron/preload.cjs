@@ -98,6 +98,21 @@ contextBridge.exposeInMainWorld("rhineDesktop", {
     readText: () => ipcRenderer.invoke("terminal:clipboard-read"),
     writeText: (text) => ipcRenderer.invoke("terminal:clipboard-write", text),
   },
+  /**
+   * The maids' assistant (electron/maid-assistant.cjs): whose keys are kept, a key saved or forgotten (it is sealed in
+   * the main process and never read back), a request to her API with her key added there, her sealed records.
+   */
+  maid: {
+    keys: () => ipcRenderer.invoke("maid:keys"),
+    saveKey: (who, key) => ipcRenderer.invoke("maid:saveKey", { who, key }),
+    forgetKey: who => ipcRenderer.invoke("maid:forgetKey", who),
+    request: request => ipcRenderer.invoke("maid:request", request),
+    cancel: id => ipcRenderer.invoke("maid:cancel", id),
+    read: name => ipcRenderer.invoke("maid:read", name),
+    write: (name, text) => ipcRenderer.invoke("maid:write", { name, text }),
+    remove: name => ipcRenderer.invoke("maid:remove", name),
+    window: mode => ipcRenderer.invoke("maid:window", mode),
+  },
   /** Renderer-side crash/error reporting; metadata only, sanitized in main. */
   captureError: (entry) => ipcRenderer.invoke("diagnostic:event", entry),
   hostProfiles: {

@@ -1,0 +1,54 @@
+/* The maids on the label home (maid-home.ts): the field's dressing over the field, her box by the way in, her portrait before the clock. */
+.label-maid-decor { position: absolute; left: 0; top: 0; pointer-events: none; }
+.label-maid { position: absolute; left: 0; top: 0; width: 332px; height: 330px; pointer-events: auto; cursor: pointer; z-index: 2; transform-origin: 100% 100%; }
+.label-maid[hidden] { display: none; }
+.label-maid-her { position: absolute; right: 0; bottom: 0; pointer-events: none; }
+.label-sheet:not([data-page="archive"]) .label-maid { visibility: hidden; }
+
+/* Her head and shoulders, a square of her picture: Claude's from her look-out, DeepSeek's the head of her bust. */
+.label-maid-avatar {
+  flex: none; width: 48px; height: 48px; margin-left: 30px;
+  background-color: var(--theme-field); background-repeat: no-repeat; box-shadow: inset 0 -3px var(--theme-accent);
+}
+.label-maid-avatar[hidden] { display: none; }
+.label-maid-avatar[data-who="claude"] { background-size: 133.4px 123.4px; background-position: -54.5px -12px; }
+.label-maid-avatar[data-who="deepseek"] { background-size: 102.2px 102.2px; background-position: -27.6px -12.3px; }
+
+/* The maid in the terminal (maid-terminal.ts): lace under the bar, she in the screen's corner, the pad over her. */
+.ssh-terminal-main { position: relative; }
+.maid-terminal-lace { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 3; }
+.maid-terminal-her { position: absolute; right: 0; bottom: 0; pointer-events: none; z-index: 3; }
+.maid-terminal-touch { position: absolute; right: 0; bottom: 0; z-index: 4; cursor: pointer; touch-action: none; }
+.maid-terminal-touch[hidden] { display: none; }
+
+/* Her start-up (maid-opening.ts): over the whole viewport, under the entry screen as it fades. */
+.maid-opening { position: absolute; left: 0; top: 0; z-index: 45; pointer-events: none; }
+.maid-opening[hidden] { display: none; }
+
+/* 设置 → 看板娘: the look between its arrows. */
+.maid-settings .theme-choices { align-items: center; flex-wrap: nowrap; }
+.maid-look-name { min-width: 6.5em; text-align: center; font-weight: 600; white-space: nowrap; }
+
+/* The completion (assistant/terminal-ghost.ts): grey after the cursor, a slip at the foot of the screen. */
+.maid-ghost { position: absolute; z-index: 5; white-space: pre; pointer-events: none; color: var(--theme-muted, #888); opacity: .75; }
+.maid-ghost[hidden], .maid-strip[hidden] { display: none; }
+.maid-strip { position: absolute; left: 12px; bottom: 12px; z-index: 5; padding: 5px 10px; pointer-events: none; background: var(--theme-ink); color: var(--theme-paper); font-size: 11px; font-weight: 700; letter-spacing: .8px; }
+
+/* 问小克 / 问大肥鱼 in the terminal's bar: in her themes on the desktop (#viewport data-maid-assistant). */
+.ssh-terminal-maid { display: none; }
+#viewport[data-maid-assistant="claude"] .ssh-terminal-maid, #viewport[data-maid-assistant="deepseek"] .ssh-terminal-maid { display: inline-flex; }
+.ssh-terminal-maid span { display: none; }
+#viewport[data-maid-assistant="claude"] .ssh-terminal-maid [data-who="claude"], #viewport[data-maid-assistant="deepseek"] .ssh-terminal-maid [data-who="deepseek"] { display: inline; }
+.label-sheet:not([data-page="archive"]) .label-maid-opener { visibility: hidden; }
+
+/* 设置 → 看板娘 · 对话助手 (assistant/maid-assistant-settings.ts). */
+.maid-assistant-settings { padding-top: 8px; }
+.maid-settings-head { margin: 18px 0 4px; font-weight: 700; font-size: 15px; }
+.maid-settings-head small { display: block; margin-top: 4px; font-size: 12px; font-weight: 400; opacity: .7; }
+.maid-row > div:first-child { min-width: 0; }
+.maid-row > div:first-child span { display: block; overflow-wrap: anywhere; }
+.maid-controls { flex-wrap: wrap; align-items: center; max-width: 64%; }
+.maid-setting-input { width: 300px; max-width: 100%; padding: 7px 10px; border: 1px solid var(--theme-line, #bdb8ad); background: var(--theme-field, transparent); color: inherit; font: inherit; font-size: 13px; }
+.maid-settings-error { margin: 6px 0 0; font-size: 12px; font-weight: 600; color: var(--theme-accent); overflow-wrap: anywhere; }
+.maid-settings-error:empty { display: none; }
+.maid-settings-note { margin: 10px 0 0; font-size: 12px; line-height: 1.6; opacity: .7; }

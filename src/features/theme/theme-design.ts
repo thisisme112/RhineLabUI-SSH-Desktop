@@ -8,11 +8,17 @@
  * shell's own room and per-surface tables. The Unreal side stays in
  * RhineTheme.cpp: when a value changes, change both.
  */
-export const THEMES = ["paper", "night", "hazard", "clinic", "orbit", "print", "transit", "slate", "reagent", "cryo"] as const;
+export const THEMES = ["paper", "night", "hazard", "clinic", "orbit", "print", "transit", "slate", "reagent", "cryo", "claude", "deepseek"] as const;
 export type ThemeName = (typeof THEMES)[number];
 
 /** The figure a theme draws in; one per theme, named after the change-over it makes. */
-export type Motif = "shutters" | "tide" | "hazard" | "frames" | "orbit" | "plates" | "transit" | "darkroom" | "label" | "rack";
+export type Motif = "shutters" | "tide" | "hazard" | "frames" | "orbit" | "plates" | "transit" | "darkroom" | "label" | "rack" | "spark" | "bubbles";
+
+/** The themes with a maid in them (features/maid): Claude's 小克 and DeepSeek's 大肥鱼. */
+export type Mascot = "claude" | "deepseek";
+export function mascotOf(name: string | undefined): Mascot | undefined {
+  return name === "claude" || name === "deepseek" ? name : undefined;
+}
 
 export type SceneEnd = { background: string; fog: string; floor: string };
 export type Roles = { shell: string; cover: string; core: string; metal: string; mark: string; label: string };
@@ -103,6 +109,25 @@ export const DESIGNS: Record<ThemeName, ThemeDesign> = {
     scene: { background: "#08100e", fog: "#0b1311", floor: "#111c19" },
     roles: { shell: "#2a3a34", cover: "#22322c", core: "#121d19", metal: "#a9bdb4", mark: "#3debb0", label: "#e7f0eb" },
   },
+  // Claude (Unreal 2026-10-13): the maid the Chinese fan art draws the model as. Three flat inks cut like paper on a
+  // warm black: cream for type and lace, the terracotta of her hair as the one signal, the apricot of its highlights as
+  // the second ink. It draws with lace scallops, ribbons and the eight-spoke spark she wears, and it has pictures of her
+  // in it (public/maid/claude). Exposure .98, cube .6, fill .22 against night's 1.0 / .65 / .22.
+  claude: {
+    motif: "spark", label: "克劳德 · 女仆", latin: "CLAUDE / MAID", caption: "焦糖黑 · 奶油白 · 陶土橙 — 橙发女仆 Claude 娘", dark: true, signal: "#d97757",
+    room: { exposure: .98, env: .923, fill: 1, tint: "#ffe3d2" },
+    scene: { background: "#120b09", fog: "#0e0807", floor: "#1d1411" },
+    roles: { shell: "#3a2a25", cover: "#2e211d", core: "#1a110f", metal: "#d8c8ba", mark: "#d97757", label: "#f7ecdf" },
+  },
+  // DeepSeek (Unreal 2026-10-15): the whale the model is drawn as, a lively maid with a whale's tail (the fans call her
+  // 大肥鱼). Light where Claude's is dark: a sea-foam sheet, deep-sea navy for type, the brand's blue as the one signal
+  // and a little gold from her embroidery as the second; waves and bubbles. 1.55 / .95 / .6 against paper's 1.6 / .9 / .6.
+  deepseek: {
+    motif: "bubbles", label: "深求 · 鲸娘", latin: "DEEPSEEK / WHALE", caption: "海沫白 · 深海藏青 · 鲸蓝 — 鲸尾女仆大肥鱼", dark: false, signal: "#4d6bfe",
+    room: { exposure: .969, env: 1.056, fill: 1, tint: "#eef3ff" },
+    scene: { background: "#eef2ff", fog: "#e8eeff", floor: "#f8faff" },
+    roles: { shell: "#e6ecff", cover: "#f3f6ff", core: "#d5ddf6", metal: "#a3acc8", mark: "#4d6bfe", label: "#ffffff" },
+  },
 };
 
 /** Transit is the one theme with more than two inks: a route map has a colour per line. */
@@ -187,6 +212,15 @@ export function motifGlyph(motif: Motif): string {
       break;
     case "label": // a host mark in miniature: a 3x3 of solid cells
       [1, 1, 0, 1, 0, 1, 0, 1, 1].forEach((on, i) => { if (on) body += box(.08 + (i % 3) * .29, .08 + Math.floor(i / 3) * .29, .26, .26); });
+      break;
+    case "spark": // the spark she wears: eight spokes about a clear centre
+      for (let i = 0; i < 8; i++) {
+        const a = -Math.PI / 2 + i * Math.PI / 4;
+        body += line([[.5 + Math.cos(a) * .13, .5 + Math.sin(a) * .13], [.5 + Math.cos(a) * .42, .5 + Math.sin(a) * .42]], 3.2);
+      }
+      break;
+    case "bubbles": // three bubbles rising one after another, the largest last
+      for (let i = 0; i < 3; i++) body += ring(.28 + i * .22, .36 - i * .06, .08 + i * .045, 1.6);
       break;
     case "rack": // six wells of a plate, filled
       for (let i = 0; i < 6; i++) {
@@ -282,9 +316,23 @@ export function themeIcon(name: IconName, motif: Motif, className = "ssh-theme-i
     case "label": // a heavy outline with a solid lemon tab at its head, a reagent label's colour code
       body = rect([0, 0, .3, .3], 'fill="#e4f03a"') + outline(stroke * 1.6);
       break;
+    case "spark": // claude: a fine outline, and her spark on the corner in the second (apricot) ink
+      body = outline() + Array.from({ length: 4 }, (_, i) => {
+        const dx = Math.cos(i * Math.PI / 4) * .14, dy = Math.sin(i * Math.PI / 4) * .14;
+        return poly([[.88 - dx, .12 - dy], [.88 + dx, .12 + dy]], `stroke="var(--theme-cyan)" stroke-width="${stroke}"`);
+      }).join("");
+      break;
+    case "bubbles": { // deepseek: round and bubbly, a heavy outline with soft corners and two gold bubbles rising off the corner
+      const w = stroke * 1.4;
+      body = bodies.map(b => { const r = p(Math.min(b[2] - b[0], b[3] - b[1]) * .34); return rect(b, `rx="${r}" ry="${r}" fill="none" stroke="currentColor" stroke-width="${w}"`); }).join("") +
+        lines.map(l => poly(l, `stroke="currentColor" stroke-width="${w}"`)).join("") +
+        `<circle cx="${p(.87)}" cy="${p(.13)}" r="${p(.08)}" fill="none" stroke="var(--theme-cyan)" stroke-width="${stroke}"/>` +
+        `<circle cx="${p(.98)}" cy="${p(-.02)}" r="${p(.045)}" fill="none" stroke="var(--theme-cyan)" stroke-width="${stroke}"/>`;
+      break;
+    }
     default:
       body = outline();
   }
-  // The darkroom's crop marks sit just outside the icon.
-  return `<svg class="${className}" viewBox="0 0 16 16" aria-hidden="true" focusable="false"${motif === "darkroom" ? ' overflow="visible"' : ""}>${body}</svg>`;
+  // The darkroom's crop marks and the whale's bubbles sit just outside the icon.
+  return `<svg class="${className}" viewBox="0 0 16 16" aria-hidden="true" focusable="false"${motif === "darkroom" || motif === "bubbles" ? ' overflow="visible"' : ""}>${body}</svg>`;
 }

@@ -73,13 +73,24 @@ import {
   isActiveArchive,
 } from "../features/archives/data";
 import { TerminalAudio, VOICES } from "../shared/audio";
-import { motifOf } from "../features/theme/theme-design";
+import { mascotOf, motifOf } from "../features/theme/theme-design";
+import { preloadMaid } from "../features/maid/maid-art";
+import { MaidHome, type MaidColors } from "../features/maid/maid-home";
+import { pick } from "../features/maid/maid-lines";
+import { MaidTerminal } from "../features/maid/maid-terminal";
+import { MaidOpening } from "../features/maid/maid-opening";
+import { maidAssistant } from "../features/maid/assistant/maid-assistant";
+import { MaidWorkbench, type MaidSession } from "../features/maid/assistant/maid-workbench";
+import { MaidPanel } from "../features/maid/assistant/maid-panel";
+import { setMaidGreeter } from "../features/maid/assistant/maid-assistant-settings";
+import { terminalMaid } from "../features/maid/assistant/terminal-hooks";
 import { ThemePoster, type PosterState } from "../features/theme/theme-poster";
 import { setSceneThemes } from "../features/theme/theme-material";
 import { playThemeReveal } from "../features/theme/theme-reveal";
 import { showThemeMark } from "../features/theme/theme-mark";
 import { configureHoverCards } from "../shared/hover-card";
 import { LabelSheet, labelDocumentHeader, DOCUMENT_LEFT, type LabelFile, type LabelPage } from "../features/label/label-sheet";
+import { FIELD, FOOT, SPINE, TOP, settle } from "../features/label/label-kit";
 import { LabelWipe, type PageTurn } from "../features/label/label-wipe";
 import { hostMark, noteHostKey } from "../features/label/host-marks";
 import { setAttr, setData, setInert, setStyle } from "../shared/dom-write";
@@ -318,6 +329,16 @@ const labelSheet = desktopShell ? new LabelSheet(stageEl, {
   column: direction => stepColumn(direction),
 }, demoSsh) : undefined;
 const labelWipe = labelSheet ? new LabelWipe(viewportEl) : undefined;
+/** The maids on the home in their themes (maid-home.ts); a pat is a soft confirm from her side. */
+const maidHome = labelSheet ? new MaidHome(labelSheet.root, () => audio.play("confirm", .5, .55), () => maidPanel?.toggle()) : undefined;
+/**
+ * Her walk in (Unreal ClaudeStepIn), in seconds on the frame clock: during her change-over she sets off when the
+ * reveal says (its walkAt), and until then she is not there; after it she just stands there.
+ */
+let maidWalkAt = -Infinity, maidWalkPending = false;
+/** Her own start-up in her themes, in place of the opening film (maid-opening.ts); her small self walks in as it leaves. */
+const maidOpening = labelSheet ? new MaidOpening(viewportEl, (cue, gain = 1, pan = 0) => audio.play(cue, pan, gain)) : undefined;
+const maidStepIn = (time: number) => maidOpening?.active ? maidOpening.stepIn(time) : maidWalkPending ? -100 : maidWalkAt === -Infinity ? 1e9 : time - maidWalkAt;
 
 $("#boot-background").insertAdjacentHTML(
   "beforeend",
@@ -400,6 +421,7 @@ const prefs = {
 };
 setPalette(prefs.theme);
 paintTheme(DESIGNS[prefs.theme].dark ? 1 : 0);
+{ const maid = mascotOf(prefs.theme); if (maid) void preloadMaid(maid); }
 const rollingMotion = {
   duration: 460,
   motionBlur: true,
@@ -465,6 +487,9 @@ audio.setVoice(VOICES[motifOf(prefs.theme)]);
 let markedPalette: ThemeName = prefs.theme;
 /** A theme picked in settings (or by the wallpaper's light/dark property): remembered, then changed over to. */
 function chooseTheme(name: ThemeName, origin: readonly [number, number] = [.5, .5]) {
+  // A maid's pictures start decoding now, off the main thread, for her change-over and poster.
+  const maid = mascotOf(name);
+  if (maid) void preloadMaid(maid);
   prefs.theme = name;
   prefs.colorTheme = DESIGNS[name].dark ? "dark" : "light";
   savePrefs();
@@ -483,7 +508,11 @@ function changePalette(name: ThemeName, origin: readonly [number, number]) {
   markedPalette = name;
   audio.setVoice(VOICES[motifOf(name)]);
   audio.play("theme");
+  // Into a maid's theme: her small self waits for her big self to walk out of the middle (theme-reveal.ts walkAt).
+  maidWalkPending = Boolean(mascotOf(name)) && !prefs.reduced;
+  maidWalkAt = -Infinity;
   void playThemeReveal({
+    walkAt: at => { maidWalkAt = at / 1000; maidWalkPending = false; },
     motif: motifOf(name),
     apply: covered => {
       setPalette(name, !covered && !prefs.reduced);
@@ -496,6 +525,9 @@ function changePalette(name: ThemeName, origin: readonly [number, number]) {
     second: `rgb(${paletteRgb(name, "accent").join(" ")})`,
     origin,
     reduced: prefs.reduced,
+  }).finally(() => {
+    // A change-over that did not play her walk (no picture in time, or cut short) leaves her standing.
+    if (markedPalette === name && maidWalkPending) maidWalkPending = false;
   });
 }
 const reviewEntry = reviewParams.has("scene") || reviewParams.has("time") || reviewParams.get("review") === "1";
@@ -1651,8 +1683,10 @@ function updateLabel(time: number) {
   const page = labelPage();
   const inset = windowControlsHeight() / stageScale;
   scene?.setLabelLayout(active ? page === "overview" ? "shelf" : page === "archive" ? "home" : "" : "", inset);
-  if (!active && !pocket) { labelShown = false; labelTurnPage = ""; scene?.setLabelWindowed(false); return; }
-  if (!labelShown) { labelShown = true; labelSheet.arrive(time); labelRestSince = time + 3; }
+  if (!active && !pocket) { labelShown = false; labelTurnPage = ""; scene?.setLabelWindowed(false); updateMaidHome(time, false, "", inset); return; }
+  // Under her start-up the home waits; it arrives as her start-up leaves.
+  if (maidOpening?.covering) labelShown = false;
+  else if (!labelShown) { labelShown = true; labelSheet.arrive(time); labelRestSince = time + 3; }
   // The operating terminal is the workspace's own page: the sheet steps aside while it is up.
   const covered = (scene?.sessionDeckFocus ?? 0) > .05 || Boolean(sshTerminal?.isOpen) || sshTerminalPending;
   setData(labelSheet.root, "covered", String(covered));
@@ -1687,14 +1721,206 @@ function updateLabel(time: number) {
   const files = columnFiles(lane);
   // The overview prints the raised host's row in reverse.
   sshOverview?.setFocus(page === "overview" ? hostAtCard(selected)?.alias ?? null : null);
+  const file = labelFile();
   labelSheet.update({
     page, time, reduced: prefs.reduced, width: stageWidth, inset, pocket,
-    file: labelFile(),
+    file,
     lane: { index: lane, count: archiveColumns.length, name: archiveColumns[lane], position: files.indexOf(selected), files },
     // The phone's sheet draws nothing round the model: no outline to cut, no leader to pin.
     probe: pocket ? null : scene?.labelProbe() ?? null,
     selection: `${selected}|${records[selected].id}`,
   });
+  updateMaidHome(time, active && page === "archive" && !covered, file.name, inset);
+}
+let maidColors: { name: string; colors: MaidColors } | undefined;
+MaidTerminal.sound = cue => audio.play(cue === "pat" ? "confirm" : "ui-tick", .5, cue === "pat" ? .6 : .5);
+/** The maid on the home (maid-home.ts): her theme's, on the archive page of the desktop sheet. */
+function updateMaidHome(time: number, shown: boolean, name: string, inset: number) {
+  if (!maidHome || !labelSheet) return;
+  const palette = currentPalette(), who = mascotOf(palette);
+  if (maidColors?.name !== palette) updateMaidColors(palette);
+  const reduced = prefs.reduced, stepIn = maidStepIn(time), walking = stepIn < 1e8;
+  maidHome.update({
+    who, time, shown: shown && Boolean(who), k: stageScale * devicePixelRatio,
+    field: [FIELD, 1080 - inset - TOP - FOOT],
+    fieldIn: reduced ? 1 : labelSheet.arrival(time, 1.9),
+    herIn: reduced || walking ? 1 : labelSheet.arrival(time, 2.2),
+    slide: reduced || walking ? 1 : labelSheet.arrival(time, 2.0, .6),
+    change: reduced ? 1 : labelSheet.changed(time),
+    line: who ? maidWorkbench ? maidWorkbench.line(maidHomeLine(who, name)) : maidHomeLine(who, name) : "",
+    working: maidAssistant.isBusy, panel: Boolean(maidPanel?.isOpen), gladAt: maidWorkbench?.gladAt ?? -100,
+    stepIn,
+    colors: maidColors!.colors,
+    window: [stageWidth - FIELD - SPINE, 1080 - inset - TOP - FOOT],
+    aside: maidAsideAt(time),
+    opener: maidPanel && who ? maidPanel.isOpen ? "收起对话" : maidAssistant.log.length ? pick(who, "打开对话 ♡", "打开对话 ～") : pick(who, "和小克说话 ♡", "和大肥鱼聊天 ～") : "",
+  });
+  // Her walk and her breath are motion the frame budget does not see in the scene.
+  if (who && shown && (walking || maidWalkPending)) frameBudget?.busy(time * 1000, 300);
+}
+// ── Her assistant (desktop): the workbench's half, her panel, the terminal's hooks ──────────────────────────
+const maidWho = () => mascotOf(currentPalette()) ?? "claude";
+/** A host's state as she names it. */
+function maidHostState(alias: string) {
+  const client = sshBank?.forAlias(alias)?.client;
+  if (!client || client.target !== alias) return "未连接";
+  const phase = client.status().phase;
+  return phase === "interactive" ? "已连接" : phase === "closed" ? "会话已结束" : phase === "failed" ? "连接失败" : client.active ? "连接中" : "未连接";
+}
+function maidSession(): MaidSession | null {
+  const session = sshBank?.active, panel = session?.panel, client = session?.client;
+  if (!session || !panel || !client?.target) return null;
+  const host = hostCards?.bound.find(entry => entry.alias === client.target);
+  const services = session.services;
+  return {
+    key: session.key, generation: client.generation, hostKey: host ? `${host.user}@${host.hostname}` : client.target,
+    running: client.active, reachedShell: panel.reachedShell, interactive: client.status().phase === "interactive", prompt: Boolean(client.pendingPrompt),
+    term: panel.screenTerminal, sent: panel.sentBytes, shown: panel.screenRevision, send: data => { panel.sendInput(data); },
+    filesReady: services.state?.sftp.state === "ready",
+    readFile: async path => {
+      const result = await services.files?.readText({ sessionId: services.sessionId, path }).catch(error => ({ ok: false, error: String(error), result: undefined }));
+      return result?.ok && result.result ? { ok: true, text: result.result.text } : { ok: false, error: result?.error ?? "文件服务不可用" };
+    },
+  };
+}
+function maidMonitor() {
+  const sample = sshBank?.active.services.state?.sample;
+  if (!sample) return "";
+  let line = `监控（${sample.hostname}）：`;
+  if (sample.cpu?.usage != null) line += `CPU ${Math.round(sample.cpu.usage)}%（${sample.cpu.cores} 核），`;
+  if (sample.memory && sample.memory.total > 0) line += `内存 ${(sample.memory.used / 1073741824).toFixed(1)} / ${(sample.memory.total / 1073741824).toFixed(1)} GiB，`;
+  for (const gpu of sample.gpus) line += `GPU${gpu.index} ${gpu.name} 占用 ${Math.max(0, Math.round(gpu.utilization ?? 0))}%，`;
+  for (const disk of sample.disks) if (disk.total > 0) line += `磁盘 ${disk.mount} 已用 ${Math.round(100 * disk.used / disk.total)}%，`;
+  return line;
+}
+const maidWorkbench = desktopShell && maidAssistant.available ? new MaidWorkbench({
+  who: maidWho,
+  hosts: () => (hostCards?.bound ?? []).map(host => ({ key: host.alias, name: hostLabel(host), user: host.user, host: host.hostname, port: host.port,
+    password: host.profile?.authMode === "password", state: maidHostState(host.alias) })),
+  selected: () => { const host = hostAtCard(selected); return host ? (hostCards?.bound ?? []).indexOf(host) : -1; },
+  page: () => sshTerminal?.isOpen ? "terminal" : mode === "detail" ? "host_file" : sshOverview && !sshOverview.isCollapsed ? "hosts" : "home",
+  session: maidSession,
+  selectedRunning: () => { const host = hostAtCard(selected); return Boolean(host && sshBank?.forAlias(host.alias)?.client.active); },
+  monitor: maidMonitor,
+  focusHost: index => {
+    const host = hostCards?.bound[index], card = host ? hostCards?.cardOf(host.alias) : undefined;
+    if (card === undefined) return;
+    if (mode === "detail") setMode("archive");
+    select(card);
+  },
+  connectSelected: () => { const host = hostAtCard(selected); if (host) connectHostAlias(host.alias); },
+  openTerminal: () => { const host = hostAtCard(selected); if (host) openHostSession(host.alias); },
+  closeTerminal: () => closeSshTerminal?.(),
+  openHostFile: () => { sshOverview?.setCollapsed(true); if (mode !== "detail") openFile(); },
+  showHome: overview => { if (mode === "detail") setMode("archive"); sshOverview?.setCollapsed(!overview); },
+  openSettings: section => {
+    if (section === "terminal") { openSettingsSection("terminal"); return; }
+    openModal("settings");
+    const target = section === "claude" ? ".maid-settings" : section === "sound" ? ".audio-setting" : section === "render" ? ".quality-heading" : ".theme-settings";
+    requestAnimationFrame(() => document.querySelector(target)?.scrollIntoView({ block: "center" }));
+  },
+  setTheme: name => { if (!isTheme(name)) return null; chooseTheme(name); return DESIGNS[name].label; },
+  setTerminalStyle: async (size, line) => {
+    // The terminal's type is the SSH workspace's, loaded with it.
+    const { terminalAppearance } = await import("../features/ssh/terminal-appearance");
+    const now = terminalAppearance.value;
+    terminalAppearance.update({ size: size > 0 ? Math.min(28, Math.max(8, size)) : now.size, lineHeight: line > 0 ? Math.min(1.8, Math.max(1, line)) : now.lineHeight });
+    return { size: terminalAppearance.value.size, line: terminalAppearance.value.lineHeight };
+  },
+  setWindow: windowMode => { void window.rhineDesktop?.maid?.window(windowMode); },
+  setSound: (on, volume) => {
+    prefs.sound = on;
+    if (volume >= 0) prefs.soundVolume = Math.min(1, Math.max(0, volume));
+    saveAudioPrefs(); configureAudio();
+    if (on) audio.play("confirm");
+    return prefs.soundVolume;
+  },
+  copy: text => { if (window.rhineDesktop?.clipboard) void window.rhineDesktop.clipboard.writeText(text); else void navigator.clipboard?.writeText(text); },
+  disconnectSelected: () => stopSshSession(),
+  selectPanel: page => { if (!sshTerminal?.isOpen) return false; sshTerminal.selectPage(page); return true; },
+  openPanel: () => maidPanel?.show(),
+  play: cue => audio.play(cue, .3, .5),
+}) : undefined;
+const maidRgb = (key: "ink" | "paper" | "accent" | "panel") => paletteRgb(currentPalette(), key) as unknown as MaidColors["ink"];
+const maidPanel = maidWorkbench ? new MaidPanel(viewportEl, maidWorkbench, {
+  who: maidWho,
+  reduced: () => prefs.reduced,
+  selectedHost: () => { const host = hostAtCard(selected); return host ? { key: host.alias, name: hostLabel(host) } : null; },
+  play: cue => audio.play(cue, .3, .5),
+  colors: () => ({ ink: maidRgb("ink"), paper: maidRgb("paper"), accent: maidRgb("accent"), panel: maidRgb("panel") }),
+  density: () => devicePixelRatio * maidScale(),
+  closed: () => { if (sshTerminal?.isOpen) sshTerminal.focus(); },
+}) : undefined;
+if (maidWorkbench && maidPanel) {
+  setMaidGreeter(text => { maidPanel.show(); maidWorkbench.ask(text); });
+  terminalMaid.state = () => ({
+    line: maidWorkbench.override() || undefined, hold: maidWorkbench.hold(), face: maidWorkbench.face(), mood: maidWorkbench.mood, moodAt: maidWorkbench.moodAt,
+    talking: maidWorkbench.talking(), away: maidPanel.isOpen,
+  });
+  terminalMaid.keys = (panel, event) => panel === sshTerminal && maidWorkbench.chord(event);
+  terminalMaid.typed = (panel, data) => { if (panel === sshTerminal) maidWorkbench.watchTyping(data); };
+  terminalMaid.ask = () => maidPanel.toggle();
+}
+/** Her panel is scaled with the window as the stage is (never below .7). */
+function maidScale() { return Math.max(.7, stageScale); }
+let maidAside = { from: 0, to: 0, at: -10 };
+/** 0 at her place on the home, 1 up on the selected card with her panel open: over half a second. */
+function maidAsideAt(time: number): number {
+  const value = () => prefs.reduced ? maidAside.to : maidAside.from + (maidAside.to - maidAside.from) * settle(Math.min(1, (time - maidAside.at) / .5));
+  const target = maidPanel?.isOpen ? 1 : 0;
+  if (target !== maidAside.to) maidAside = { from: value(), to: target, at: time };
+  return value();
+}
+/** Her assistant once a frame: the workbench, her panel, the completion over the terminal on show. */
+function maidAssistantFrame() {
+  if (!maidWorkbench || !maidPanel) return;
+  const who = mascotOf(currentPalette());
+  setData(viewportEl, "maidAssistant", who ?? "");
+  // Out of her themes her panel is put away.
+  if (!who && maidPanel.isOpen) maidPanel.toggle();
+  setStyle(viewportEl, "--maid-s", String(maidScale()));
+  maidWorkbench.tick();
+  maidPanel.frame();
+  if (maidPanel.isOpen || maidAssistant.isBusy) frameBudget?.busy(performance.now(), 300);
+  for (const session of sshBank?.sessions ?? []) {
+    const on = session.panel === sshTerminal && session.panel.isOpen;
+    session.panel.ghost.update(on ? session.panel.screenTerminal : null, on ? maidWorkbench.suggestion : "", on ? maidWorkbench.strip() : "");
+  }
+}
+/** Her walk is heard: a soft rush as the doorways open, a footfall each stride, a chime as she arrives. */
+let maidStepWas = 1e9;
+function maidWalkSounds(time: number) {
+  if (!mascotOf(currentPalette())) { maidStepWas = 1e9; return; }
+  const step = maidStepIn(time), crossed = (at: number) => maidStepWas > -50 && maidStepWas < 1e8 && maidStepWas < at && step >= at && step < 1e8;
+  if (crossed(-.2)) audio.play("open", .4, .7);
+  for (let at = 0; at < 1; at += .25) if (crossed(at)) audio.play("tick", .3, .7);
+  if (crossed(1)) audio.play("confirm", .5, .9);
+  maidStepWas = step;
+}
+/** The maids in the terminals that are on screen (maid-terminal.ts), on this frame. */
+function maidTerminalFrame(time: number) {
+  const palette = currentPalette(), who = mascotOf(palette);
+  if (maidColors?.name !== palette) updateMaidColors(palette);
+  MaidTerminal.frame({ who, time, stepIn: maidStepIn(time), colors: maidColors!.colors });
+}
+function updateMaidColors(palette: ThemeName) {
+  const rgb = (key: "ink" | "paper" | "accent" | "cyan") => paletteRgb(palette, key) as unknown as MaidColors["ink"];
+  maidColors = { name: palette, colors: { ink: rgb("ink"), paper: rgb("paper"), accent: rgb("accent"), cyan: rgb("cyan") } };
+}
+/** What she says of the selected host (RhineLabelHome.cpp, the companion's Line). */
+function maidHomeLine(who: "claude" | "deepseek", name: string) {
+  const host = hostAtCard(selected);
+  const ready = pick(who, `主人，${name} 的档案备好了。`, `主人，${name} 的档案准备好啦！`);
+  // The archive's own index card (not a host): what is in the archive.
+  if (!host) return hostCards?.bound.length ? pick(who, "主人，档案都在这儿了。", "主人，档案都在这儿啦！") : pick(who, "主人，这里还没有档案呢。", "主人，这片海还没有档案呢！");
+  const client = sshBank?.forAlias(host.alias)?.client;
+  if (!client || client.target !== host.alias) return ready;
+  switch (client.status().phase) {
+    case "interactive": return pick(who, `${name} 已接通，随时听候吩咐。`, `${name} 连上啦，随时出发！`);
+    case "closed": return pick(who, "会话结束了，主人辛苦了。", "会话结束啦，主人辛苦了！");
+    case "failed": return pick(who, "非常抱歉，没能接通……", "呜……没能连上……");
+    default: return client.active ? pick(who, "正在为您接通，请稍候。", "全速连接中，稍等哦～") : ready;
+  }
 }
 // A phone that cannot hold its budget renders smaller instead of stuttering (frame-budget.ts ResolutionGovernor).
 const governor = frameBudget && isPhone ? new ResolutionGovernor() : undefined;
@@ -1726,7 +1952,7 @@ function frame(ms: number) {
   workbench?.tick();
   portals?.sync();
   // A portal's page covers the window; so does a phone's host overview, whose sheet is opaque from the strip down.
-  scene?.setPageCovered(Boolean(portals?.isPageOpen) || (labelPocket() && labelPage() === "overview"));
+  scene?.setPageCovered(Boolean(portals?.isPageOpen) || (labelPocket() && labelPage() === "overview") || Boolean(maidOpening?.covering));
   const time = ms / 1000;
   const theme = scene?.themeAmount ?? (DESIGNS[prefs.theme].dark ? 1 : 0);
   paintTheme(theme);
@@ -1739,6 +1965,8 @@ function frame(ms: number) {
       : undefined;
   wallpaperEffects?.update(time, prefs.reduced);
   sshFrame?.(time);
+  if (mode !== "boot") { maidTerminalFrame(time); maidAssistantFrame(); maidWalkSounds(time); }
+  if (maidOpening?.active) { maidOpening.update(time); frameBudget?.busy(ms, 250); }
   // The calibrated 2D opening fully covers the scene until array entry.
   if (!viewer?.isOpen && (!cinema || cinema.time >= 21.9)) scene?.update(time, cinema);
   if (frameBudget && scene) {
@@ -1949,6 +2177,19 @@ async function start() {
     $("#loading button").addEventListener("click", () => location.reload());
   }
 }
+/** Whether the opening is hers: a maid's theme on the desktop sheet, a landscape window, motion not reduced, not scripted to a scene. */
+function playsMaidOpening() {
+  if (!maidOpening || !mascotOf(prefs.theme) || prefs.reduced || isWallpaper || prefs.design === "classic") return false;
+  if (reviewEntry && !reviewParams.has("maid-opening")) return false;
+  return viewportEl.clientWidth >= viewportEl.clientHeight;
+}
+// Any key or click while her start-up plays starts its leaving at once (and does nothing else).
+for (const type of ["keydown", "pointerdown"] as const) window.addEventListener(type, event => {
+  if (!maidOpening?.covering || !started) return;
+  if (type === "keydown" && ["Shift", "Control", "Alt", "Meta"].includes((event as KeyboardEvent).key)) return;
+  event.preventDefault(); event.stopPropagation();
+  maidOpening.leave(performance.now() / 1000);
+}, { capture: true });
 function completeStartup(silent: boolean) {
   if (started || !ready) return;
   started = true;
@@ -1964,6 +2205,14 @@ function completeStartup(silent: boolean) {
   if (!reviewParams.has("time")) bootStart += fade / 1000;
   setMode("boot");
   if (reviewParams.get("scene") === "archive" || (prefs.reduced && !reviewParams.has("time"))) setMode("archive");
+  else if (playsMaidOpening()) {
+    // Her theme: her own start-up in place of the film, over the home that waits under it.
+    const who = mascotOf(prefs.theme)!;
+    setMode("archive");
+    updateMaidColors(prefs.theme);
+    const { ink: cream, paper: ground, accent: mark } = maidColors!.colors;
+    maidOpening!.start(who, performance.now() / 1000 + (fade / 1000), () => hostCards?.bound.length ?? 0, { ground, cream, mark });
+  }
   if (reviewParams.get("scene") === "detail") setMode("detail");
   if (isWallpaper && wallpaperHost()?.properties.boot?.value === false) setMode("archive");
   $("#stage").inert = false;

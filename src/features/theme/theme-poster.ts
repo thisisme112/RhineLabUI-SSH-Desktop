@@ -1,6 +1,8 @@
 import { sigil } from "../../shared/sigil";
 import { textureContext } from "../../shared/texture-canvas";
 import { TRANSIT_LINES, type Motif } from "./theme-design";
+import { ART, maidArt, onMaidArt } from "../maid/maid-art";
+import { bubble, scallops, spark, waveFill, waveLine } from "../maid/maid-draw";
 
 type Rgb = readonly number[];
 
@@ -76,6 +78,8 @@ export class ThemePoster {
     // A canvas keeps the fallback face a draw fell back to: a face that loads later
     // (a MiSans subset, the mono or display face) draws the poster again.
     document.fonts.addEventListener("loadingdone", () => { this.signature = ""; });
+    // So does a maid's picture once it has decoded (her poster leans her on its rows).
+    onMaidArt(() => { if (this.signature.startsWith("spark|") || this.signature.startsWith("bubbles|")) this.signature = ""; });
   }
 
   update(state: PosterState) {
@@ -108,6 +112,14 @@ export class ThemePoster {
     ctx.clearRect(0, 0, width / scale, 1080);
     this.draw(ctx, width / scale, 1080, state, easeOut(change));
     this.revision++;
+  }
+
+  /** A maid leaning on her elbow, 300 high, her right edge at `right` (the third cut-out). */
+  private leaning(ctx: CanvasRenderingContext2D, who: "claude" | "deepseek", right: number, top: number) {
+    const art = maidArt(who, ART.lean);
+    if (!art) return;
+    const high = 300, wide = high * art.width / art.height;
+    ctx.save(); ctx.globalAlpha = .94; ctx.drawImage(art, right - wide, top, wide, high); ctx.restore();
   }
 
   private draw(ctx: CanvasRenderingContext2D, W: number, H: number, s: PosterState, change: number) {
@@ -342,6 +354,34 @@ export class ThemePoster {
         for (let y = 0; y < 8; y++) text(String.fromCharCode(65 + y), px - 14, py + y * pitch + 5, 9, 700, 0, rgba(ink, .3), 0, MONO);
         text("CRYO STOCK  −80 °C", zx, zy - 30, 11, 700, 11 * .16, rgba(signal, .7), 0, MONO);
         text(`WELL ${String.fromCharCode(65 + row)}${column + 1}   ${index}   ${s.group}`, zx, zy - 12, 11, 400, 1.6, rgba(ink, .4));
+        break;
+      }
+      case "spark": { // a parlour wall: a lace edge under the top of the sheet and her sparks strewn faint (none behind the document column); in Z she leans on her elbow above the rows and bobs up with each record, the figure in the terracotta of her hair under a ribbon rule
+        box(0, 12, W, 6, rgba(ink, .1));
+        clip(0, 18, W, 22, () => scallops(ctx, 0, 18, W, 18, 26, rgba(ink, .1)));
+        for (let k = 0; k < 22; k++) {
+          const x = 60 + ((k * .61803) % 1) * (W - 120), y = 90 + ((k * .3819) % 1) * (H - 180);
+          if (!clearOf(x, y)) spark(ctx, x, y, 9 + ((k * .27) % 1) * 15, 2.4, rgba(k % 3 ? ink : accent, k % 3 ? .07 : .16), k * .4);
+        }
+        text("CLAUDE / MAID ON DUTY", zx, zy - 34, 11, 600, 3, rgba(ink, .5));
+        text(`${index}   ${s.group}`, zx, zy - 16, 11, 400, 1.6, rgba(ink, .4));
+        box(zx, zy + 8, 64, 3, rgba(accent, .8));
+        figure(zx, zy + 14, 150, 800, 0, accent, .3, 0, 170, DISPLAY);
+        this.leaning(ctx, "claude", zx + zw, zy - 44 + 18 * (1 - change));
+        break;
+      }
+      case "bubbles": { // her deck by the sea: swells rolling along the sheet's head and bubbles strewn faint (none behind the document column); in Z she leans on her elbow and bobs up with each record, the figure in the whale blue under a wave rule
+        waveFill(ctx, 0, W, 22, 6, 90, 0, 0, rgba(accent, .12));
+        waveLine(ctx, 0, W, 34, 5, 90, 1.2, 2.5, rgba(accent, .14));
+        for (let k = 0; k < 24; k++) {
+          const x = 60 + ((k * .61803) % 1) * (W - 120), y = 90 + ((k * .3819) % 1) * (H - 180);
+          if (!clearOf(x, y)) bubble(ctx, x, y, 6 + ((k * .27) % 1) * 14, rgba(k % 3 ? ink : accent, k % 3 ? .07 : .16));
+        }
+        text("DEEPSEEK / WHALE ON DECK", zx, zy - 34, 11, 600, 3, rgba(ink, .5));
+        text(`${index}   ${s.group}`, zx, zy - 16, 11, 400, 1.6, rgba(ink, .4));
+        waveLine(ctx, zx, zx + 70, zy + 10, 3, 24, 0, 3, rgba(accent, .8));
+        figure(zx, zy + 14, 150, 800, 0, accent, .3, 0, 170, DISPLAY);
+        this.leaning(ctx, "deepseek", zx + zw, zy - 44 + 18 * (1 - change));
         break;
       }
     }

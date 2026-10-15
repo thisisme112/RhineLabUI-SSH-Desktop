@@ -443,6 +443,30 @@ function registerSessionIpc() {
 }
 
 function registerShellIpc() {
+  // The maids' keys, requests and sealed records (maid-assistant.cjs): the key never leaves this process.
+  const { MaidAssistant } = require("../maid-assistant.cjs");
+  const maid = new MaidAssistant(runtimeContext.app.getPath("userData"), runtimeContext.safeStorage);
+  const trusted = (channel, listener) => runtimeContext.ipcMain.handle(channel, (event, ...args) =>
+    runtimeContext.trustedSender(event) ? listener(event, ...args) : { ok: false, error: "请求来源无效" });
+  trusted("maid:keys", () => maid.status());
+  trusted("maid:saveKey", (_event, request) => maid.save(request?.who, request?.key));
+  trusted("maid:forgetKey", (_event, who) => maid.forget(who));
+  trusted("maid:request", (_event, request) => maid.request(request));
+  trusted("maid:cancel", (_event, id) => maid.cancel(id));
+  trusted("maid:read", (_event, name) => maid.read(name));
+  trusted("maid:write", (_event, request) => maid.write(request?.name, request?.text));
+  trusted("maid:remove", (_event, name) => maid.remove(name));
+  // Her set_window: the window as a window, maximised, or full screen.
+  trusted("maid:window", (event, mode) => {
+    const win = runtimeContext.BrowserWindow.fromWebContents(event.sender);
+    if (!win || win.isDestroyed()) return { ok: false, error: "窗口不可用" };
+    if (mode === "fullscreen") win.setFullScreen(true);
+    else {
+      if (win.isFullScreen()) win.setFullScreen(false);
+      if (mode === "maximized") win.maximize(); else if (win.isMaximized()) win.unmaximize();
+    }
+    return { ok: true };
+  });
   // The theme change-over captures the window as it is, to break it up over the new theme.
   runtimeContext.ipcMain.handle("shell:capture", async (event) => {
     if (!runtimeContext.trustedSender(event)) return null;

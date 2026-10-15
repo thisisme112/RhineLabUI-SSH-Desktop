@@ -82,6 +82,8 @@ export type PlatformBridge = {
     }): Promise<{ ok: boolean; key?: SshKeyEntry; error?: string }>;
     remove(id: string): Promise<{ ok: boolean; error?: string }>;
   };
+  /** The maids' assistant (electron/maid-assistant.cjs). Desktop only; the key is never handed back. */
+  maid?: MaidBridge;
   /** Past session records, read back for the host cards. */
   records?: {
     list(): Promise<{
@@ -110,6 +112,21 @@ export type PlatformBridge = {
       errors?: string[];
     }>;
   };
+};
+
+export type MaidWho = "claude" | "deepseek";
+export type MaidKeySource = "saved" | "env" | "";
+export type MaidBridge = {
+  keys(): Promise<{ ok: boolean; keys?: Record<MaidWho, MaidKeySource>; available?: boolean; error?: string }>;
+  saveKey(who: MaidWho, key: string): Promise<{ ok: boolean; keys?: Record<MaidWho, MaidKeySource>; error?: string }>;
+  forgetKey(who: MaidWho): Promise<{ ok: boolean; keys?: Record<MaidWho, MaidKeySource>; error?: string }>;
+  request(request: { id?: string; who: MaidWho; url: string; body: string; auth: "anthropic" | "bearer"; beta?: string; workspace?: string; timeout?: number }):
+    Promise<{ ok: boolean; status: number; text: string; error?: string }>;
+  cancel(id: string): Promise<{ ok: boolean }>;
+  read(name: "history" | "commands"): Promise<{ ok: boolean; text?: string; error?: string }>;
+  write(name: "history" | "commands", text: string): Promise<{ ok: boolean; error?: string }>;
+  remove(name: "history" | "commands"): Promise<{ ok: boolean; error?: string }>;
+  window(mode: "windowed" | "maximized" | "fullscreen"): Promise<{ ok: boolean; error?: string }>;
 };
 
 declare global {

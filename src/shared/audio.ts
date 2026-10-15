@@ -50,6 +50,8 @@ export const VOICES: Record<Motif, Voice> = {
   darkroom: { ...PAPER_VOICE, pitch: .9, decay: .38, air: 1.8, band: .7, gain: .9, modes: 1, click: true }, // slate: a dry shutter tick
   label: { ...PAPER_VOICE, pitch: 1.19, decay: .5, air: .35, gain: .9, modes: 2, click: true }, // reagent: a label printer's short stamp
   rack: { ...PAPER_VOICE, pitch: 1.42, decay: 1.6, air: .5, gain: .82, modes: 4, chirp: .98 }, // cryo: a cold glass ting off a sample tube
+  spark: { ...PAPER_VOICE, pitch: 1.5, decay: 1, air: .15, gain: .84, modes: 3, double: true }, // claude: a service bell, struck twice, a fifth over paper's glass
+  bubbles: { ...PAPER_VOICE, pitch: .96, decay: .62, air: .22, band: .5, gain: .9, chirp: 1.38, modes: 1 }, // deepseek: a water drop, a pure tone that bends well up as it sounds
 };
 export type SoundScene = "boot" | "archive" | "detail" | "viewer";
 export type AudioPreferences = {

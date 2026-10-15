@@ -34,6 +34,8 @@ const THEME_TYPE: Record<string, TerminalType> = {
   slate: { font: "jetbrains", size: 13, spacing: 0, lineHeight: 1.25 },
   reagent: { font: "consolas", size: 13.5, spacing: .1, lineHeight: 1.15 },
   cryo: { font: "system", size: 13.5, spacing: .2, lineHeight: 1.2 },
+  claude: { font: "plex", size: 13.5, spacing: 0, lineHeight: 1.2 },      // a neat hand, a little open
+  deepseek: { font: "jetbrains", size: 13.5, spacing: 0, lineHeight: 1.2 }, // round and friendly
 };
 const themeType = () => THEME_TYPE[document.documentElement.dataset.colorPalette ?? ""] ?? REFERENCE_TYPE;
 /** The cursor shapes the Unreal build offers (方块 / 竖线 / 下划线), as xterm names them. */

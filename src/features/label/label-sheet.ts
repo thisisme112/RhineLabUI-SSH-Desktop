@@ -227,6 +227,16 @@ export class LabelSheet {
     this.root.dataset.arriving = "";
   }
 
+  /** How far a piece of the home has arrived (Unreal LabelIn): `delay` seconds after the home began to, over `span`. */
+  arrival(time: number, delay: number, span = .5) {
+    return settle(Math.min(1, Math.max(0, (time - this.arrivedAt - delay) / span)));
+  }
+
+  /** 0..1 since the selection last changed (Unreal Changed). */
+  changed(time: number) {
+    return Math.min(1, Math.max(0, (time - this.changedAt) / DECODE));
+  }
+
   update(frame: LabelFrame) {
     const { time, file } = frame;
     if (frame.page !== this.page) {

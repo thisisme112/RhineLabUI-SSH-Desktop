@@ -1,5 +1,7 @@
 import { getPlatformBridge } from "../../platform/bridge.ts";
 import { TRANSIT_LINES, type Motif } from "./theme-design";
+import { preloadMaid } from "../maid/maid-art";
+import { drawMaidReveal, drawWhaleReveal, MAID_REVEAL, MAID_STEP, WHALE_REVEAL, WHALE_STEP } from "../maid/maid-reveal";
 
 /**
  * The theme change-over (the Unreal build's RhineThemeReveal.h): the window as
@@ -18,9 +20,17 @@ import { TRANSIT_LINES, type Motif } from "./theme-design";
  *   darkroom  contact-sheet frames a hairline apart, each shuttered top to bottom behind a signal edge
  *   label     twelve columns cut through the middle, the halves parting to head and foot from the left
  *   rack      a 96-well plate drawn up column by column
+ *   spark     claude, kept sweet: the old frame glitches, then breaks up in squares from the middle out, a spark or a
+ *             heart rising from each; a blueprint grid and a scan line pass over the new theme while her hologram is
+ *             built on its projector, comes solid and waves, then she steps out to the right through a doorway of light
+ *             as her small self steps in at her place (3.35 s)
+ *   bubbles   deepseek: the sea comes up over the old frame and drains off the new theme, bubbles going up through
+ *             it; a whale's shadow swims across behind; she swims in, lands in a splash and waves, then walks out to
+ *             the right through a column of bubbles as her small self walks in (3.75 s)
  *
  * Without a capture (the web and Android builds, reduced motion) the interface
- * and the room fade into the new theme over .45 s instead (Unreal StartThemeBlend).
+ * and the room fade into the new theme over .45 s instead (Unreal StartThemeBlend);
+ * a maid still makes her entrance over it, with nothing of the old frame (not under reduced motion).
  */
 export type RevealOptions = {
   motif: Motif;
@@ -32,9 +42,16 @@ export type RevealOptions = {
   /** Where orbit's rings start, 0..1 of the viewport. */
   origin?: readonly [number, number];
   reduced: boolean;
+  /**
+   * A maid's change-over: when (performance.now()) she sets off walking out of the middle, so her small self can walk
+   * in at her place on the same clock (features/maid). Told once the change-over has begun.
+   */
+  walkAt?: (at: number) => void;
 };
 
 const DURATION = 1000;
+/** A maid's change-over runs until she has walked out (features/maid/maid-reveal.ts); the others take a second. */
+const durationOf = (motif: Motif) => (motif === "spark" ? MAID_REVEAL : motif === "bubbles" ? WHALE_REVEAL : 1) * 1000;
 let running: Promise<void> | undefined;
 
 export async function playThemeReveal(options: RevealOptions): Promise<void> {
@@ -45,6 +62,9 @@ export async function playThemeReveal(options: RevealOptions): Promise<void> {
 
 async function run(o: RevealOptions) {
   const capture = getPlatformBridge()?.capture;
+  const maid = o.motif === "spark" ? "claude" : o.motif === "bubbles" ? "deepseek" : undefined;
+  // Her pictures decoded before the show starts (most are in already: they are asked for when her theme is chosen).
+  if (maid && !o.reduced) await Promise.race([preloadMaid(maid), new Promise(r => setTimeout(r, 900))]);
   let image: ImageBitmap | undefined;
   if (!o.reduced && capture) {
     try {
@@ -52,7 +72,7 @@ async function run(o: RevealOptions) {
       if (bytes) image = await createImageBitmap(new Blob([bytes as BlobPart], { type: "image/jpeg" }));
     } catch { image = undefined; }
   }
-  if (!image) { o.apply(false); return; }
+  if (!image && (!maid || o.reduced)) { o.apply(false); return; }
 
   const dpr = window.devicePixelRatio || 1;
   const width = innerWidth, height = innerHeight;
@@ -64,11 +84,12 @@ async function run(o: RevealOptions) {
   const ctx = canvas.getContext("2d")!;
   ctx.scale(dpr, dpr);
   // The capture is the page at device pixels: local (CSS px) → image px.
-  const kx = image.width / width, ky = image.height / height;
-  const piece = (x0: number, y0: number, x1: number, y1: number) => {
+  const kx = image ? image.width / width : 1, ky = image ? image.height / height : 1;
+  /** A window onto the capture where it stands (drawn `dx` to the side for a slipping band). */
+  const piece = (x0: number, y0: number, x1: number, y1: number, dx = 0) => {
     x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(width, x1); y1 = Math.min(height, y1);
-    if (x1 - x0 < .5 || y1 - y0 < .5) return;
-    ctx.drawImage(image!, x0 * kx, y0 * ky, (x1 - x0) * kx, (y1 - y0) * ky, x0, y0, x1 - x0, y1 - y0);
+    if (!image || x1 - x0 < .5 || y1 - y0 < .5) return;
+    ctx.drawImage(image, x0 * kx, y0 * ky, (x1 - x0) * kx, (y1 - y0) * ky, x0 + dx, y0, x1 - x0, y1 - y0);
   };
   const inOut = (x: number) => { x = Math.min(1, Math.max(0, x)); return x < .5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2; };
   const cubicIn = (x: number) => { x = Math.min(1, Math.max(0, x)); return x * x * x; };
@@ -195,6 +216,12 @@ async function run(o: RevealOptions) {
       case "rack":
         squares(width / 12, (x, y) => x * .045 + y * .008, .26, t, false);
         break;
+      case "spark":
+        drawMaidReveal(ctx, t * MAID_REVEAL, width, height, piece);
+        break;
+      case "bubbles":
+        drawWhaleReveal(ctx, t * WHALE_REVEAL, width, height, piece, !!image);
+        break;
       case "plates":
       default: {
         const hash = (x: number, y: number) => (((Math.imul(x, 73856093) ^ Math.imul(y, 19349663)) >>> 0) % 1000) / 1000;
@@ -205,13 +232,14 @@ async function run(o: RevealOptions) {
 
   draw(0);
   document.body.appendChild(canvas);
-  // The picture covers the page; everything switches under it at once.
+  // The picture covers the page; everything switches under it at once (without one, the page fades under her show).
   await new Promise(requestAnimationFrame);
-  o.apply(true);
-  const start = performance.now();
+  o.apply(!!image);
+  const start = performance.now(), length = durationOf(o.motif);
+  if (maid) o.walkAt?.(start + (maid === "claude" ? MAID_STEP : WHALE_STEP) * 1000);
   await new Promise<void>(resolve => {
     const frame = (now: number) => {
-      const t = (now - start) / DURATION;
+      const t = (now - start) / length;
       if (t >= 1) { resolve(); return; }
       draw(t);
       requestAnimationFrame(frame);
@@ -219,5 +247,5 @@ async function run(o: RevealOptions) {
     requestAnimationFrame(frame);
   });
   canvas.remove();
-  image.close();
+  image?.close();
 }

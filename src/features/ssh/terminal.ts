@@ -14,6 +14,9 @@ import { SessionTabs } from "./session-tabs";
 import { terminalAppearance } from "./terminal-appearance";
 import { paintRevision } from "../theme/theme-ui";
 import { sigilCells } from "../label/label-kit";
+import { MaidTerminal, type MaidTerminalState } from "../maid/maid-terminal";
+import { TerminalGhost } from "../maid/assistant/terminal-ghost";
+import { terminalMaid } from "../maid/assistant/terminal-hooks";
 import {
   TerminalTools,
   TERMINAL_TOOLS_MARKUP,
@@ -33,6 +36,7 @@ const MARKUP = `
     ${WORKSPACE_NAV}
     <button type="button" class="ssh-terminal-reconnect" hidden>重新连接 ↻</button>
     <button type="button" class="ssh-terminal-recovery" hidden title="点击停止自动重连"></button>
+    <button type="button" class="ssh-terminal-maid" title="和看板娘说话"><span data-who="claude">问小克 ♡</span><span data-who="deepseek">问大肥鱼 ～</span></button>
     <button type="button" class="ssh-terminal-search-all" title="检索主机、档案、命令和会话 · Ctrl+Shift+K">检索 ⌕</button>
     <details class="ssh-terminal-more"><summary aria-label="更多终端操作">更多 ···</summary><div class="ssh-terminal-more-panel">
       <button type="button" class="ssh-terminal-audit">会话记录</button>
@@ -125,6 +129,11 @@ export class SshTerminalPanel {
   /** The theme-ui paintRevision the signature was read at. */
   private themeRevision = -1;
   private hasShell = false;
+  /** The maid in the corner of the screen, in her themes (maid-terminal.ts), and the completion over the screen (any theme). */
+  private maid: MaidTerminal;
+  readonly ghost: TerminalGhost;
+  /** Bytes the reader has typed into this session. */
+  sentBytes = 0;
   private projectionHost: HTMLElement;
   private viewport: HTMLElement;
   private fitFrame = 0;
@@ -173,6 +182,13 @@ export class SshTerminalPanel {
       this.root.querySelector<HTMLElement>(".ssh-terminal-exit")!;
     for (const node of this.root.querySelectorAll<HTMLElement>("[data-stat]"))
       this.stats[node.dataset.stat!] = node;
+    const main = this.root.querySelector<HTMLElement>(".ssh-terminal-main")!;
+    this.maid = new MaidTerminal(main, {
+      visible: () => this.open && !this.disposed && !this.root.hidden && (this.workspace?.terminalVisible ?? true),
+      state: () => this.maidState(),
+      assistant: () => terminalMaid.state(),
+    });
+    this.ghost = new TerminalGhost(main);
     this.tools = new TerminalTools(this.root, client, {
       visible: () => this.open && (this.workspace?.terminalVisible ?? true),
       hasShell: () => this.hasShell,
@@ -230,6 +246,7 @@ export class SshTerminalPanel {
       .addEventListener("click", () => this.embedded ? this.splitClose?.() : onRequestClose());
     this.root.querySelector(".ssh-terminal-settings")!.addEventListener("click", () => this.onSettings());
     this.root.querySelector(".ssh-terminal-search-all")!.addEventListener("click", () => this.onSearch());
+    this.root.querySelector(".ssh-terminal-maid")!.addEventListener("click", () => terminalMaid.ask());
     this.root.querySelector(".ssh-terminal-recovery")!.addEventListener("click", () => this.onCancelRecovery());
     const splitSelect = this.root.querySelector<HTMLSelectElement>(".ssh-terminal-split-select")!;
     splitSelect.hidden = isAndroid;
@@ -262,6 +279,7 @@ export class SshTerminalPanel {
       (event) =>
         this.open &&
         !this.root.inert &&
+        !terminalMaid.keys(this, event) &&
         !isTerminalToolShortcut(event) &&
         !(event.ctrlKey && event.key === "Tab") &&
         !(
@@ -273,8 +291,12 @@ export class SshTerminalPanel {
     term.onData((data) => {
       // disableStdin and the modal scope gate keyboard input. Protocol replies
       // (cursor position, device attributes) must also work while collapsed.
-      if (this.client.active && this.client.status().phase === "interactive")
-        this.client.write(this.mobileControls?.input(data) ?? data);
+      if (this.client.active && this.client.status().phase === "interactive") {
+        const input = this.mobileControls?.input(data) ?? data;
+        terminalMaid.typed(this, input);
+        this.sentBytes += input.length;
+        this.client.write(input);
+      }
     });
     term.onResize(({ cols, rows }) => {
       this.screenRevision++;
@@ -703,8 +725,31 @@ export class SshTerminalPanel {
     this.tools.sync();
   }
 
+  /** The shell is up (the session reached its prompt at least once this generation). */
+  get reachedShell() { return this.hasShell; }
+  /** Types into the session as the reader would (her draft, her command, a key she was allowed to press). */
+  sendInput(data: string) {
+    if (!this.client.active || this.client.status().phase !== "interactive") return false;
+    this.sentBytes += data.length;
+    this.client.write(data);
+    return true;
+  }
+  /** What the maid in the corner reads of the session. */
+  private maidState(): MaidTerminalState {
+    const status = this.client.status(), meter = this.client.meter.measurements;
+    return {
+      waiting: !this.hasShell,
+      busy: meter.bytesPerSecondIn > 0 || meter.bytesPerSecondOut > 0,
+      minutes: Math.floor(this.client.traffic.elapsedMs / 60000),
+      phase: status.phase,
+      prompt: Boolean(this.client.pendingPrompt),
+      stopped: false,
+    };
+  }
+
   dispose() {
     this.clearSplit();
+    this.maid.dispose();
     this.disposed = true;
     this.mobileControls?.dispose();
     this.open = false;

@@ -27,6 +27,8 @@ const PALETTES: Record<ThemeName, Palette> = {
   slate: { ink: "#f8fafc", muted: "#94a3b8", line: "#2b364b", paper: "#0f172a", panel: "#192134", field: "#222c41", accent: "#3b82f6", glass: "#141d31", cyan: "#38bdf8" },
   reagent: { ink: "#0e100f", muted: "#5d6561", line: "#c8cdc8", paper: "#eceee9", panel: "#f4f5f1", field: "#e0e4de", accent: "#12b886", glass: "#f1f2ee", cyan: "#0b7a63" },
   cryo: { ink: "#e7f0eb", muted: "#8fa39a", line: "#24332d", paper: "#0b1311", panel: "#111c19", field: "#17241f", accent: "#3debb0", glass: "#0f1916", cyan: "#c9f25c" },
+  claude: { ink: "#f7ecdf", muted: "#a8948a", line: "#3d2a25", paper: "#140d0b", panel: "#1d1411", field: "#271a16", accent: "#d97757", glass: "#18100e", cyan: "#f0b392" },
+  deepseek: { ink: "#182050", muted: "#5d6b98", line: "#c3cdee", paper: "#eef2ff", panel: "#f8faff", field: "#e1e8ff", accent: "#4d6bfe", glass: "#f4f7ff", cyan: "#f0b847" },
 };
 
 /**
@@ -57,6 +59,8 @@ const SIGNALS: Record<ThemeName, readonly string[]> = {
   slate: ["#3b82f6", "#4ade80", "#f59e0b", "#a78bfa", "#38bdf8"],
   reagent: ["#12b886", "#b8c41c", "#5d6561", "#f2643f", "#0b7a63"],
   cryo: ["#3debb0", "#c9f25c", "#8fa39a", "#ff8a6b", "#5fd1c1"],
+  claude: ["#d97757", "#f0b392", "#f7ecdf", "#d9b26a", "#9dbfae"],
+  deepseek: ["#4d6bfe", "#f0b847", "#88b0f8", "#ff7a9a", "#2fc4b2"],
 };
 export function signalsOf(name: ThemeName): readonly string[] {
   return SIGNALS[name];

@@ -1,0 +1,123 @@
+/* Her panel (maid-panel.ts): a card at the right of the window, scaled with it (--maid-s, the stage's scale). */
+.maid-panel {
+  position: absolute; z-index: 60; right: calc(14px * var(--maid-s, 1)); top: calc(140px * var(--maid-s, 1));
+  width: 508px; height: calc((100% - 196px * var(--maid-s, 1)) / var(--maid-s, 1));
+  transform: scale(var(--maid-s, 1)); transform-origin: 100% 0; pointer-events: none;
+  font-family: "MiSans", "Mi Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; color: var(--theme-ink);
+}
+.maid-panel[hidden] { display: none; }
+.maid-panel-card {
+  position: relative; width: 100%; height: 100%; pointer-events: auto; opacity: 0; transform: translate(70px, -10px) scale(.92); transform-origin: 100% 0;
+  transition: opacity .24s cubic-bezier(.4, 0, 1, 1), transform .24s cubic-bezier(.4, 0, 1, 1);
+}
+.maid-panel[data-open="true"] .maid-panel-card { opacity: 1; transform: none; transition-duration: .5s; transition-timing-function: cubic-bezier(.16, 1, .3, 1); }
+.maid-panel[data-reduced="true"] .maid-panel-card { transition: none; }
+.maid-panel-back { position: absolute; left: -20px; top: -20px; pointer-events: none; }
+.maid-panel-boot { position: absolute; left: -40px; top: -40px; pointer-events: none; z-index: 3; }
+.maid-panel-content { position: absolute; inset: 16px 29px 26px 22px; z-index: 1; display: flex; flex-direction: column; min-height: 0; }
+.maid-panel button { font-family: inherit; }
+
+/* The head: her bust, her name and what she is doing, the buttons. */
+.maid-panel-head { display: flex; align-items: center; gap: 6px; flex: none; }
+.maid-panel-bust { flex: none; align-self: flex-end; margin: -52px 4px -10px -8px; pointer-events: none; }
+.maid-panel-who { flex: 1; min-width: 0; }
+.maid-panel-title { display: flex; align-items: center; gap: 8px; }
+.maid-panel-name { white-space: nowrap; font-family: "Barlow Condensed", Bahnschrift, "Arial Narrow", sans-serif; font-stretch: condensed; font-size: 28px; font-weight: 800; line-height: 1; }
+.maid-panel-spark, .maid-input-spark, .maid-hello-spark { color: var(--theme-accent); font-size: 16px; display: inline-block; animation: maid-spin 8s linear infinite; }
+.maid-panel-status { display: flex; align-items: center; gap: 6px; margin: 4px 0 0 1px; font-size: 12px; font-weight: 500; letter-spacing: .3px; color: var(--theme-muted); white-space: nowrap; }
+.maid-panel-state { overflow: hidden; text-overflow: ellipsis; }
+.maid-panel-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: color-mix(in srgb, var(--theme-ink) 70%, transparent); }
+.maid-panel-dot[data-busy="true"] { background: var(--theme-accent); animation: maid-pulse 1s ease-in-out infinite; }
+.maid-close { font-size: 15px; font-weight: 800; padding: 3px 11px; }
+@keyframes maid-spin { to { transform: rotate(360deg); } }
+@keyframes maid-pulse { 50% { opacity: .35; } }
+
+/* Pills. */
+.maid-pill { flex: none; border: 0; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 700; letter-spacing: .3px; line-height: 1.25; cursor: pointer; white-space: nowrap; transition: transform .12s, filter .12s; }
+.maid-pill:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.12); }
+.maid-pill:disabled { cursor: default; opacity: .55; }
+.maid-pill[hidden] { display: none; }
+.maid-pill-accent { background: var(--theme-accent); color: var(--theme-paper); }
+.maid-pill-field { background: var(--theme-field); color: var(--theme-ink); padding: 6px 12px; }
+.maid-pill-soft { background: color-mix(in srgb, var(--theme-ink) 8%, transparent); color: var(--theme-ink); }
+.maid-pill-ring { background: transparent; color: var(--theme-muted); box-shadow: inset 0 0 0 1.5px currentColor; }
+.maid-pill-idea { background: color-mix(in srgb, var(--theme-accent) 16%, transparent); color: var(--theme-ink); font-weight: 600; padding: 7px 13px; }
+.maid-big { font-size: 14px; font-weight: 800; padding: 7px 20px; }
+.maid-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+/* The conversation on show, its host's others, a new one. */
+.maid-thread-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex: none; }
+.maid-thread { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: left; background: color-mix(in srgb, var(--theme-ink) 7%, transparent); color: var(--theme-ink); padding: 6px 14px; }
+.maid-threads, .maid-options { flex: none; margin-top: 8px; padding: 8px 10px; border-radius: 16px; background: var(--theme-field); max-height: 250px; overflow-y: auto; }
+.maid-threads[hidden], .maid-options[hidden] { display: none; }
+.maid-threads-title { margin: 2px 6px 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--theme-muted); }
+.maid-thread-item { display: flex; align-items: center; gap: 8px; margin: 2px 0; padding: 0 4px 0 0; border-radius: 12px; }
+.maid-thread-item[data-on="true"] { background: color-mix(in srgb, var(--theme-accent) 20%, transparent); }
+.maid-thread-pick { flex: 1; min-width: 0; display: grid; grid-template-columns: 7px 1fr; column-gap: 8px; align-items: center; border: 0; background: transparent; color: var(--theme-ink); padding: 7px 12px; text-align: left; cursor: pointer; border-radius: 12px; }
+.maid-thread-pick:hover:not(:disabled) { background: color-mix(in srgb, var(--theme-ink) 7%, transparent); }
+.maid-thread-pick i { grid-row: span 2; width: 7px; height: 7px; border-radius: 50%; background: color-mix(in srgb, var(--theme-muted) 40%, transparent); }
+.maid-thread-item[data-on="true"] i { background: var(--theme-accent); }
+.maid-thread-pick b { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maid-thread-item[data-on="true"] b { font-weight: 800; }
+.maid-thread-pick small { font-size: 10px; font-weight: 500; letter-spacing: .4px; color: var(--theme-muted); }
+.maid-options { padding: 12px 16px; }
+.maid-section { margin: 12px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: var(--theme-muted); }
+.maid-section:first-child { margin-top: 0; }
+.maid-note { margin: 5px 0 0 2px; font-size: 11px; color: var(--theme-muted); }
+.maid-look { display: flex; align-items: center; gap: 0; margin-top: 6px; }
+.maid-look .maid-pill-accent { font-size: 14px; font-weight: 800; padding: 3px 12px; }
+.maid-look .maid-look-name { min-width: 150px; text-align: center; font-size: 13px; font-weight: 700; }
+.maid-reset { margin-left: auto; }
+
+/* The log: a well of the page's colour, every word selectable. */
+.maid-log { flex: 1; min-height: 0; margin: 12px 0; padding: 4px 6px 4px 12px; border-radius: 18px; overflow-y: auto; background: color-mix(in srgb, var(--theme-ink) 5%, transparent); }
+.maid-entry { margin: 14px 0; }
+.maid-caption { display: flex; align-items: center; gap: 6px; margin: 0 4px 4px; font-size: 10px; font-weight: 700; letter-spacing: .8px; color: var(--theme-muted); }
+.maid-copy { font-size: 10px; padding: 1px 8px; }
+.maid-bubble { padding: 9px 14px; font-size: 14px; line-height: 1.5; letter-spacing: .2px; white-space: pre-wrap; word-break: break-word; user-select: text; cursor: text; }
+.maid-user { display: flex; flex-direction: column; align-items: flex-end; }
+.maid-bubble-user { max-width: 340px; border-radius: 18px 5px 18px 18px; background: var(--theme-accent); color: var(--theme-paper); font-weight: 600; }
+.maid-her { display: flex; align-items: flex-start; gap: 6px; }
+.maid-face { flex: none; width: 44px; height: 44px; margin-top: 2px; border-radius: 50%; background: color-mix(in srgb, var(--theme-accent) 22%, transparent) no-repeat; background-size: 100px 100px; background-position: -27px -10px; }
+.maid-panel[data-who="deepseek"] .maid-face { background-size: 94px 94px; background-position: -26px -12px; }
+.maid-her-side { min-width: 0; }
+.maid-bubble-her { max-width: 360px; border-radius: 5px 18px 18px 18px; background: var(--theme-ink); color: var(--theme-paper); font-weight: 500; }
+.maid-her[data-error="true"] .maid-bubble-her { background: color-mix(in srgb, var(--theme-ink) 92%, transparent); color: var(--theme-accent); }
+.maid-bubble-outcome { margin-top: 6px; font-size: 11px; color: color-mix(in srgb, var(--theme-paper) 70%, transparent); }
+.maid-thought { margin-left: 50px; }
+.maid-thought-text { margin: 6px 0 0; max-height: 320px; overflow-y: auto; padding: 9px 12px; border-radius: 12px; background: color-mix(in srgb, var(--theme-ink) 5%, transparent);
+  color: var(--theme-muted); font: 400 12px/1.5 inherit; letter-spacing: .2px; white-space: pre-wrap; word-break: break-word; user-select: text; }
+.maid-ticket { padding: 11px 13px; border-radius: 16px; background: var(--theme-field); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--theme-line) 50%, transparent); }
+.maid-ticket[data-waiting="true"] { animation: maid-ring 1.6s ease-in-out infinite; }
+@keyframes maid-ring { 0%, 100% { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--theme-accent) 100%, transparent); } 50% { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--theme-accent) 60%, transparent); } }
+.maid-ticket-top { display: flex; align-items: center; gap: 8px; }
+.maid-tag { flex: none; padding: 2px 9px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .4px; background: color-mix(in srgb, var(--theme-ink) 16%, transparent); color: var(--theme-ink); }
+.maid-tag[data-hot="true"] { background: var(--theme-accent); color: var(--theme-paper); }
+.maid-tag:empty { display: none; }
+.maid-ticket-text { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; letter-spacing: .2px; }
+.maid-subject { margin: 8px 0 0; padding: 8px 11px; border-radius: 10px; background: var(--theme-paper); color: var(--theme-ink);
+  font: 700 13px/1.4 "JetBrains Mono", "Cascadia Mono", Consolas, monospace; white-space: pre-wrap; word-break: break-all; user-select: text; }
+.maid-ticket-buttons { display: flex; gap: 10px; margin-top: 10px; }
+.maid-outcome { margin: 8px 0 0; max-height: 240px; overflow-y: auto; color: var(--theme-muted); font: 400 12px/1.4 "JetBrains Mono", "Cascadia Mono", Consolas, monospace; white-space: pre-wrap; word-break: break-all; user-select: text; }
+.maid-hello { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 4px 8px; }
+.maid-hello-spark { font-size: 30px; }
+.maid-hello b { margin-top: 10px; font-family: "Barlow Condensed", Bahnschrift, "Arial Narrow", sans-serif; font-stretch: condensed; font-size: 22px; font-weight: 800; }
+.maid-hello p { margin: 8px 0 16px; font-size: 13px; font-weight: 500; line-height: 1.6; color: var(--theme-muted); }
+.maid-ideas { justify-content: center; gap: 8px; }
+.maid-pop { animation: maid-pop .34s cubic-bezier(.34, 1.56, .64, 1) both; transform-origin: 0 100%; }
+.maid-user.maid-pop { transform-origin: 100% 100%; }
+@keyframes maid-pop { from { opacity: 0; transform: translateY(14px) scale(.8); } to { opacity: 1; transform: none; } }
+
+/* The field: a pill in her ink with her colour off register, her spark at the front and a round send at the back. */
+.maid-input { flex: none; display: flex; align-items: center; gap: 4px; margin: 0 4px 4px 0; padding: 2px 5px 2px 16px; border-radius: 999px; background: var(--theme-ink); box-shadow: 4px 4px 0 var(--theme-accent); }
+.maid-field { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--theme-paper); padding: 11px 6px 11px 8px; font: 600 15px/1.2 inherit; }
+.maid-field::placeholder { color: color-mix(in srgb, var(--theme-paper) 50%, transparent); }
+.maid-field:disabled { opacity: .7; }
+.maid-send { font-size: 13px; font-weight: 800; padding: 8px 16px; }
+.maid-hint { flex: none; margin: 9px 0 0; text-align: center; font-size: 11px; letter-spacing: .3px; color: var(--theme-muted); }
+
+/* The pill under her bubble on the home that opens the panel (maid-home.ts). */
+.label-sheet .label-maid-opener { position: absolute; z-index: 2; pointer-events: auto; border: 0; border-radius: 999px; padding: 9px 20px 10px; background: var(--theme-ink); color: var(--theme-paper);
+  font: 700 15px/1.2 "MiSans", "Microsoft YaHei", system-ui, sans-serif; letter-spacing: .4px; box-shadow: 4px 4px 0 var(--theme-accent); cursor: pointer; transition: transform .12s, opacity .3s; }
+.label-sheet .label-maid-opener:hover { transform: translateY(-2px); }
+.label-maid-opener[hidden] { display: none; }
